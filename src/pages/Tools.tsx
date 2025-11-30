@@ -66,6 +66,7 @@ export default function Tools() {
 
   const helperRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const inspireTriggeredRef = useRef<boolean>(false) // 中文注释：避免在开发模式下重复触发灵感生成
   
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -78,7 +79,8 @@ export default function Tools() {
     if (from === 'home') {
       helperRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-    if (mode === 'inspire') {
+    if (mode === 'inspire' && !inspireTriggeredRef.current) {
+      inspireTriggeredRef.current = true
       generateSuggestions()
     }
     if (!restored) {

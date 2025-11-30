@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { TianjinImage, TianjinButton } from './TianjinStyleComponents';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
+import BRANDS from '@/lib/brands';
 
 // 活动类型定义
 interface Activity {
@@ -827,122 +828,16 @@ export default function TianjinCreativeActivities() {
     }
   ];
   
-  // 模拟老字号品牌数据
-  const traditionalBrands: TraditionalBrand[] = [
-    {
-      id: 1,
-      name: '桂发祥',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Guifaxiang%20traditional%20brand%20logo',
-      description: '创建于1927年，以十八街麻花闻名，是天津食品行业的老字号品牌。',
-      establishedYear: '1927',
-      collaborationTools: 8,
-      popularity: 96
-    },
-    {
-      id: 2,
-      name: '狗不理',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Goubuli%20traditional%20brand%20logo',
-      description: '创建于1858年，以特色包子闻名，是天津餐饮行业的代表性老字号。',
-      establishedYear: '1858',
-      collaborationTools: 12,
-      popularity: 98
-    },
-    {
-      id: 3,
-      name: '耳朵眼',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Erduoyan%20traditional%20brand%20logo',
-      description: '创建于1900年，以炸糕和酒类产品闻名，是天津的传统老字号。',
-      establishedYear: '1900',
-      collaborationTools: 6,
-      popularity: 92
-    },
-    {
-      id: 4,
-      name: '老美华',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Laomeihua%20traditional%20shoe%20brand%20logo',
-      description: '始于民国时期的传统鞋履品牌，以手工缝制与舒适耐穿著称。',
-      establishedYear: '1911',
-      collaborationTools: 5,
-      popularity: 88
-    },
-    {
-      id: 5,
-      name: '大福来',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Dafulai%20guobacai%20brand%20logo',
-      description: '以锅巴菜闻名，糊辣香浓、层次丰富，是天津特色早点代表。',
-      establishedYear: '1930',
-      collaborationTools: 4,
-      popularity: 85
-    },
-    {
-      id: 6,
-      name: '果仁张',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Guorenzhang%20candied%20chestnut%20brand%20logo',
-      description: '百年坚果品牌，以糖炒栗子香甜饱满闻名，老天津味道的代表。',
-      establishedYear: '1906',
-      collaborationTools: 6,
-      popularity: 90
-    },
-    {
-      id: 7,
-      name: '茶汤李',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Chatangli%20sweet%20soup%20brand%20logo',
-      description: '源自清末的茶汤品牌，口感细腻柔滑、甘香回甜，承载城市记忆。',
-      establishedYear: '1895',
-      collaborationTools: 3,
-      popularity: 83
-    },
-    // 利顺德：酒店文化，城市记忆
-    {
-      id: 8,
-      name: '利顺德',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Lishunde%20hotel%20heritage%20brand%20logo',
-      description: '百年酒店品牌，承载天津近代史与文化记忆，适合文旅联名。',
-      establishedYear: '1863',
-      collaborationTools: 7,
-      popularity: 91
-    },
-    // 亨得利：钟表店，精工匠艺
-    {
-      id: 9,
-      name: '亨得利表行',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Hengdeli%20watch%20store%20heritage%20brand%20logo',
-      description: '老牌钟表行品牌，精工与匠艺象征，可开展工艺联名。',
-      establishedYear: '1890',
-      collaborationTools: 5,
-      popularity: 86
-    },
-    // 正兴德：茶庄文化，津门茶韵
-    {
-      id: 10,
-      name: '正兴德茶庄',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Zhengxingde%20tea%20house%20traditional%20brand%20logo',
-      description: '历史悠久的茶庄品牌，融合津门茶文化与现代设计。',
-      establishedYear: '1908',
-      collaborationTools: 4,
-      popularity: 84
-    },
-    // 石头门坎：素包之源，传统技法
-    {
-      id: 11,
-      name: '石头门坎素包',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Shitoumenkan%20vegetarian%20bun%20heritage%20brand%20logo',
-      description: '素包名店，传承传统素馅工艺，可做餐饮联名设计。',
-      establishedYear: '1926',
-      collaborationTools: 3,
-      popularity: 82
-    },
-    // 孙记烧卖：街巷味道，家常点心
-    {
-      id: 12,
-      name: '孙记烧卖',
-      logo: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Sunji%20shaomai%20traditional%20brand%20logo',
-      description: '街巷点心品牌，家常美味代表，适合集市活动联名。',
-      establishedYear: '1935',
-      collaborationTools: 2,
-      popularity: 79
-    }
-  ];
+  // 中文注释：老字号品牌数据改为引用 BRANDS，并做轻度映射以适配现有展示字段
+  const traditionalBrands: TraditionalBrand[] = BRANDS.map((b, idx) => ({
+    id: idx + 1,
+    name: b.name,
+    logo: b.image,
+    description: b.story,
+    establishedYear: '—', // 中文注释：暂无年份数据，用破折号占位
+    collaborationTools: Math.max(3, Math.min(12, (b.name.length % 12) + 3)), // 中文注释：演示用的工具数量
+    popularity: 80 + (idx % 20), // 中文注释：演示用的热度指数
+  }));
   
   const handleApplyTemplate = (templateId: number) => {
     void templateId;
@@ -967,6 +862,11 @@ export default function TianjinCreativeActivities() {
   const filteredBrands = searchLower
     ? traditionalBrands.filter((b) => [b.name, b.description, b.establishedYear].some((s) => s.toLowerCase().includes(searchLower)))
     : traditionalBrands;
+  // 中文注释：分页（每页9项）
+  const [brandPage, setBrandPage] = useState(1);
+  const pageSize = 9;
+  const brandTotalPages = Math.max(1, Math.ceil(filteredBrands.length / pageSize));
+  const pagedBrands = filteredBrands.slice((brandPage - 1) * pageSize, brandPage * pageSize);
   
   // 骨架屏加载状态
   if (isLoading) {
@@ -1272,7 +1172,7 @@ export default function TianjinCreativeActivities() {
       {/* 老字号联名内容 */}
       {activeTab === 'brands' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredBrands.map((brand) => (
+          {pagedBrands.map((brand) => (
             <motion.div
               key={brand.id}
               className={`p-4 rounded-xl shadow-md border transition-shadow ${
@@ -1320,7 +1220,7 @@ export default function TianjinCreativeActivities() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {/* 中文注释：使用天津特色按钮，提供细腻的悬浮与点击反馈 */}
-                <TianjinButton ariaLabel={`查看${brand.name}联名工具`} className="w-full">
+                <TianjinButton ariaLabel={`查看${brand.name}联名工具`} className="w-full" onClick={() => navigate(`/tools?from=tianjin&query=${encodeURIComponent(brand.name + ' 联名 工具')}&mode=inspire`)}>
                   <i className="fas fa-tools mr-2"></i>
                   查看联名工具
                 </TianjinButton>
@@ -1331,6 +1231,18 @@ export default function TianjinCreativeActivities() {
               </div>
             </motion.div>
           ))}
+          {/* 中文注释：分页控件 */}
+          <div className="col-span-full flex items-center justify-center gap-2 mt-2">
+            <TianjinButton variant="secondary" size="sm" disabled={brandPage <= 1} onClick={() => setBrandPage(p => Math.max(1, p - 1))}>
+              上一页
+            </TianjinButton>
+            <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm px-2`}>
+              第 {brandPage} / {brandTotalPages} 页
+            </span>
+            <TianjinButton variant="secondary" size="sm" disabled={brandPage >= brandTotalPages} onClick={() => setBrandPage(p => Math.min(brandTotalPages, p + 1))}>
+              下一页
+            </TianjinButton>
+          </div>
         </div>
       )}
         {/* 活动详情弹层 */}
