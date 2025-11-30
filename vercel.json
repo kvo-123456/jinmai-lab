@@ -6,6 +6,7 @@
       "config": { "distDir": "dist/static" }
     }
   ],
+  "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm build",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
