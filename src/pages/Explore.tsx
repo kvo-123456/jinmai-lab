@@ -5,8 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import SidebarLayout from '@/components/SidebarLayout'
 import GradientHero from '@/components/GradientHero'
 import { isPrefetched } from '@/services/prefetch'
-import { TianjinImage, TianjinButton } from '@/components/TianjinStyleComponents'
-import BRANDS, { Brand } from '@/lib/brands'
+import { TianjinImage } from '@/components/TianjinStyleComponents'
 import llmService from '@/services/llmService'
  
 
@@ -2165,18 +2164,6 @@ export default function Explore() {
   const [scheduleGroup, setScheduleGroup] = useState<'style' | 'topic'>('style');
   const [scheduleSub, setScheduleSub] = useState('国潮');
   const [schedules, setSchedules] = useState<Array<{ title: string; content: string; time: string; group: string; sub: string }>>([]);
-
-  // 中文注释：老字号品牌搜索与分页（引用 BRANDS 数据）
-  const [brandQuery, setBrandQuery] = useState('')
-  const [brandPage, setBrandPage] = useState(1)
-  const brandFiltered = useMemo(() => {
-    const q = brandQuery.trim().toLowerCase()
-    if (!q) return BRANDS
-    return BRANDS.filter((b: Brand) => [b.name, b.story].some((s: string) => s.toLowerCase().includes(q)))
-  }, [brandQuery])
-  const brandPageSize = 12
-  const brandTotalPages = Math.max(1, Math.ceil(brandFiltered.length / brandPageSize))
-  const brandPaged = useMemo(() => brandFiltered.slice((brandPage - 1) * brandPageSize, brandPage * brandPageSize), [brandFiltered, brandPage, brandPageSize])
   
   // 模拟加载数据
   useEffect(() => {
@@ -2865,54 +2852,6 @@ export default function Explore() {
               </div>
             </motion.div>
           )}
-        </motion.div>
-
-        {/* 老字号联名大全（引用 BRANDS，支持搜索与分页） */}
-        <motion.div
-          className={`${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} rounded-2xl p-4 shadow-sm mb-10`}
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold">老字号联名大全</h3>
-            <div className="flex items-center gap-2">
-              <input
-                value={brandQuery}
-                onChange={(e) => { setBrandQuery(e.target.value); setBrandPage(1) }}
-                placeholder="搜索品牌或故事"
-                className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'} px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 w-56`}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {brandPaged.map((b) => (
-              <motion.div key={b.id} className={`p-4 rounded-xl shadow-sm border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}`} whileHover={{ y: -3 }}>
-                <div className="flex items-center mb-3">
-                  <div className={`w-14 h-14 rounded-lg overflow-hidden mr-3 border ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}`}>
-                    <TianjinImage src={b.image} alt={b.name} ratio="square" rounded="md" withBorder fit="cover" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">{b.name}</h4>
-                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} line-clamp-1`}>{b.story}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <TianjinButton ariaLabel={`查看${b.name}联名工具`} variant="heritage" size="sm" onClick={() => navigate(`/tools?from=explore&query=${encodeURIComponent(b.name + ' 联名 工具')}&mode=inspire`)}>
-                    <i className="fas fa-tools mr-2"></i>查看联名工具
-                  </TianjinButton>
-                  <TianjinButton ariaLabel={`查看${b.name}品牌指南`} variant="secondary" size="sm" onClick={() => navigate('/brand-guide')}>
-                    <i className="fas fa-book mr-2"></i>品牌指南
-                  </TianjinButton>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <TianjinButton variant="secondary" size="sm" disabled={brandPage <= 1} onClick={() => setBrandPage(p => Math.max(1, p - 1))}>上一页</TianjinButton>
-            <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm px-2`}>第 {brandPage} / {brandTotalPages} 页</span>
-            <TianjinButton variant="secondary" size="sm" disabled={brandPage >= brandTotalPages} onClick={() => setBrandPage(p => Math.min(brandTotalPages, p + 1))}>下一页</TianjinButton>
-          </div>
         </motion.div>
 
         {/* 中文注释：社区侧栏已迁移至创作者社区页面 */}
