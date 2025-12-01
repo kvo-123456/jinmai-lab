@@ -5,7 +5,7 @@
 
 import { MultimodalContent } from './multimodalService';
 import { getAllContent } from './multimodalService';
-import { getAllPosts } from './postService';
+import { getPosts } from './postService';
 
 // 定义数据类型
 export interface CreatorAnalytics {
@@ -58,7 +58,7 @@ const ANALYTICS_KEY = 'jmzf_creator_analytics';
 export function getCreatorAnalytics(): CreatorAnalytics {
   // 获取所有内容
   const allContent = getAllContent();
-  const allPosts = getAllPosts();
+  const allPosts = getPosts();
   
   // 合并所有作品
   const allWorks = [...allContent, ...allPosts];
@@ -258,7 +258,7 @@ function calculateGrowthRate(works: Array<any>): {
  * 获取作品详细分析
  */
 export function getWorkAnalytics(workId: string): any {
-  const allWorks = [...getAllContent(), ...getAllPosts()];
+  const allWorks = [...getAllContent(), ...getPosts()];
   const work = allWorks.find(w => w.id === workId);
   
   if (!work) {
