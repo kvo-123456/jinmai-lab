@@ -65,7 +65,7 @@ const EXPANDED_EXPLORE_SEEDS: Post[] = [
       shares: 0,
       isFeatured: false,
       isDraft: false,
-      completionStatus: 'completed',
+      completionStatus: 'completed' as const,
       creativeDirection: '',
       culturalElements: [],
       colorScheme: [],

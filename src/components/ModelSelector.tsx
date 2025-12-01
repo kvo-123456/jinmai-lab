@@ -495,7 +495,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
                 deepseek_model: 'deepseek-chat',
                 deepseek_base_url: 'https://api.deepseek.com'
               });
-            }},
+            }
             className={`px-5 py-2.5 rounded-lg transition-colors ${
               isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
             }`}
