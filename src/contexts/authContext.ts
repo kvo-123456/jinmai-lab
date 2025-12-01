@@ -1,5 +1,6 @@
 import React from "react";
 import { createContext, useState, ReactNode, useEffect } from "react";
+import { apiClient } from "@/lib/apiClient";
 
 // 用户类型定义
 export interface User {
@@ -44,21 +45,6 @@ export const AuthContext = createContext<AuthContextType>({
   updateUser: () => {},
 });
 
-// API请求工具函数
-async function apiRequest(url: string, method: string, data?: any) {
-  const response = await fetch(url, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-    },
-    body: data ? JSON.stringify(data) : undefined
-  });
-  
-  const result = await response.json();
-  return { response, result };
-}
-
 // AuthProvider 组件
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 从本地存储获取用户认证状态
@@ -78,9 +64,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const token = localStorage.getItem('token');
       if (token && !user) {
         try {
-          const { result } = await apiRequest('/api/auth/me', 'GET');
-          if (result.ok && result.user) {
-            setUser(result.user);
+          const response = await apiClient.get('/api/auth/me');
+          if (response.ok && response.data && response.data.user) {
+            setUser(response.data.user);
             setIsAuthenticated(true);
           } else {
             // 令牌无效，清除本地存储
@@ -105,19 +91,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 登录方法
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { result } = await apiRequest('/api/auth/login', 'POST', {
+      const response = await apiClient.post('/api/auth/login', {
         email,
         password
       });
       
-      if (result.ok && result.token && result.user) {
+      if (response.ok && response.data && response.data.token && response.data.user) {
         // 存储令牌和用户信息
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         
         // 更新状态
         setIsAuthenticated(true);
-        setUser(result.user);
+        setUser(response.data.user);
         
         return true;
       } else {
@@ -132,20 +118,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 注册方法
   const register = async (username: string, email: string, password: string): Promise<boolean> => {
     try {
-      const { result } = await apiRequest('/api/auth/register', 'POST', {
+      const response = await apiClient.post('/api/auth/register', {
         username,
         email,
         password
       });
       
-      if (result.ok && result.token && result.user) {
+      if (response.ok && response.data && response.data.token && response.data.user) {
         // 存储令牌和用户信息
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         
         // 更新状态
         setIsAuthenticated(true);
-        setUser(result.user);
+        setUser(response.data.user);
         
         return true;
       } else {
