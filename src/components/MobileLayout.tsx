@@ -268,4 +268,5 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
         </ul>
       </nav>
     </div>
-)
+  )
+}

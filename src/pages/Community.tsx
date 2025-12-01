@@ -3,6 +3,10 @@ import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import SidebarLayout from '@/components/SidebarLayout'
 import GradientHero from '@/components/GradientHero'
+import CommunityChat from '@/components/CommunityChat'
+import CommunityManagement from '@/components/CommunityManagement'
+import { DiscussionSection, CommunityDiscussion } from '@/components/DiscussionSection'
+import ScheduledPost from '@/components/ScheduledPost'
 import { useTheme } from '@/hooks/useTheme'
 import postsApi, { Post } from '@/services/postService'
 import { toast } from 'sonner'
@@ -1234,67 +1238,21 @@ export default function Community() {
         )}
         {/* 中文注释：社群列表 + 聊天双栏布局（仅在共创社群“进入的社群”标签显示；置于页面上方便于发现） */}
         {communityContext === 'cocreation' && communityTab === 'joined' && (
-        <motion.section
-          className={`mb-6 ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-md p-4`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-medium">社群列表与聊天</h3>
-            <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>快速交流</span>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1">
-              <div className="flex items-center gap-2 mb-2">
-                <input value={chatSearch} onChange={e => setChatSearch(e.target.value)} placeholder="搜索已加入社群..." className={`${isDark ? 'bg-gray-800 text-white ring-1 ring-gray-700' : 'bg-white text-gray-900 ring-1 ring-gray-300'} px-3 py-2 rounded-lg flex-1 focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-purple-500' : 'focus:ring-pink-300'}`} />
-              </div>
-              <ul className="space-y-2 max-h-[38vh] overflow-y-auto">
-                {chatJoinedList.length === 0 ? (
-                  <li className="text-sm opacity-60">暂无已加入社群</li>
-                ) : (
-                  chatJoinedList.map(c => (
-                    <li key={`chatlist-top-${c.id}`}>
-                      <button onClick={() => setActiveChatCommunityId(c.id)} className={`w-full text-left p-2 rounded-lg text-sm ring-1 ${activeChatCommunityId === c.id ? (isDark ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-indigo-600 text-white ring-indigo-600') : (isDark ? 'bg-gray-700 text-white ring-gray-700' : 'bg-gray-100 text-gray-900 ring-gray-200')}`}>
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium truncate mr-2">{c.name}</div>
-                          {pinnedJoined.includes(c.id) && (<span className={`text-[10px] px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-indigo-100 text-indigo-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-indigo-200'}`}>置顶</span>)}
-                          {mutedCommunities.includes(c.id) && (<span className={`text-[10px] px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>静音</span>)}
-                        </div>
-                        <div className={`text-xs opacity-70 mt-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{c.tags.slice(0,3).join(' · ')}</div>
-                      </button>
-                    </li>
-                  ))
-                )}
-              </ul>
-            </div>
-            <div className="lg:col-span-2">
-              {activeChatCommunityId ? (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-medium">{(joinedList.find(ci => ci.id === activeChatCommunityId)?.name) || '社群'}</div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => togglePinJoined(activeChatCommunityId)} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-indigo-100 text-indigo-700'} text-xs px-3 py-1 rounded-full`}>{pinnedJoined.includes(activeChatCommunityId) ? '取消置顶' : '置顶'}</button>
-                      <button onClick={() => toggleMuteCommunity(activeChatCommunityId)} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'} text-xs px-3 py-1 rounded-full`}>{mutedCommunities.includes(activeChatCommunityId) ? '取消静音' : '静音'}</button>
-                      <button onClick={() => toggleJoinCommunity(activeChatCommunityId)} className={`text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(activeChatCommunityId) ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900')}`}>{joinedCommunities.includes(activeChatCommunityId) ? '退出' : '加入'}</button>
-                    </div>
-                  </div>
-                  <DiscussionSection
-                    isDark={isDark}
-                    messages={communityMessages[activeChatCommunityId] || []}
-                    onSend={(t: string) => sendCommunityMessage(activeChatCommunityId, t)}
-                    canSend={joinedCommunities.includes(activeChatCommunityId)}
-                    showModeration={joinedCommunities.includes(activeChatCommunityId)}
-                    onDelete={(id: string) => deleteCommunityMessage(activeChatCommunityId, id)}
-                    onTogglePin={(id: string) => togglePinCommunityMessage(activeChatCommunityId, id)}
-                  />
-                </div>
-              ) : (
-                <div className="text-sm opacity-60">请选择左侧社群开始交流</div>
-              )}
-            </div>
-          </div>
-        </motion.section>
+          <CommunityChat
+            isDark={isDark}
+            joinedCommunities={joinedCommunities}
+            recommendedCommunities={recommendedCommunities}
+            userCommunities={userCommunities}
+            activeChatCommunityId={activeChatCommunityId}
+            onActiveChatCommunityChange={setActiveChatCommunityId}
+            pinnedJoined={pinnedJoined}
+            onTogglePinJoined={togglePinJoined}
+            mutedCommunities={mutedCommunities}
+            onToggleMuteCommunity={toggleMuteCommunity}
+            communityMessages={communityMessages}
+            onCommunityMessagesChange={setCommunityMessages}
+            mockCreators={mockCreators}
+          />
         )}
 
         {/* 中文注释：社群板块（推荐社群 / 我创建的社群 / 进入的社群），上下文配色区分 */}
@@ -1353,75 +1311,24 @@ export default function Community() {
             </div>
           )}
           {communityTab === 'user' && (
-            <div>
-              <div className={`${isDark ? 'bg-gray-700' : 'bg-white/70'} p-4 rounded-xl mb-4 ring-1 ${isDark ? 'ring-gray-700' : 'ring-rose-200'}`}>
-                <div className="text-sm opacity-70 mb-2">创建新社群</div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input value={newCommunityName} onChange={e => setNewCommunityName(e.target.value)} placeholder="社群名称" className={`${isDark ? 'bg-gray-800 text-white ring-1 ring-gray-700' : 'bg-white text-gray-900 ring-1 ring-gray-300'} px-3 py-2 rounded-lg focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-purple-500' : 'focus:ring-pink-300'}`} />
-                  <input value={newCommunityDesc} onChange={e => setNewCommunityDesc(e.target.value)} placeholder="社群简介" className={`${isDark ? 'bg-gray-800 text-white ring-1 ring-gray-700' : 'bg-white text-gray-900 ring-1 ring-gray-300'} px-3 py-2 rounded-lg focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-purple-500' : 'focus:ring-pink-300'}`} />
-                  <input value={newCommunityTags} onChange={e => setNewCommunityTags(e.target.value)} placeholder="标签（逗号分隔）" className={`${isDark ? 'bg-gray-800 text-white ring-1 ring-gray-700' : 'bg-white text-gray-900 ring-1 ring-gray-300'} px-3 py-2 rounded-lg focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-purple-500' : 'focus:ring-pink-300'}`} />
-                </div>
-                <div className="mt-3 flex justify-end">
-                  <button onClick={createCommunity} className="px-4 py-2 rounded-lg bg-gradient-to-r from-red-600 to-pink-600 text-white">创建</button>
-                </div>
-              </div>
-              {userCommunities.length === 0 ? (
-                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>暂无自建社群，快来创建吧～</div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {userCommunities.map(c => (
-                    <motion.div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white/80'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-rose-200'} rounded-xl overflow-hidden shadow-sm`} whileHover={{ y: -4 }}>
-                      <img src={c.cover} alt={c.name} className="w-full aspect-[4/3] object-cover" />
-                      <div className="p-4">
-                        <div className="font-medium mb-1 flex items-center gap-2">
-                          {c.name}
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-rose-100 text-rose-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-rose-200'}`}>个人</span>
-                        </div>
-                        <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{c.description}</div>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {c.tags.map((t, i) => (
-                            <span key={i} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>#{t}</span>
-                          ))}
-                        </div>
-                        {/* 中文注释：卡片信息条（成员数量与公告摘要） */}
-                        <div className={`text-xs opacity-70 mb-2 flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                          <span>成员 {(memberStore[c.id]?.length || 0) + 1}</span>
-                          <span>公告 {(announceStore[c.id] && announceStore[c.id]!.slice(0, 18)) || '暂无公告'}</span>
-                          <span className={`px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>{(privacyStore[c.id] || 'public') === 'private' ? '私密' : '公开'}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.members + (joinedCommunities.includes(c.id) ? 1 : 0)} 人加入</div>
-                          <button onClick={() => toggleJoinCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(c.id) ? 'bg-blue-600 text-white' : (isDark ? 'bg-gray-700 text-gray-200' : 'bg-rose-100 text-rose-700')}`}>{joinedCommunities.includes(c.id) ? '已加入' : '加入'}</button>
-                        </div>
-                        <div className="mt-3 flex justify-end">
-                          {editDraft?.id === c.id ? (
-                            <div className="w-full">
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-                                <input value={editDraft.name} onChange={e => setEditDraft({ ...editDraft!, name: e.target.value })} placeholder="社群名称" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} px-3 py-1 rounded`} />
-                                <input value={editDraft.desc} onChange={e => setEditDraft({ ...editDraft!, desc: e.target.value })} placeholder="社群简介" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} px-3 py-1 rounded`} />
-                                <input value={editDraft.tags} onChange={e => setEditDraft({ ...editDraft!, tags: e.target.value })} placeholder="标签（逗号分隔）" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} px-3 py-1 rounded`} />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <button onClick={saveEditCommunity} className="text-xs px-3 py-1 rounded-lg bg-purple-600 text-white">保存</button>
-                                <button onClick={cancelEditCommunity} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'} text-xs px-3 py-1 rounded-lg`}>取消</button>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-lg`}>查看详情</button>
-                              <button onClick={() => copyInviteLink(c.id)} className={`ml-2 text-xs px-3 py-1 rounded-lg ${isDark ? 'bg-gray-700 text-white' : 'bg-rose-100 text-rose-700'}`}>邀请链接</button>
-                              <button onClick={() => startEditCommunity(c)} className={`ml-2 text-xs px-3 py-1 rounded-lg ${isDark ? 'bg-gray-700 text-white' : 'bg-rose-100 text-rose-700'}`}>编辑</button>
-                              <button onClick={() => openManage(c.id)} className={`ml-2 text-xs px-3 py-1 rounded-lg ${isDark ? 'bg-purple-700 text-white' : 'bg-purple-600 text-white'}`}>管理</button>
-                              <button onClick={() => deleteCommunity(c.id)} className={`ml-2 text-xs px-3 py-1 rounded-lg ${isDark ? 'bg-red-700 text-white' : 'bg-red-100 text-red-700'}`}>删除</button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <CommunityManagement
+              isDark={isDark}
+              userCommunities={userCommunities}
+              onUserCommunitiesChange={setUserCommunities}
+              joinedCommunities={joinedCommunities}
+              onJoinedCommunitiesChange={setJoinedCommunities}
+              adminStore={adminStore}
+              onAdminStoreChange={setAdminStore}
+              memberStore={memberStore}
+              onMemberStoreChange={setMemberStore}
+              announceStore={announceStore}
+              onAnnounceStoreChange={setAnnounceStore}
+              privacyStore={privacyStore}
+              onPrivacyStoreChange={setPrivacyStore}
+              currentEmail={currentEmail}
+              communityTab={communityTab}
+              onCommunityTabChange={setCommunityTab}
+            />
           )}
           {communityTab === 'joined' && communityContext === 'cocreation' && (
             <div>
@@ -1632,206 +1539,67 @@ export default function Community() {
         </div>
         )}
 
-        {/* 中文注释：子社区切换与标签选择 */}
+        {/* 中文注释：社区讨论区（发帖+置顶+回复） */}
         {communityContext === 'cocreation' && (
-        <div className={`mb-6 rounded-2xl p-4 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 shadow-lg' : 'bg-white ring-1 ring-gray-200 shadow-lg'}`}>
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="text-sm opacity-70">子社区：</span>
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setMode('style')} className={`${mode==='style' ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900')} px-3 py-1 rounded-full text-sm transition-colors hover:opacity-90`}>风格</motion.button>
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setMode('topic')} className={`${mode==='topic' ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900')} px-3 py-1 rounded-full text-sm transition-colors hover:opacity-90`}>题材</motion.button>
-          </div>
-          {mode === 'style' ? (
-            <div className="flex flex-wrap gap-2">
-              {STYLE_LIST.map(s => {
-                const count = threads.filter(t => t.topic === s).length
-                return (
-                  <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} key={s} onClick={() => setSelectedStyle(s)} className={`${selectedStyle===s ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900')} px-3 py-1 rounded-full text-sm flex items-center gap-2 transition-colors hover:opacity-90`}>
-                    <span>{s}</span>
-                    <span className={`${selectedStyle===s ? 'bg-white text-red-600 ring-1 ring-red-200' : (isDark ? 'bg-gray-600 text-white ring-1 ring-gray-700' : 'bg-gray-300 text-gray-900 ring-1 ring-gray-300')} text-xs px-2 py-0.5 rounded-full`}>{count}</span>
-                  </motion.button>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {TOPIC_LIST.map(s => {
-                const count = threads.filter(t => t.topic === s).length
-                return (
-                  <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} key={s} onClick={() => setSelectedTopic(s)} className={`${selectedTopic===s ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900')} px-3 py-1 rounded-full text-sm flex items-center gap-2 transition-colors hover:opacity-90`}>
-                    <span>{s}</span>
-                    <span className={`${selectedTopic===s ? 'bg-white text-red-600 ring-1 ring-red-200' : (isDark ? 'bg-gray-600 text-white ring-1 ring-gray-700' : 'bg-gray-300 text-gray-900 ring-1 ring-gray-300')} text-xs px-2 py-0.5 rounded-full`}>{count}</span>
-                  </motion.button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-        )}
-
-        {/* 中文注释：话题热榜 */}
-        {communityContext === 'cocreation' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className={`rounded-2xl p-4 lg:col-span-1 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 shadow-lg' : 'bg-white ring-1 ring-gray-200 shadow-lg'}`}>
-            <div className="font-medium mb-3"><span className="flex items-center gap-2">🔥 话题热榜</span></div>
-            <ul>
-              {hotTopics.map(([t, score], i) => {
-                const maxHeat = hotTopics.length ? hotTopics[0][1] : 1
-                const pct = Math.max(6, Math.round((score / Math.max(1, maxHeat)) * 100))
-                return (
-                  <li key={t} className="py-1 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="mr-3">{i + 1}. {t}</span>
-                      <span className="opacity-70">{score}</span>
-                    </div>
-                    <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-200'} w-full h-2 rounded-full mt-1`}>
-                      <div style={{ width: `${pct}%` }} className={`h-2 rounded-full ${isDark ? 'bg-red-500' : 'bg-red-600'} transition-all duration-300`}></div>
-                    </div>
-                  </li>
-                )
-              })}
-              {hotTopics.length === 0 && (
-                <li className="text-sm opacity-60">暂无数据</li>
-              )}
-            </ul>
-          </div>
-
-          {/* 中文注释：社区讨论区（发帖+置顶+回复） */}
-          <div className={`rounded-2xl p-4 lg:col-span-2 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 shadow-lg' : 'bg-white ring-1 ring-gray-200 shadow-lg'}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="font-medium">{mode === 'style' ? selectedStyle : selectedTopic} 子社区讨论</div>
-              <div className="flex items-center gap-2">
-                <input value={threadSearch} onChange={e => setThreadSearch(e.target.value)} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'} px-3 py-1 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`} placeholder="搜索讨论" aria-label="搜索讨论" />
-                <select value={threadSort} onChange={e => setThreadSort(e.target.value as any)} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'} px-3 py-1 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`}>
-                  <option value="new">最新</option>
-                  <option value="reply">最多回复</option>
-                  <option value="hot">热度</option>
-                </select>
-                <button onClick={() => setFavOnly(f => !f)} className={`${favOnly ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900')} px-3 py-1 rounded-lg text-sm transition-colors`}>{favOnly ? '只看收藏' : '全部'}</button>
-                <button onClick={() => insertRandomIdea()} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'} px-3 py-1 rounded-lg text-sm transition-colors`}>随机灵感</button>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              <input value={newTitle} onChange={e => setNewTitle(e.target.value)} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'} px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`} placeholder="帖子标题（如：京剧角色设计打磨建议）" aria-label="帖子标题" />
-              <button onClick={submitThread} disabled={!newTitle.trim() || !newContent.trim()} aria-disabled={!newTitle.trim() || !newContent.trim()} className={`px-3 py-2 rounded-lg transition-colors ${(!newTitle.trim() || !newContent.trim()) ? (isDark ? 'bg-gray-600 text-gray-300' : 'bg-gray-300 text-gray-600') : 'bg-red-600 text-white hover:bg-red-700 shadow-sm'}`}>发布新帖</button>
-            </div>
-            {threadDraft && (threadDraft.title || threadDraft.content) && (
-              <div className="flex items-center justify-between mb-2">
-                <div className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs`}>检测到草稿，可恢复上一编辑</div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => { setNewTitle(threadDraft.title || ''); setNewContent(threadDraft.content || ''); if (threadDraft.mode) { setMode(threadDraft.mode); if (threadDraft.mode === 'style' && threadDraft.selected) setSelectedStyle(threadDraft.selected); if (threadDraft.mode === 'topic' && threadDraft.selected) setSelectedTopic(threadDraft.selected); } }} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>恢复草稿</button>
-                  <button onClick={() => { setThreadDraft(null); try { localStorage.removeItem(THREAD_DRAFT_KEY) } catch {} }} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>清除草稿</button>
-                </div>
-              </div>
-            )}
-            <textarea value={newContent} onChange={e => setNewContent(e.target.value)} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'} w-full h-24 px-3 py-2 rounded-lg border mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`} placeholder="详细内容" />
-
-            <div className="space-y-3">
-              {threads
-                .filter(t => (mode === 'style' ? t.topic === selectedStyle : t.topic === selectedTopic))
-                .filter(t => favOnly ? favoriteThreads.includes(t.id) : true)
-                .filter(t => debouncedThreadSearch ? (t.title.includes(debouncedThreadSearch) || t.content.includes(debouncedThreadSearch)) : true)
-                .sort((a, b) => {
-                  const pinDiff = Number(b.pinned) - Number(a.pinned)
-                  if (pinDiff !== 0) return pinDiff
-                  if (threadSort === 'new') return b.createdAt - a.createdAt
-                  if (threadSort === 'reply') return (b.replies.length) - (a.replies.length)
-                  return ((b.upvotes || 0) + b.replies.length) - ((a.upvotes || 0) + a.replies.length)
-                })
-                .map(t => (
-                  <motion.div key={t.id} whileHover={{ y: -2 }} className={`${isDark ? 'bg-gray-700 ring-1 ring-gray-700' : 'bg-gray-50 ring-1 ring-gray-200'} rounded-xl p-4`}>
-                    <div className="flex justify-between items-center">
-                      <div className="font-medium">
-                        {t.title}
-                        {t.pinned && <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-600 text-white">置顶</span>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => upvote(t.id)} aria-label="点赞帖子" className="px-3 py-1 rounded-lg text-xs bg-red-600 text-white hover:bg-red-700 transition-colors">点赞 {t.upvotes || 0}</button>
-                        <button onClick={() => toggleFavoriteThread(t.id)} aria-label="收藏帖子" className={`${favoriteThreads.includes(t.id) ? 'bg-blue-600 text-white' : (isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900')} px-3 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>{favoriteThreads.includes(t.id) ? '已收藏' : '收藏'}</button>
-                        <button onClick={() => convertToSquarePost(t)} aria-label="转为作品" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>转为作品</button>
-                        <button onClick={() => togglePin(t.id)} aria-label={t.pinned ? '取消置顶' : '置顶'} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>{t.pinned ? '取消置顶' : '置顶'}</button>
-                        <button onClick={() => removeThread(t.id)} aria-label="删除帖子" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>删除</button>
-                      </div>
-                    </div>
-                    <div className="text-sm opacity-80 mt-1">{t.content}</div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <input value={replyText[t.id] || ''} onChange={e => setReplyText(prev => ({ ...prev, [t.id]: e.target.value }))} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addReply(t.id) } }} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} flex-1 px-3 py-1 rounded-lg border focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`} placeholder="回复内容" aria-label="回复内容" />
-                      <button onClick={() => addReply(t.id)} aria-label="添加回复" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} px-3 py-1 rounded-lg text-xs hover:opacity-90 transition-colors`}>回复</button>
-                    </div>
-                    {t.replies.length > 0 && (
-                      <div className="mt-3 text-sm">
-                        {t.replies.map(r => (
-                          <div key={r.id} className={`${isDark ? 'border-gray-700' : 'border-gray-200'} border-t py-2 flex items-center justify-between`}>
-                            <span>{r.content}</span>
-                            <button onClick={() => removeReply(t.id, r.id)} aria-label="删除回复" className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-2 py-0.5 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>删除</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
-              {threads.filter(t => (mode === 'style' ? t.topic === selectedStyle : t.topic === selectedTopic)).length === 0 && (
-                <div className="text-sm opacity-60">暂无讨论，发布第一条吧～</div>
-              )}
-            </div>
-          </div>
-        </div>
+          <CommunityDiscussion
+            isDark={isDark}
+            threads={threads}
+            onThreadsChange={setThreads}
+            mode={mode}
+            selectedStyle={selectedStyle}
+            selectedTopic={selectedTopic}
+            newTitle={newTitle}
+            onNewTitleChange={setNewTitle}
+            newContent={newContent}
+            onNewContentChange={setNewContent}
+            threadSearch={threadSearch}
+            onThreadSearchChange={setThreadSearch}
+            threadSort={threadSort}
+            onThreadSortChange={setThreadSort}
+            favOnly={favOnly}
+            onFavOnlyChange={setFavOnly}
+            favoriteThreads={favoriteThreads}
+            onFavoriteThreadsChange={setFavoriteThreads}
+            replyText={replyText}
+            onReplyTextChange={setReplyText}
+            threadDraft={threadDraft}
+            onThreadDraftChange={setThreadDraft}
+            hotTopics={hotTopics}
+            STYLE_LIST={STYLE_LIST}
+            TOPIC_LIST={TOPIC_LIST}
+            onModeChange={setMode}
+            onSelectedStyleChange={setSelectedStyle}
+            onSelectedTopicChange={setSelectedTopic}
+            onInsertRandomIdea={insertRandomIdea}
+            upvoteGuard={upvoteGuard}
+            onUpvoteGuardChange={setUpvoteGuard}
+          />
         )}
 
         {/* 中文注释：运营工具（公告、定时发布） */}
         {communityContext === 'cocreation' && (
-        <div className={`mb-6 rounded-2xl p-4 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 shadow-lg' : 'bg-white ring-1 ring-gray-200 shadow-lg'}`}>
-          <div className="font-medium mb-3"><span className="flex items-center gap-2">🛠️ 话题运营工具</span></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className={`${isDark ? 'bg-gray-700 ring-1 ring-gray-700' : 'bg-gray-50 ring-1 ring-gray-200'} rounded-xl p-4`}>
-              <div className="font-medium mb-2"><span className="flex items-center gap-2">⏰ 创建定时发布</span></div>
-              <input value={scheduledTitle} onChange={e => setScheduledTitle(e.target.value)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} w-full px-3 py-2 rounded-lg border mb-2 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`} placeholder="标题" />
-              <textarea value={scheduledContent} onChange={e => setScheduledContent(e.target.value)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} w-full h-20 px-3 py-2 rounded-lg border mb-2 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`} placeholder="内容" />
-              <input type="datetime-local" value={scheduledTime} onChange={e => setScheduledTime(e.target.value)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} w-full px-3 py-2 rounded-lg border mb-2 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors`} />
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs opacity-70">目标子社区：</span>
-                <select value={mode} onChange={e => setMode(e.target.value as any)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg border text-xs`}>
-                  <option value="style">风格</option>
-                  <option value="topic">题材</option>
-                </select>
-                {mode === 'style' ? (
-                  <select value={selectedStyle} onChange={e => setSelectedStyle(e.target.value)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg border text-xs`}>
-                    {STYLE_LIST.map(s => (<option key={s} value={s}>{s}</option>))}
-                  </select>
-                ) : (
-                  <select value={selectedTopic} onChange={e => setSelectedTopic(e.target.value)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg border text-xs`}>
-                    {TOPIC_LIST.map(s => (<option key={s} value={s}>{s}</option>))}
-                  </select>
-                )}
-              </div>
-              <button onClick={schedulePost} className="bg-red-600 text-white px-3 py-2 rounded-lg w-full hover:bg-red-700 transition-colors shadow-sm">添加到定时</button>
-            </div>
-            <div className={`${isDark ? 'bg-gray-700 ring-1 ring-gray-700' : 'bg-gray-50 ring-1 ring-gray-200'} rounded-xl p-4 md:col-span-2`}>
-              <div className="font-medium mb-2">定时任务列表</div>
-              <ul className="space-y-2">
-                {scheduled.map(it => (
-                  <li key={it.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-3 flex items-center justify-between ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>
-                    <div>
-                      <div className="font-medium text-sm flex items-center gap-2">
-                        <span>{it.title}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${it.published ? 'bg-green-600 text-white' : 'bg-yellow-500 text-white'}`}>{it.published ? '已发布' : '待发布'}</span>
-                      </div>
-                      <div className="text-xs opacity-70">
-                        {new Date(it.time).toLocaleString()} • 倒计时 {formatRemain(it.time - now)} • 目标 {it.targetValue}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => publishScheduled(it.id)} disabled={it.published} aria-disabled={it.published} className={`${it.published ? (isDark ? 'bg-gray-600 text-gray-300' : 'bg-gray-300 text-gray-600') : 'bg-red-600 text-white hover:bg-red-700'} px-3 py-1 rounded-lg text-xs transition-colors`}>立即发布</button>
-                      <button onClick={() => removeScheduled(it.id)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} px-3 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>删除</button>
-                    </div>
-                  </li>
-                ))}
-                {scheduled.length === 0 && (
-                  <li className="text-sm opacity-60 rounded-lg border-2 border-dashed p-4 text-center">暂无定时任务</li>
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
+          <ScheduledPost
+            isDark={isDark}
+            scheduled={scheduled}
+            onScheduledChange={setScheduled}
+            scheduledTitle={scheduledTitle}
+            onScheduledTitleChange={setScheduledTitle}
+            scheduledContent={scheduledContent}
+            onScheduledContentChange={setScheduledContent}
+            scheduledTime={scheduledTime}
+            onScheduledTimeChange={setScheduledTime}
+            mode={mode}
+            onModeChange={setMode}
+            selectedStyle={selectedStyle}
+            onSelectedStyleChange={setSelectedStyle}
+            selectedTopic={selectedTopic}
+            onSelectedTopicChange={setSelectedTopic}
+            STYLE_LIST={STYLE_LIST}
+            TOPIC_LIST={TOPIC_LIST}
+            now={now}
+            threads={threads}
+            onThreadsChange={setThreads}
+          />
         )}
 
         {/* 中文注释：当前子社区相关作品（从本地帖子抽取） */}

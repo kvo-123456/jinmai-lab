@@ -28,6 +28,7 @@ export interface Post {
   date: string;
   author?: string;
   isLiked?: boolean;
+  isBookmarked?: boolean;
   // 作品集扩展字段
   category: PostCategory;
   tags: string[];
@@ -48,6 +49,8 @@ export interface Post {
 }
 
 const KEY = 'jmzf_posts';
+const USER_BOOKMARKS_KEY = 'jmzf_user_bookmarks';
+const USER_LIKES_KEY = 'jmzf_user_likes';
 
 /**
  * 获取所有帖子
@@ -60,13 +63,14 @@ export function getPosts(): Post[] {
 /**
  * 添加作品
  */
-export function addPost(p: Omit<Post, 'id' | 'likes' | 'comments' | 'date' | 'isLiked' | 'views' | 'shares' | 'isFeatured' | 'isDraft' | 'completionStatus'>): Post {
+export function addPost(p: Omit<Post, 'id' | 'likes' | 'comments' | 'date' | 'isLiked' | 'isBookmarked' | 'views' | 'shares' | 'isFeatured' | 'isDraft' | 'completionStatus'>): Post {
   const post: Post = {
     id: `p-${Date.now()}`,
     likes: 0,
     comments: [],
     date: new Date().toISOString().slice(0, 10),
     isLiked: false,
+    isBookmarked: false,
     views: 0,
     shares: 0,
     isFeatured: false,
@@ -89,6 +93,14 @@ export function likePost(id: string): Post | undefined {
   if (idx >= 0) {
     posts[idx].likes += 1;
     posts[idx].isLiked = true;
+    
+    // 更新用户点赞记录
+    const userLikes = getUserLikes();
+    if (!userLikes.includes(id)) {
+      userLikes.push(id);
+      localStorage.setItem(USER_LIKES_KEY, JSON.stringify(userLikes));
+    }
+    
     localStorage.setItem(KEY, JSON.stringify(posts));
     return posts[idx];
   }
@@ -101,13 +113,95 @@ export function likePost(id: string): Post | undefined {
 export function unlikePost(id: string): Post | undefined {
   const posts = getPosts();
   const idx = posts.findIndex(p => p.id === id);
-  if (idx >= 0 && posts[idx].likes > 0) {
-    posts[idx].likes -= 1;
+  if (idx >= 0) {
+    posts[idx].likes = Math.max(0, posts[idx].likes - 1);
     posts[idx].isLiked = false;
+    
+    // 更新用户点赞记录
+    const userLikes = getUserLikes();
+    const updatedLikes = userLikes.filter(postId => postId !== id);
+    localStorage.setItem(USER_LIKES_KEY, JSON.stringify(updatedLikes));
+    
     localStorage.setItem(KEY, JSON.stringify(posts));
     return posts[idx];
   }
   return undefined;
+}
+
+/**
+ * 收藏帖子
+ */
+export function bookmarkPost(id: string): Post | undefined {
+  const posts = getPosts();
+  const idx = posts.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    posts[idx].isBookmarked = true;
+    
+    // 更新用户收藏记录
+    const userBookmarks = getUserBookmarks();
+    if (!userBookmarks.includes(id)) {
+      userBookmarks.push(id);
+      localStorage.setItem(USER_BOOKMARKS_KEY, JSON.stringify(userBookmarks));
+    }
+    
+    localStorage.setItem(KEY, JSON.stringify(posts));
+    return posts[idx];
+  }
+  return undefined;
+}
+
+/**
+ * 取消收藏帖子
+ */
+export function unbookmarkPost(id: string): Post | undefined {
+  const posts = getPosts();
+  const idx = posts.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    posts[idx].isBookmarked = false;
+    
+    // 更新用户收藏记录
+    const userBookmarks = getUserBookmarks();
+    const updatedBookmarks = userBookmarks.filter(postId => postId !== id);
+    localStorage.setItem(USER_BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
+    
+    localStorage.setItem(KEY, JSON.stringify(posts));
+    return posts[idx];
+  }
+  return undefined;
+}
+
+/**
+ * 获取用户收藏的帖子ID列表
+ */
+export function getUserBookmarks(): string[] {
+  const raw = localStorage.getItem(USER_BOOKMARKS_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+/**
+ * 获取用户点赞的帖子ID列表
+ */
+export function getUserLikes(): string[] {
+  const raw = localStorage.getItem(USER_LIKES_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+/**
+ * 获取用户收藏的帖子
+ */
+export function getBookmarkedPosts(): Post[] {
+  const posts = getPosts();
+  const bookmarkedIds = getUserBookmarks();
+  return posts.filter(post => bookmarkedIds.includes(post.id));
+}
+
+/**
+ * 获取用户点赞的帖子
+ */
+export function getLikedPosts(): Post[] {
+  const posts = getPosts();
+  const likedIds = getUserLikes();
+  return posts.filter(post => likedIds.includes(post.id));
 }
 
 /**
@@ -260,6 +354,10 @@ export default {
   addPost,
   likePost,
   unlikePost,
+  bookmarkPost,
+  unbookmarkPost,
+  getBookmarkedPosts,
+  getLikedPosts,
   addComment,
   likeComment,
   unlikeComment,

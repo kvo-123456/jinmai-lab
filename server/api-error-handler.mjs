@@ -226,12 +226,15 @@ export function sendErrorResponse(res, errorCode, options = {}) {
 export function sendSuccessResponse(res, data = null, options = {}) {
   const { statusCode = 200, message, requestId } = options;
   
+  // 生成或使用提供的请求ID
+  const finalRequestId = requestId || generateRequestId();
+  
   // 构建成功响应
   const successResponse = {
     ok: true,
     ...(message && { message }),
     ...(data !== null && { data }),
-    ...(requestId && { requestId })
+    requestId: finalRequestId
   };
   
   // 发送响应
@@ -245,17 +248,58 @@ export function sendSuccessResponse(res, data = null, options = {}) {
  */
 export function withErrorHandling(handler) {
   return async (req, res) => {
+    // 生成请求ID
+    const requestId = generateRequestId();
+    
+    // 将请求ID添加到响应头
+    res.setHeader('X-Request-ID', requestId);
+    
     try {
       // 调用原始处理函数
       await handler(req, res);
     } catch (error) {
-      console.error('API错误:', error);
-      console.error('错误详情:', { message: error.message, stack: error.stack });
+      // 收集错误上下文信息
+      const errorContext = {
+        request: {
+          method: req.method,
+          url: req.url,
+          headers: {
+            // 只包含安全的头信息
+            'user-agent': req.headers['user-agent'],
+            'accept-language': req.headers['accept-language'],
+            'content-type': req.headers['content-type']
+          },
+          // 只在开发环境中包含请求体，避免敏感信息泄露
+          ...(process.env.NODE_ENV === 'development' && req.body && { body: req.body })
+        },
+        environment: {
+          nodeEnv: process.env.NODE_ENV,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      // 记录详细的错误日志
+      console.error('API错误:', {
+        requestId,
+        error: {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+          code: error.code
+        },
+        context: errorContext
+      });
       
       // 发送统一格式的错误响应
       sendErrorResponse(res, API_ERRORS.SERVER_ERROR, {
         message: process.env.NODE_ENV === 'production' ? ERROR_MESSAGES[API_ERRORS.SERVER_ERROR] : error.message,
-        data: process.env.NODE_ENV === 'development' ? { stack: error.stack } : undefined
+        data: process.env.NODE_ENV === 'development' ? {
+          stack: error.stack,
+          name: error.name,
+          code: error.code
+        } : undefined,
+        requestId,
+        context: process.env.NODE_ENV === 'development' ? errorContext : undefined
       });
     }
   };

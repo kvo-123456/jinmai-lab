@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useState, useEffect } from 'react'
 import Home from "@/pages/Home";
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
@@ -25,6 +25,7 @@ const Wizard = lazy(() => import("@/pages/Wizard"));
 const Neo = lazy(() => import("@/pages/Neo"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
+const UserCollection = lazy(() => import("@/pages/UserCollection"));
 import PrivateRoute from "@/components/PrivateRoute";
 import AdminRoute from "@/components/AdminRoute";
 const CulturalKnowledge = lazy(() => import("@/pages/CulturalKnowledge"));
@@ -37,14 +38,48 @@ const AchievementMuseum = lazy(() => import("@/components/AchievementMuseum"));
 const Drafts = lazy(() => import("@/pages/Drafts"));
 const Lab = lazy(() => import("@/pages/Lab"));
 const BlindBoxShop = lazy(() => import("@/components/BlindBoxShop"));
+import SidebarLayout from '@/components/SidebarLayout';
+import MobileLayout from '@/components/MobileLayout';
 
 export default function App() {
+  // 添加响应式布局状态
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // 监听窗口大小变化
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // 初始化检查
+    checkIsMobile();
+    
+    // 添加 resize 事件监听
+    window.addEventListener('resize', checkIsMobile);
+    
+    // 清理事件监听
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  // 布局组件包装器
+  const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
+    return isMobile ? (
+      <MobileLayout>{children}</MobileLayout>
+    ) : (
+      <SidebarLayout>{children}</SidebarLayout>
+    );
+  };
+
   return (
     <Suspense fallback={<div className="p-4">加载中...</div>}>
       <Routes>
+        {/* 不需要布局的页面 */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        {/* 使用布局的页面 */}
+        <Route element={<LayoutWrapper />}>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/explore/:id" element={<WorkDetail />} />
           <Route path="/tools" element={<Tools />} />
@@ -87,6 +122,11 @@ export default function App() {
           <Route 
             path="/analytics" 
             element={<PrivateRoute component={Analytics} />} 
+          />
+          
+          <Route 
+            path="/collection" 
+            element={<PrivateRoute component={UserCollection} />} 
           />
           
           <Route 
@@ -149,6 +189,7 @@ export default function App() {
             path="/admin-analytics" 
             element={<AdminRoute component={AdminAnalytics} />} 
           />
+        </Route>
       </Routes>
     </Suspense>
   );

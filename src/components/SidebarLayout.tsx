@@ -427,6 +427,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
           />
         )}
       </aside>
+      )}
       {/* 移动端遮罩层 */}
       {!collapsed && !isMobile && (
         <div
@@ -663,6 +664,9 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
                       <ul className="py-1">
                         <li>
                           <button className={`w-full text-left px-4 py-2 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`} onClick={() => { setShowUserMenu(false); navigate('/dashboard') }}>个人中心</button>
+                        </li>
+                        <li>
+                          <button className={`w-full text-left px-4 py-2 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`} onClick={() => { setShowUserMenu(false); navigate('/collection') }}>我的收藏</button>
                         </li>
                         <li>
                           <button className={`w-full text-left px-4 py-2 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`} onClick={() => { setShowUserMenu(false); navigate('/drafts') }}>草稿箱</button>

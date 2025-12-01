@@ -312,6 +312,157 @@ class ErrorService {
     return this.logger.getErrorStats(recentCount);
   }
 
+  /**
+   * 获取错误分类统计
+   * @param timeRange 时间范围（毫秒），默认24小时
+   */
+  getErrorCategoryStats(timeRange: number = 24 * 60 * 60 * 1000) {
+    const allErrors = this.logger.getAllErrors();
+    const cutoffTime = Date.now() - timeRange;
+    const recentErrors = allErrors.filter(error => error.timestamp >= cutoffTime);
+    
+    // 按错误类型分类
+    const categoryStats = recentErrors.reduce((stats, error) => {
+      if (stats[error.errorType]) {
+        stats[error.errorType]++;
+      } else {
+        stats[error.errorType] = 1;
+      }
+      return stats;
+    }, {} as Record<string, number>);
+    
+    // 按设备类型分类
+    const deviceStats = recentErrors.reduce((stats, error) => {
+      const deviceType = error.deviceInfo.device;
+      if (stats[deviceType]) {
+        stats[deviceType]++;
+      } else {
+        stats[deviceType] = 1;
+      }
+      return stats;
+    }, {} as Record<string, number>);
+    
+    // 按浏览器分类
+    const browserStats = recentErrors.reduce((stats, error) => {
+      const browser = `${error.deviceInfo.browser} v${error.deviceInfo.browserVersion}`;
+      if (stats[browser]) {
+        stats[browser]++;
+      } else {
+        stats[browser] = 1;
+      }
+      return stats;
+    }, {} as Record<string, number>);
+    
+    // 按操作系统分类
+    const osStats = recentErrors.reduce((stats, error) => {
+      const os = error.deviceInfo.os;
+      if (stats[os]) {
+        stats[os]++;
+      } else {
+        stats[os] = 1;
+      }
+      return stats;
+    }, {} as Record<string, number>);
+    
+    return {
+      total: recentErrors.length,
+      byCategory: categoryStats,
+      byDevice: deviceStats,
+      byBrowser: browserStats,
+      byOS: osStats,
+      timeRange,
+      cutoffTime
+    };
+  }
+
+  /**
+   * 获取错误趋势统计
+   * @param interval 时间间隔（毫秒），默认1小时
+   * @param timeRange 时间范围（毫秒），默认24小时
+   */
+  getErrorTrendStats(interval: number = 60 * 60 * 1000, timeRange: number = 24 * 60 * 60 * 1000) {
+    const allErrors = this.logger.getAllErrors();
+    const cutoffTime = Date.now() - timeRange;
+    const recentErrors = allErrors.filter(error => error.timestamp >= cutoffTime);
+    
+    // 按时间间隔分组
+    const trendStats = recentErrors.reduce((stats, error) => {
+      const intervalKey = Math.floor(error.timestamp / interval) * interval;
+      if (stats[intervalKey]) {
+        stats[intervalKey]++;
+      } else {
+        stats[intervalKey] = 1;
+      }
+      return stats;
+    }, {} as Record<number, number>);
+    
+    // 转换为数组格式，便于图表展示
+    const trendArray = Object.entries(trendStats)
+      .map(([timestamp, count]) => ({
+        timestamp: parseInt(timestamp),
+        count
+      }))
+      .sort((a, b) => a.timestamp - b.timestamp);
+    
+    return {
+      trend: trendArray,
+      interval,
+      timeRange,
+      cutoffTime
+    };
+  }
+
+  /**
+   * 上报错误到远程服务器
+   * @param errorInfo 错误信息
+   * @returns Promise<boolean> 上报是否成功
+   */
+  async reportErrorToServer(errorInfo: ErrorInfo): Promise<boolean> {
+    try {
+      // 检查是否配置了错误上报URL
+      const reportUrl = process.env.REACT_APP_ERROR_REPORT_URL || process.env.NEXT_PUBLIC_ERROR_REPORT_URL;
+      if (!reportUrl) {
+        console.warn('错误上报URL未配置，跳过上报');
+        return false;
+      }
+      
+      // 发送错误报告
+      const response = await fetch(reportUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(errorInfo),
+        keepalive: true // 允许在页面卸载时继续发送请求
+      });
+      
+      return response.ok;
+    } catch (error) {
+      console.error('错误上报失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 批量上报错误到远程服务器
+   * @param limit 批量上报的最大数量
+   * @returns Promise<number> 成功上报的错误数量
+   */
+  async batchReportErrors(limit: number = 10): Promise<number> {
+    const stats = this.getErrorStats();
+    const errorsToReport = stats.recent.slice(0, limit);
+    
+    let successCount = 0;
+    for (const error of errorsToReport) {
+      const success = await this.reportErrorToServer(error);
+      if (success) {
+        successCount++;
+      }
+    }
+    
+    return successCount;
+  }
+
   clearErrors() {
     this.logger.clearErrors();
   }

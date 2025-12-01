@@ -7,8 +7,6 @@ import { AuthContext } from '@/contexts/authContext';
 import { useContext } from 'react';
 import { toast } from 'sonner';
 import { YangliuqingCard, TianjinImage } from '@/components/TianjinStyleComponents';
-import SidebarLayout from '@/components/SidebarLayout'
-import MobileLayout from '@/components/MobileLayout'
 import llmService from '@/services/llmService'
 import voiceService from '@/services/voiceService'
 import { markPrefetched, isPrefetched } from '@/services/prefetch'
@@ -724,16 +722,5 @@ export default function Home() {
     </motion.section>
   );
   
-  return (
-    isMobile ? (
-      <MobileLayout>
-        {renderContent()}
-      </MobileLayout>
-    ) : (
-      <SidebarLayout>
-        {renderContent()}
-        <Footer variant="full" />
-      </SidebarLayout>
-    )
-  );
+  return renderContent();
 }

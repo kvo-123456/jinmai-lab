@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import { motion } from 'framer-motion'
 import SidebarLayout from '@/components/SidebarLayout'
 import { useNavigate, useParams } from 'react-router-dom'
 import { mockWorks } from '@/pages/Explore'
 import ARPreview, { ARPreviewConfig } from '@/components/ARPreview'
+import postsApi from '@/services/postService'
 
 export default function WorkDetail() {
   const { isDark } = useTheme()
@@ -22,13 +23,42 @@ export default function WorkDetail() {
     return mockWorks.filter(w => w.category === work.category && w.id !== work.id).slice(0, 6)
   }, [work])
 
+  // 初始化作品的点赞和收藏状态
+  useEffect(() => {
+    if (work) {
+      // 这里应该从postService获取作品的实际状态
+      // 由于当前使用的是mock数据，我们暂时使用本地状态
+      // 实际项目中应该调用API获取作品详情
+      setLikes(work.likes)
+      setLiked(false)
+      setBookmarked(false)
+    }
+  }, [work])
+
   const handleLike = () => {
-    if (!liked) { setLikes(likes + 1) } else { setLikes(Math.max(0, likes - 1)) }
-    setLiked(!liked)
+    if (work) {
+      const stringId = work.id.toString()
+      if (!liked) {
+        postsApi.likePost(stringId)
+        setLikes(likes + 1)
+      } else {
+        postsApi.unlikePost(stringId)
+        setLikes(Math.max(0, likes - 1))
+      }
+      setLiked(!liked)
+    }
   }
 
   const handleBookmark = () => {
-    setBookmarked(!bookmarked)
+    if (work) {
+      const stringId = work.id.toString()
+      if (!bookmarked) {
+        postsApi.bookmarkPost(stringId)
+      } else {
+        postsApi.unbookmarkPost(stringId)
+      }
+      setBookmarked(!bookmarked)
+    }
   }
 
   if (!work) {
