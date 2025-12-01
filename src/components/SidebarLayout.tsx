@@ -16,8 +16,6 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
-  // 中文注释：滚动隐藏底部导航，提高内容可见面积（仅移动端）
-  const [showMobileNav, setShowMobileNav] = useState(true)
   const [width, setWidth] = useState<number>(() => {
     const saved = localStorage.getItem('sidebarWidth')
     // 中文注释：默认侧边栏更窄（180px），并将可拖拽的最小宽度下调到 180px
@@ -48,7 +46,6 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
     type?: 'info' | 'success' | 'warning'
   }
   const [showNotifications, setShowNotifications] = useState(false)
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
   // 中文注释：滚动超过一定距离后显示“回到顶部”悬浮按钮，提升长页可用性
   const [showBackToTop, setShowBackToTop] = useState(false)
   // 中文注释：快捷键提示弹层（提高功能可发现性）
@@ -56,24 +53,6 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const shortcutsRef = useRef<HTMLDivElement | null>(null)
   // 中文注释：问题反馈弹层显示状态
   const [showFeedback, setShowFeedback] = useState(false)
-  // 中文注释：检测是否为移动端
-  const [isMobile, setIsMobile] = useState(false)
-  
-  // 监听窗口大小变化，检测是否为移动端
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    
-    // 初始化检查
-    checkIsMobile()
-    
-    // 添加 resize 事件监听
-    window.addEventListener('resize', checkIsMobile)
-    
-    // 清理事件监听
-    return () => window.removeEventListener('resize', checkIsMobile)
-  }, [])
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (!shortcutsRef.current) return
@@ -248,16 +227,10 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [toggleTheme])
 
-  // 中文注释：监听滚动方向，向下滚动时隐藏底部导航，向上滚动或靠近顶部时显示
+  // 中文注释：当滚动距离超过 480px 时展示“回到顶部”按钮
   useEffect(() => {
-    let lastY = window.scrollY
     const onScroll = () => {
       const y = window.scrollY
-      const delta = y - lastY
-      lastY = y
-      if (Math.abs(delta) < 6) return
-      setShowMobileNav(delta <= 0 || y < 80)
-      // 中文注释：当滚动距离超过 480px 时展示“回到顶部”按钮
       setShowBackToTop(y > 480)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -324,11 +297,10 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-[#0b0e13] via-[#0e1218] to-[#0b0e13] text-gray-100' : theme === 'pink' ? 'bg-gradient-to-br from-[#fff0f5] via-[#ffe4ec] to-[#fff0f5] text-gray-900' : 'bg-white text-gray-900'}`}> 
       {/* 仅在桌面端显示侧边栏 */}
-      {!isMobile && (
-        <aside 
-          className={`${isDark ? 'bg-[#10151d]/95 backdrop-blur-sm border-gray-800' : theme === 'pink' ? 'bg-white/90 backdrop-blur-sm border-pink-200' : 'bg-white border-gray-200'} border-r relative ring-1 ${isDark ? 'ring-gray-800' : theme === 'pink' ? 'ring-pink-200' : 'ring-gray-200'}`} 
-          style={{ width: collapsed ? 72 : width }}
-        >
+      <aside 
+        className={`${isDark ? 'bg-[#10151d]/95 backdrop-blur-sm border-gray-800' : theme === 'pink' ? 'bg-white/90 backdrop-blur-sm border-pink-200' : 'bg-white border-gray-200'} border-r relative ring-1 ${isDark ? 'ring-gray-800' : theme === 'pink' ? 'ring-pink-200' : 'ring-gray-200'}`} 
+        style={{ width: collapsed ? 72 : width }}
+      >
         <div className={`px-4 py-3 flex items-center justify-between rounded-lg transition-colors group ${isDark ? 'hover:bg-gray-800/60' : theme === 'pink' ? 'hover:bg-pink-50' : 'hover:bg-gray-50'}`}>
           <div className="flex items-center space-x-2">
             <span className={`font-extrabold bg-gradient-to-r ${isDark ? 'from-red-400 to-rose-500' : 'from-red-600 to-rose-500'} bg-clip-text text-transparent tracking-tight`}>津脉</span>
@@ -427,21 +399,10 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
           />
         )}
       </aside>
-      )}
-      {/* 移动端遮罩层 */}
-      {!collapsed && !isMobile && (
-        <div
-          onClick={() => setCollapsed(true)}
-          className="fixed inset-0 bg-black/30 md:hidden"
-          aria-hidden="true"
-        />
-      )}
-      {/* 中文注释：为移动端底部导航预留更大安全区（包含中心悬浮按钮），支持 iOS 刘海屏 */}
+      {/* 中文注释：当用户点击右侧内容区域时，自动收起左侧导航栏，减少视觉占用、聚焦内容 */}
       <div 
         className="flex-1 min-w-0 md:pb-0"
-        // 中文注释：当用户点击右侧内容区域时，自动收起左侧导航栏，减少视觉占用、聚焦内容
-        onClick={() => { if (!collapsed && !isMobile) setCollapsed(true) }}
-        style={{ paddingBottom: showMobileNav ? 'calc(90px + env(safe-area-inset-bottom))' : 'env(safe-area-inset-bottom)' }}
+        onClick={() => { if (!collapsed) setCollapsed(true) }}
       >
         {/* 中文注释：暗色头部采用半透明背景与毛玻璃，弱化硬边 */}
         <header className={`sticky top-0 z-40 ${isDark ? 'bg-[#0b0e13]/80 backdrop-blur-sm' : theme === 'pink' ? 'bg-white/80 backdrop-blur-sm' : 'bg-white'} border-b ${isDark ? 'border-gray-800' : theme === 'pink' ? 'border-pink-200' : 'border-gray-200'} px-4 py-3`}> 
@@ -554,13 +515,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
               >
                 <i className="fas fa-bug"></i>
               </button>
-              <button
-                className={`md:hidden p-2 rounded-lg ${isDark ? 'hover:bg-gray-800 ring-1 ring-gray-700' : 'hover:bg-gray-50 ring-1 ring-gray-200'}`}
-                aria-label="搜索"
-                onClick={() => setShowMobileSearch(true)}
-              >
-                <i className="fas fa-search"></i>
-              </button>
+
               <button
                 title="分享"
                 aria-label="分享当前页面"
@@ -709,145 +664,15 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
             aria-label="回到顶部"
             title="回到顶部"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className={`fixed right-4 ${showMobileNav ? 'bottom-[96px]' : 'bottom-6'} z-40 p-3 rounded-full shadow-lg ring-1 transition-colors ${isDark ? 'bg-gray-800 text-white ring-gray-700 hover:bg-gray-700' : theme === 'pink' ? 'bg-white text-gray-900 ring-pink-200 hover:bg-pink-50' : 'bg-white text-gray-900 ring-gray-200 hover:bg-gray-50'}`}
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) / 2)' }}
+            className={`fixed right-4 bottom-6 z-40 p-3 rounded-full shadow-lg ring-1 transition-colors ${isDark ? 'bg-gray-800 text-white ring-gray-700 hover:bg-gray-700' : theme === 'pink' ? 'bg-white text-gray-900 ring-pink-200 hover:bg-pink-50' : 'bg-white text-gray-900 ring-gray-200 hover:bg-gray-50'}`}
           >
             <i className="fas fa-arrow-up"></i>
           </button>
         )}
-        {showMobileSearch && (
-          <div className={`fixed inset-x-0 top-0 z-50 md:hidden ${isDark ? 'bg-[#0b0e13]/95' : 'bg-white'} px-4 py-3 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-            <div className={`rounded-lg ring-1 ${isDark ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-gray-200'} px-3 py-2 flex items-center`}>
-              <i className={`fas fa-search ${isDark ? 'text-gray-400' : 'text-gray-500'} mr-2`}></i>
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { onSearchSubmit(); setShowMobileSearch(false) } }}
-                placeholder="搜索作品、素材或用户"
-                className={`flex-1 outline-none ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-                autoFocus
-              />
-              <button
-                onClick={() => { onSearchSubmit(); setShowMobileSearch(false) }}
-                className="ml-2 px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white"
-              >
-                搜索
-              </button>
-              <button
-                onClick={() => setShowMobileSearch(false)}
-                className={`ml-2 p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                aria-label="关闭"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            {/* 中文注释：移动端在输入框下提供“热门分类”和“最近搜索”便捷入口 */}
-            <div className="mt-3">
-              <div className="text-xs mb-2 opacity-70">热门分类</div>
-              <div className="flex flex-wrap gap-2">
-                {suggestions.map((s) => (
-                  <button
-                    key={s}
-                    className={`text-xs px-2.5 py-1 rounded-full ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}
-                    onClick={() => { setSearch(s); onSearchSubmit(); setShowMobileSearch(false) }}
-                  >{s}</button>
-                ))}
-              </div>
-              {recentSearches.length > 0 && (
-                <div className="mt-3">
-                  <div className="text-xs mb-2 opacity-70">最近搜索</div>
-                  <div className="flex flex-wrap gap-2">
-                    {recentSearches.map((r) => (
-                      <button
-                        key={r}
-                        className={`text-xs px-2.5 py-1 rounded-full ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}
-                        onClick={() => { setSearch(r); onSearchSubmit(); setShowMobileSearch(false) }}
-                      >{r}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+
         {showFeedback && (
           <ErrorFeedback onClose={() => setShowFeedback(false)} autoShow={true} />
         )}
-        {/* 中文注释：玻璃拟态底部导航（含中心悬浮“创作”按钮） */}
-        <nav className={`fixed bottom-0 inset-x-0 md:hidden ${isDark ? 'bg-[#0b0e13]/80 backdrop-blur-xl ring-1 ring-gray-800/70' : theme === 'pink' ? 'bg-white/80 backdrop-blur-xl ring-1 ring-pink-200/70' : 'bg-white/85 backdrop-blur-xl ring-1 ring-gray-200/70'} z-40 transform transition-transform duration-200 shadow-2xl`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', transform: showMobileNav ? 'translateY(0)' : 'translateY(100%)' }}> 
-          <ul className="grid grid-cols-5 text-xs px-2 py-1">
-            <li>
-              <NavLink 
-                to="/"
-                onTouchStart={() => prefetchRoute('/')}
-                className={({ isActive }) => `flex flex-col items-center justify-center py-2.5 ${isActive ? (isDark ? 'text-red-400' : 'text-red-600') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}
-                aria-label="首页"
-              >
-                <i className="fas fa-home"></i>
-                <span className="mt-0.5">首页</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink 
-                to="/explore"
-                onTouchStart={() => prefetchRoute('/explore')}
-                className={({ isActive }) => `flex flex-col items-center justify-center py-2.5 ${isActive ? (isDark ? 'text-red-400' : 'text-red-600') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}
-                aria-label="探索"
-              >
-                <i className="fas fa-compass"></i>
-                <span className="mt-0.5">探索</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink 
-                to="/create"
-                onTouchStart={() => prefetchRoute('/create')}
-                className={({ isActive }) => `flex flex-col items-center justify-center py-2.5 ${isActive ? (isDark ? 'text-red-400' : 'text-red-600') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}
-                aria-label="创作"
-              >
-                <i className="fas fa-plus-circle"></i>
-                <span className="mt-0.5">创作</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink 
-                to="/neo"
-                onTouchStart={() => prefetchRoute('/neo')}
-                className={({ isActive }) => `flex flex-col items-center justify-center py-2.5 ${isActive ? (isDark ? 'text-red-400' : 'text-red-600') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}
-                aria-label="灵感"
-              >
-                <i className="fas fa-bolt"></i>
-                <span className="mt-0.5">灵感</span>
-              </NavLink>
-            </li>
-            <li>
-              {isAuthenticated ? (
-                <NavLink 
-                  to="/dashboard"
-                  onTouchStart={() => prefetchRoute('/dashboard')}
-                  className={({ isActive }) => `relative flex flex-col items-center justify-center py-2.5 ${isActive ? (isDark ? 'text-red-400' : 'text-red-600') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}
-                  aria-label="我的"
-                >
-                  <i className="fas fa-user"></i>
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-6 inline-flex items-center justify-center w-2 h-2 rounded-full bg-red-500"></span>
-                  )}
-                  <span className="mt-0.5">我的</span>
-                </NavLink>
-              ) : (
-                <NavLink 
-                  to="/wizard"
-                  onTouchStart={() => prefetchRoute('/wizard', 300000)}
-                  className={({ isActive }) => `relative flex flex-col items-center justify-center py-2.5 ${isActive ? (isDark ? 'text-red-400' : 'text-red-600') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}
-                  aria-label="向导"
-                >
-                  <i className="fas fa-hat-wizard"></i>
-                  <span className="mt-0.5">向导</span>
-                </NavLink>
-              )}
-            </li>
-          </ul>
-        </nav>
       </div>
     </div>
   )

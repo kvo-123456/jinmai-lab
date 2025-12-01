@@ -7,6 +7,7 @@ import CommunityChat from '@/components/CommunityChat'
 import CommunityManagement from '@/components/CommunityManagement'
 import { DiscussionSection, CommunityDiscussion } from '@/components/DiscussionSection'
 import ScheduledPost from '@/components/ScheduledPost'
+import VirtualList from '@/components/VirtualList'
 import { useTheme } from '@/hooks/useTheme'
 import postsApi, { Post } from '@/services/postService'
 import { toast } from 'sonner'
@@ -1282,32 +1283,39 @@ export default function Community() {
                 <button onClick={() => setCommunitySort('members')} className={`text-xs px-3 py-2 rounded-lg ring-1 ${communitySort === 'members' ? 'bg-purple-600 text-white ring-purple-600' : (isDark ? 'bg-gray-800 text-gray-300 ring-gray-700' : 'bg-white text-gray-700 ring-gray-200')}`}>按人数</button>
                 <button onClick={() => setCommunitySort('alphabet')} className={`text-xs px-3 py-2 rounded-lg ring-1 ${communitySort === 'alphabet' ? 'bg-purple-600 text-white ring-purple-600' : (isDark ? 'bg-gray-800 text-gray-300 ring-gray-700' : 'bg-white text-gray-700 ring-gray-200')}`}>按名称</button>
               </div>
-              {displayRecommended.map(c => (
-                <motion.div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'} rounded-xl overflow-hidden shadow-sm`} whileHover={{ y: -4 }}>
-                  <div className="relative">
-                    <img src={c.cover} alt={c.name} className="w-full aspect-[4/3] object-cover" />
-                    <div className="absolute top-3 right-3">
-                      <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-black/40 text-gray-200' : 'bg-white/70 text-gray-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>官方</span>
+              <VirtualList
+                items={displayRecommended}
+                renderItem={(c) => (
+                  <motion.div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'} rounded-xl overflow-hidden shadow-sm`} whileHover={{ y: -4 }}>
+                    <div className="relative">
+                      <img src={c.cover} alt={c.name} className="w-full aspect-[4/3] object-cover" />
+                      <div className="absolute top-3 right-3">
+                        <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-black/40 text-gray-200' : 'bg-white/70 text-gray-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>官方</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="font-medium mb-1">{c.name}</div>
-                    <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{c.description}</div>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {c.tags.map((t, i) => (
-                        <button key={i} onClick={() => setSelectedStyle(t)} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>#{t}</button>
-                      ))}
+                    <div className="p-4">
+                      <div className="font-medium mb-1">{c.name}</div>
+                      <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{c.description}</div>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {c.tags.map((t, i) => (
+                          <button key={i} onClick={() => setSelectedStyle(t)} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>#{t}</button>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.members + (joinedCommunities.includes(c.id) ? 1 : 0)} 人加入</div>
+                        <button onClick={() => toggleJoinCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(c.id) ? 'bg-blue-600 text-white' : (isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700')}`}>{joinedCommunities.includes(c.id) ? '已加入' : '加入'}</button>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-lg`}>查看详情</button>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.members + (joinedCommunities.includes(c.id) ? 1 : 0)} 人加入</div>
-                      <button onClick={() => toggleJoinCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(c.id) ? 'bg-blue-600 text-white' : (isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700')}`}>{joinedCommunities.includes(c.id) ? '已加入' : '加入'}</button>
-                    </div>
-                    <div className="mt-3 flex justify-end">
-                      <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-lg`}>查看详情</button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                )}
+                itemHeight={300} // 调整为适合社群卡片的高度
+                itemWidth={300} // 调整为适合社群卡片的宽度
+                columns={3} // 根据屏幕尺寸调整列数
+                isDark={isDark}
+              />
             </div>
           )}
           {communityTab === 'user' && (

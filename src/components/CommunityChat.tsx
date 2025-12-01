@@ -11,7 +11,9 @@ export type ChatMessage = {
   avatar: string; 
   createdAt?: number; 
   pinned?: boolean; 
-  time?: string 
+  time?: string;
+  replyTo?: { id: string; user: string; text: string };
+  reactions?: { [emoji: string]: string[] }; // 存储每个表情的用户列表
 };
 
 export type Community = {
@@ -56,6 +58,12 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
 }) => {
   const [chatSearch, setChatSearch] = useState('');
   const [newMessage, setNewMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [selectedEmoji, setSelectedEmoji] = useState('');
+
+  // 常用表情列表
+  const emojis = ['👍', '❤️', '😂', '🎉', '😮', '😢', '😡', '🤔', '👀', '👏'];
 
   // 已加入社群列表
   const joinedList = useMemo(() => {
@@ -83,7 +91,12 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
       user: user.name, 
       text: t, 
       avatar: user.avatar, 
-      createdAt: Date.now() 
+      createdAt: Date.now(),
+      replyTo: replyingTo ? { 
+        id: replyingTo.id!, 
+        user: replyingTo.user, 
+        text: replyingTo.text 
+      } : undefined
     };
 
     const updatedMessages = {
@@ -95,6 +108,55 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
     localStorage.setItem('jmzf_community_messages', JSON.stringify(updatedMessages));
     toast.success('已发送到该社群');
     setNewMessage('');
+    setReplyingTo(null);
+  };
+
+  // 添加表情反应
+  const addReaction = (communityId: string, messageId: string, emoji: string) => {
+    const user = mockCreators.find(c => c.online) || mockCreators[0];
+    const userId = user.name;
+
+    const updatedMessages = {
+      ...communityMessages,
+      [communityId]: (communityMessages[communityId] || []).map(msg => {
+        if (msg.id !== messageId) return msg;
+
+        const reactions = { ...(msg.reactions || {}) };
+        const users = reactions[emoji] || [];
+
+        if (users.includes(userId)) {
+          // 移除反应
+          reactions[emoji] = users.filter(u => u !== userId);
+          if (reactions[emoji].length === 0) {
+            delete reactions[emoji];
+          }
+        } else {
+          // 添加反应
+          reactions[emoji] = [...users, userId];
+        }
+
+        return { ...msg, reactions };
+      })
+    };
+
+    onCommunityMessagesChange(updatedMessages);
+    localStorage.setItem('jmzf_community_messages', JSON.stringify(updatedMessages));
+  };
+
+  // 开始回复消息
+  const startReply = (message: ChatMessage) => {
+    setReplyingTo(message);
+  };
+
+  // 取消回复
+  const cancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  // 插入表情
+  const insertEmoji = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
   };
 
   // 删除社群消息
@@ -218,6 +280,14 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
                           decoding="async"
                         />
                         <div className="flex-1">
+                          {/* 回复引用 */}
+                          {msg.replyTo && (
+                            <div className={`mb-2 p-2 rounded-lg text-sm ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                              <div className="font-medium">回复 {msg.replyTo.user}:</div>
+                              <div className="text-xs opacity-80">{msg.replyTo.text}</div>
+                            </div>
+                          )}
+                          
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className="text-sm font-medium">{msg.user}</div>
@@ -226,8 +296,32 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
                               {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString() : ''}
                             </div>
                           </div>
-                          <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{msg.text}</div>
-                          <div className="mt-2 flex items-center gap-2">
+                          <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-2`}>{msg.text}</div>
+                          
+                          {/* 表情反应 */}
+                          {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                            <div className="flex items-center gap-1 mb-2">
+                              {Object.entries(msg.reactions).map(([emoji, users]) => (
+                                <button 
+                                  key={emoji} 
+                                  onClick={() => msg.id && addReaction(activeCommunity.id, msg.id, emoji)} 
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white text-gray-800 hover:bg-gray-100'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
+                                >
+                                  <span>{emoji}</span>
+                                  <span>{users.length}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* 操作按钮 */}
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => msg.id && startReply(msg)} 
+                              className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-2 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
+                            >
+                              回复
+                            </button>
                             <button 
                               onClick={() => msg.id && togglePinCommunityMessage(activeCommunity.id, msg.id)} 
                               className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-2 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
@@ -247,14 +341,55 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
                   ))
                 )}
               </div>
+              {/* 回复指示器 */}
+              {replyingTo && (
+                <div className={`flex items-center gap-2 mb-2 p-2 rounded-lg ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                  <div className="text-sm">回复 {replyingTo.user}:</div>
+                  <button 
+                    onClick={cancelReply} 
+                    className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
+                  >
+                    取消
+                  </button>
+                </div>
+              )}
+              
+              {/* 消息输入区域 */}
               <div className="flex items-center gap-2">
-                <input 
-                  value={newMessage} 
-                  onChange={e => setNewMessage(e.target.value)} 
-                  onKeyPress={(e) => e.key === 'Enter' && sendCommunityMessage(activeCommunity.id, newMessage)} 
-                  placeholder="发表你的看法..." 
-                  className={`flex-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 ${isDark ? 'bg-gray-700 text-white ring-1 ring-gray-600 focus:ring-purple-500' : 'bg-white text-gray-900 ring-1 ring-gray-300 focus:ring-pink-300'}`} 
-                />
+                <div className="relative flex-1">
+                  <input 
+                    value={newMessage} 
+                    onChange={e => setNewMessage(e.target.value)} 
+                    onKeyPress={(e) => e.key === 'Enter' && sendCommunityMessage(activeCommunity.id, newMessage)} 
+                    placeholder={replyingTo ? `回复 ${replyingTo.user}...` : "发表你的看法..."} 
+                    className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 ${isDark ? 'bg-gray-700 text-white ring-1 ring-gray-600 focus:ring-purple-500' : 'bg-white text-gray-900 ring-1 ring-gray-300 focus:ring-pink-300'}`} 
+                  />
+                  {/* 表情选择器 */}
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)} 
+                      className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-full ${isDark ? 'hover:bg-gray-600 text-white' : 'hover:bg-gray-200 text-gray-800'}`}
+                    >
+                      😊
+                    </button>
+                    
+                    {showEmojiPicker && (
+                      <div className={`absolute bottom-full right-0 mb-2 p-2 rounded-lg shadow-lg z-10 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-300'}`}>
+                        <div className="grid grid-cols-5 gap-2">
+                          {emojis.map((emoji) => (
+                            <button 
+                              key={emoji} 
+                              onClick={() => insertEmoji(emoji)} 
+                              className={`text-xl p-1 rounded-full ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <button 
                   onClick={() => sendCommunityMessage(activeCommunity.id, newMessage)} 
                   className="px-3 py-2 rounded-lg bg-gradient-to-r from-red-600 to-pink-600 text-white transition-colors hover:opacity-90"

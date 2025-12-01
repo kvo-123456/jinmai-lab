@@ -259,7 +259,7 @@ const CommunityManagement: React.FC<CommunityManagementProps> = ({
     }
     
     const currentPrivacy = privacyStore[manageCommunityId] || 'public';
-    const updatedPrivacyStore = {
+    const updatedPrivacyStore: Record<string, 'public' | 'private'> = {
       ...privacyStore,
       [manageCommunityId]: currentPrivacy === 'public' ? 'private' : 'public'
     };

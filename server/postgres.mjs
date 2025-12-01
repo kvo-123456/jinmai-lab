@@ -1,4 +1,10 @@
 import { Pool } from 'pg'
+import dotenv from 'dotenv'
+
+// 加载环境变量
+// 支持.env.local、.env.development.local等文件
+dotenv.config({ path: '.env.local' })
+dotenv.config()
 
 // 获取PostgreSQL连接字符串
 // 支持Vercel自动创建的环境变量和手动配置的环境变量
