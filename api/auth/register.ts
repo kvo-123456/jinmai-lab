@@ -1,11 +1,37 @@
 import type { VercelRequest, VercelResponse } from 'vercel'
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { initDb, createUser, findUserByEmail, findUserByUsername } from '../../server/db.mjs'
 
 // 获取JWT密钥
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
+
+// 模拟数据库 - 在无服务器环境中使用内存存储（仅用于测试）
+// 生产环境建议使用Vercel Postgres、Supabase或其他持久化数据库
+let mockUsers = []
+
+// 模拟findUserByEmail函数
+const findUserByEmail = (email) => {
+  return mockUsers.find(user => user.email === email) || null
+}
+
+// 模拟findUserByUsername函数
+const findUserByUsername = (username) => {
+  return mockUsers.find(user => user.username === username) || null
+}
+
+// 模拟createUser函数
+const createUser = (_, userData) => {
+  const now = Date.now()
+  const newUser = {
+    id: now,
+    ...userData,
+    created_at: now,
+    updated_at: now
+  }
+  mockUsers.push(newUser)
+  return newUser.id
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 设置CORS头
