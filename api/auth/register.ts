@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from 'vercel'
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { getMongoDB } from '../../server/mongodb.mjs'
+import { getPostgreSQL, initPostgreSQL } from '../../server/postgres.mjs'
 
 // 获取JWT密钥
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
@@ -54,20 +54,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
     
-    // 获取MongoDB实例
-    const db = await getMongoDB()
-    const usersCollection = db.collection('users')
+    // 初始化PostgreSQL
+    await initPostgreSQL()
+    
+    // 获取PostgreSQL连接池
+    const pool = getPostgreSQL()
     
     // 检查用户名是否已存在
-    const existingUserByUsername = await usersCollection.findOne({ username })
-    if (existingUserByUsername) {
+    const existingUserByUsername = await pool.query(
+      'SELECT id FROM users WHERE username = $1',
+      [username]
+    )
+    if (existingUserByUsername.rows.length > 0) {
       res.status(409).json({ error: 'USERNAME_ALREADY_EXISTS' })
       return
     }
     
     // 检查邮箱是否已存在
-    const existingUserByEmail = await usersCollection.findOne({ email })
-    if (existingUserByEmail) {
+    const existingUserByEmail = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    )
+    if (existingUserByEmail.rows.length > 0) {
       res.status(409).json({ error: 'EMAIL_ALREADY_EXISTS' })
       return
     }
@@ -78,16 +86,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     // 创建用户
     const now = Date.now()
-    const newUser = {
-      username,
-      email,
-      password_hash: passwordHash,
-      created_at: now,
-      updated_at: now
-    }
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password_hash, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+      [username, email, passwordHash, now, now]
+    )
     
-    const result = await usersCollection.insertOne(newUser)
-    const userId = result.insertedId.toString()
+    const userId = result.rows[0].id.toString()
     
     // 生成JWT令牌
     const token = jwt.sign(

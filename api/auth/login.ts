@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from 'vercel'
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { getMongoDB } from '../../server/mongodb.mjs'
+import { getPostgreSQL, initPostgreSQL } from '../../server/postgres.mjs'
 
 // 获取JWT密钥
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
@@ -35,12 +35,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
     
-    // 获取MongoDB实例
-    const db = await getMongoDB()
-    const usersCollection = db.collection('users')
+    // 初始化PostgreSQL
+    await initPostgreSQL()
+    
+    // 获取PostgreSQL连接池
+    const pool = getPostgreSQL()
     
     // 根据邮箱查找用户
-    const user = await usersCollection.findOne({ email })
+    const result = await pool.query(
+      'SELECT id, username, email, password_hash FROM users WHERE email = $1',
+      [email]
+    )
+    
+    const user = result.rows[0]
     if (!user) {
       res.status(401).json({ error: 'INVALID_CREDENTIALS' })
       return
@@ -55,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     // 生成JWT令牌
     const token = jwt.sign(
-      { userId: user._id.toString(), email: user.email, username: user.username },
+      { userId: user.id.toString(), email: user.email, username: user.username },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     )
@@ -65,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ok: true,
       token,
       user: {
-        id: user._id.toString(),
+        id: user.id.toString(),
         username: user.username,
         email: user.email
       }

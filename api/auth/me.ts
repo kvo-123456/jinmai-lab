@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from 'vercel'
 import jwt from 'jsonwebtoken'
-import { ObjectId } from 'mongodb'
-import { getMongoDB } from '../../server/mongodb.mjs'
+import { getPostgreSQL, initPostgreSQL } from '../../server/postgres.mjs'
 
 // 获取JWT密钥
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
@@ -52,12 +51,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
     
-    // 获取MongoDB实例
-    const db = await getMongoDB()
-    const usersCollection = db.collection('users')
+    // 初始化PostgreSQL
+    await initPostgreSQL()
+    
+    // 获取PostgreSQL连接池
+    const pool = getPostgreSQL()
     
     // 根据ID查找用户
-    const user = await usersCollection.findOne({ _id: new ObjectId(userId) })
+    const result = await pool.query(
+      'SELECT id, username, email FROM users WHERE id = $1',
+      [parseInt(userId)]
+    )
+    
+    const user = result.rows[0]
     if (!user) {
       res.status(404).json({ error: 'USER_NOT_FOUND' })
       return
@@ -67,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({
       ok: true,
       user: {
-        id: user._id.toString(),
+        id: user.id.toString(),
         username: user.username,
         email: user.email
       }
