@@ -401,7 +401,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
       </aside>
       {/* 中文注释：当用户点击右侧内容区域时，自动收起左侧导航栏，减少视觉占用、聚焦内容 */}
       <div 
-        className="flex-1 min-w-0 md:pb-0"
+        className="flex-1 min-w-0 md:pb-0 pt-[73px]"
         onClick={() => { if (!collapsed) setCollapsed(true) }}
       >
         {/* 中文注释：暗色头部采用半透明背景与毛玻璃，弱化硬边 */}

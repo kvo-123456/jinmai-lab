@@ -1,264 +1,239 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
-import { toast } from 'sonner';
 
-// 类型定义
-export type CommentReaction = 'like' | 'love' | 'laugh' | 'surprise' | 'sad' | 'angry';
-
-export interface Comment {
+// 评论类型定义
+interface Comment {
   id: string;
   content: string;
-  date: string;
-  author?: string;
+  author: string;
+  avatar: string;
   likes: number;
-  reactions: Record<CommentReaction, number>;
-  parentId?: string;
+  dislikes: number;
   replies: Comment[];
-  isLiked?: boolean;
-  userReactions: CommentReaction[];
+  createdAt: Date;
+  updatedAt: Date;
+  isLiked: boolean;
+  isDisliked: boolean;
 }
 
 interface EnhancedCommentProps {
   comment: Comment;
   postId: string;
-  onCommentUpdate: () => void;
+  onCommentUpdate?: (comment: Comment) => void;
   depth?: number;
   maxDepth?: number;
 }
 
-const REACTION_ICONS: Record<CommentReaction, string> = {
-  like: 'fa-thumbs-up',
-  love: 'fa-heart',
-  laugh: 'fa-face-laugh',
-  surprise: 'fa-face-surprise',
-  sad: 'fa-face-sad-tear',
-  angry: 'fa-face-angry'
-};
-
-const REACTION_COLORS: Record<CommentReaction, string> = {
-  like: 'text-blue-500',
-  love: 'text-red-500',
-  laugh: 'text-yellow-500',
-  surprise: 'text-purple-500',
-  sad: 'text-gray-500',
-  angry: 'text-orange-500'
-};
-
-export default React.memo(function EnhancedComment({
+const EnhancedComment: React.FC<EnhancedCommentProps> = ({
   comment,
   postId,
   onCommentUpdate,
   depth = 0,
   maxDepth = 3
-}: EnhancedCommentProps) {
-  const { isDark } = useTheme();
-  const [showReplyInput, setShowReplyInput] = useState(false);
-  const [replyContent, setReplyContent] = useState('');
+}) => {
+  const { theme, isDark } = useTheme();
   const [isReplying, setIsReplying] = useState(false);
-  const [showReactions, setShowReactions] = useState(false);
+  const [replyContent, setReplyContent] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
 
-  // 处理评论点赞
-  const handleLikeComment = async () => {
-    try {
-      const postService = await import('@/services/postService');
-      if (comment.isLiked) {
-        postService.unlikeComment(postId, comment.id);
-      } else {
-        postService.likeComment(postId, comment.id);
+  // 处理点赞
+  const handleLike = () => {
+    const updatedComment = {
+      ...comment,
+      likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
+      dislikes: comment.isDisliked ? comment.dislikes - 1 : comment.dislikes,
+      isLiked: !comment.isLiked,
+      isDisliked: false
+    };
+    if (onCommentUpdate) {
+      onCommentUpdate(updatedComment);
+    }
+  };
+
+  // 处理点踩
+  const handleDislike = () => {
+    const updatedComment = {
+      ...comment,
+      dislikes: comment.isDisliked ? comment.dislikes - 1 : comment.dislikes + 1,
+      likes: comment.isLiked ? comment.likes - 1 : comment.likes,
+      isDisliked: !comment.isDisliked,
+      isLiked: false
+    };
+    if (onCommentUpdate) {
+      onCommentUpdate(updatedComment);
+    }
+  };
+
+  // 提交回复
+  const handleSubmitReply = () => {
+    if (replyContent.trim()) {
+      const newReply: Comment = {
+        id: `reply-${Date.now()}`,
+        content: replyContent.trim(),
+        author: '当前用户',
+        avatar: 'https://via.placeholder.com/40',
+        likes: 0,
+        dislikes: 0,
+        replies: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isLiked: false,
+        isDisliked: false
+      };
+
+      const updatedComment = {
+        ...comment,
+        replies: [...comment.replies, newReply]
+      };
+
+      if (onCommentUpdate) {
+        onCommentUpdate(updatedComment);
       }
-      onCommentUpdate();
-    } catch (error) {
-      toast.error('操作失败，请重试');
-    }
-  };
 
-  // 处理评论反应
-  const handleReaction = async (reaction: CommentReaction) => {
-    try {
-      const postService = await import('@/services/postService');
-      postService.addCommentReaction(postId, comment.id, reaction);
-      onCommentUpdate();
-      setShowReactions(false);
-    } catch (error) {
-      toast.error('操作失败，请重试');
-    }
-  };
-
-  // 处理回复评论
-  const handleReply = async () => {
-    if (!replyContent.trim()) {
-      toast.warning('回复内容不能为空');
-      return;
-    }
-
-    try {
-      setIsReplying(true);
-      const postService = await import('@/services/postService');
-      postService.addComment(postId, replyContent, comment.id);
       setReplyContent('');
-      setShowReplyInput(false);
-      onCommentUpdate();
-      toast.success('回复成功');
-    } catch (error) {
-      toast.error('回复失败，请重试');
-    } finally {
       setIsReplying(false);
     }
   };
 
-  // 处理删除评论
-  const handleDelete = async () => {
-    if (window.confirm('确定要删除这条评论吗？')) {
-      try {
-        const postService = await import('@/services/postService');
-        postService.deleteComment(postId, comment.id);
-        onCommentUpdate();
-        toast.success('评论已删除');
-      } catch (error) {
-        toast.error('删除失败，请重试');
+  // 提交编辑
+  const handleSubmitEdit = () => {
+    if (editContent.trim()) {
+      const updatedComment = {
+        ...comment,
+        content: editContent.trim(),
+        updatedAt: new Date()
+      };
+
+      if (onCommentUpdate) {
+        onCommentUpdate(updatedComment);
       }
+
+      setIsEditing(false);
     }
   };
 
-  // 格式化日期
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  // 渲染反应按钮
-  const renderReactionButtons = () => {
-    return (
-      <div className="flex gap-1 mt-2">
-        {Object.entries(comment.reactions).map(([reaction, count]) => {
-          const reactionKey = reaction as CommentReaction;
-          const isActive = comment.userReactions.includes(reactionKey);
-          return (
-            <button
-              key={reactionKey}
-              onClick={() => handleReaction(reactionKey)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'} ${isActive ? REACTION_COLORS[reactionKey] : 'text-gray-500'}`}
-              title={reactionKey}
-            >
-              <i className={`fas ${REACTION_ICONS[reactionKey]} ${isActive ? REACTION_COLORS[reactionKey] : ''}`}></i>
-              {count > 0 && <span>{count}</span>}
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
-    <div className="mb-4">
-      {/* 评论内容 */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className={`p-3 rounded-lg ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border ${depth > 0 ? `ml-${depth * 4}` : ''}`}
-      >
-        {/* 评论头部 */}
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
-              <i className="fas fa-user text-gray-500"></i>
-            </div>
-            <div>
-              <div className="font-medium text-sm">{comment.author || '匿名用户'}</div>
-              <div className="text-xs text-gray-500">{formatDate(comment.date)}</div>
-            </div>
-          </div>
-          <button
-            onClick={() => handleDelete()}
-            className={`p-1 rounded-full text-xs transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}
-            title="删除评论"
-          >
-            <i className="fas fa-trash"></i>
-          </button>
+    <div className={`mb-4 ${depth > 0 ? 'ml-8 border-l-2 pl-4' : ''} ${isDark ? 'border-gray-700' : theme === 'pink' ? 'border-pink-200' : 'border-gray-200'}`}>
+      <div className={`flex gap-3 p-3 rounded-lg ${isDark ? 'bg-gray-800' : theme === 'pink' ? 'bg-pink-50' : 'bg-white'}`}>
+        {/* 头像 */}
+        <div className="flex-shrink-0">
+          <img
+            src={comment.avatar}
+            alt={comment.author}
+            className="w-10 h-10 rounded-full object-cover"
+          />
         </div>
 
-        {/* 评论正文 */}
-        <div className="mb-3 text-sm">{comment.content}</div>
+        {/* 评论内容 */}
+        <div className="flex-1">
+          {/* 作者和时间 */}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-medium">{comment.author}</span>
+            <span className="text-xs opacity-60">
+              {comment.createdAt.toLocaleDateString()}
+            </span>
+          </div>
 
-        {/* 评论操作 */}
-        <div className="flex items-center gap-3 text-xs">
-          <button
-            onClick={handleLikeComment}
-            className={`flex items-center gap-1 px-2 py-1 rounded-full transition-colors ${comment.isLiked ? 'text-blue-500' : 'text-gray-500'} ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
-          >
-            <i className={`fas fa-thumbs-up ${comment.isLiked ? 'text-blue-500' : ''}`}></i>
-            <span>{comment.likes}</span>
-          </button>
+          {/* 评论正文 */}
+          {isEditing ? (
+            <div className="mb-2">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className={`w-full p-2 rounded border ${isDark ? 'bg-gray-700 border-gray-600' : theme === 'pink' ? 'bg-pink-100 border-pink-300' : 'bg-gray-50 border-gray-300'} resize-none`}
+                rows={3}
+              />
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={handleSubmitEdit}
+                  className={`px-3 py-1 text-sm rounded ${isDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                >
+                  保存
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className={`px-3 py-1 text-sm rounded ${isDark ? 'bg-gray-700 hover:bg-gray-600' : theme === 'pink' ? 'bg-pink-200 hover:bg-pink-300' : 'bg-gray-200 hover:bg-gray-300'}`}
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-2">{comment.content}</div>
+          )}
 
-          <button
-            onClick={() => setShowReactions(!showReactions)}
-            className={`flex items-center gap-1 px-2 py-1 rounded-full transition-colors text-gray-500 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
-          >
-            <i className="fas fa-face-smile"></i>
-            <span>反应</span>
-          </button>
-
-          {depth < maxDepth && (
+          {/* 操作按钮 */}
+          <div className="flex gap-4 text-sm">
             <button
-              onClick={() => setShowReplyInput(!showReplyInput)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-full transition-colors text-gray-500 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+              onClick={handleLike}
+              className={`flex items-center gap-1 transition-colors ${comment.isLiked ? 'text-blue-500' : 'opacity-60 hover:opacity-100'}`}
             >
-              <i className="fas fa-reply"></i>
-              <span>回复</span>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+              </svg>
+              {comment.likes}
             </button>
+
+            <button
+              onClick={handleDislike}
+              className={`flex items-center gap-1 transition-colors ${comment.isDisliked ? 'text-red-500' : 'opacity-60 hover:opacity-100'}`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.333V3.9a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 0011.057 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.2-1.866a4 4 0 00.8-2.4z" />
+              </svg>
+              {comment.dislikes}
+            </button>
+
+            <button
+              onClick={() => setIsReplying(!isReplying)}
+              className="opacity-60 hover:opacity-100 transition-colors"
+            >
+              回复
+            </button>
+
+            <button
+              onClick={() => setIsEditing(true)}
+              className="opacity-60 hover:opacity-100 transition-colors"
+            >
+              编辑
+            </button>
+          </div>
+
+          {/* 回复输入框 */}
+          {isReplying && (
+            <div className="mt-3">
+              <div className="flex gap-2">
+                <textarea
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  placeholder="写下你的回复..."
+                  className={`flex-1 p-2 rounded border ${isDark ? 'bg-gray-700 border-gray-600' : theme === 'pink' ? 'bg-pink-100 border-pink-300' : 'bg-gray-50 border-gray-300'} resize-none`}
+                  rows={2}
+                />
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={handleSubmitReply}
+                    className={`px-3 py-1 text-sm rounded ${isDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                  >
+                    发送
+                  </button>
+                  <button
+                    onClick={() => setIsReplying(false)}
+                    className={`px-3 py-1 text-sm rounded ${isDark ? 'bg-gray-700 hover:bg-gray-600' : theme === 'pink' ? 'bg-pink-200 hover:bg-pink-300' : 'bg-gray-200 hover:bg-gray-300'}`}
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-
-        {/* 反应按钮 */}
-        {showReactions && renderReactionButtons()}
-
-        {/* 回复输入框 */}
-        {showReplyInput && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mt-3"
-          >
-            <textarea
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="写下你的回复..."
-              rows={2}
-              className={`w-full px-3 py-2 rounded-lg text-sm ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            ></textarea>
-            <div className="flex justify-end gap-2 mt-2">
-              <button
-                onClick={() => {
-                  setShowReplyInput(false);
-                  setReplyContent('');
-                }}
-                className={`px-3 py-1 rounded-lg text-sm transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                取消
-              </button>
-              <button
-                onClick={handleReply}
-                disabled={isReplying || !replyContent.trim()}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-blue-600 hover:bg-blue-700 text-white ${(isReplying || !replyContent.trim()) ? 'opacity-60 cursor-not-allowed' : ''}`}
-              >
-                {isReplying ? '回复中...' : '回复'}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
+      </div>
 
       {/* 回复列表 */}
-      {comment.replies.length > 0 && (
+      {comment.replies.length > 0 && depth < maxDepth && (
         <div className="mt-2">
           {comment.replies.map((reply) => (
             <EnhancedComment
@@ -274,4 +249,6 @@ export default React.memo(function EnhancedComment({
       )}
     </div>
   );
-}
+};
+
+export default EnhancedComment;

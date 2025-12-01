@@ -62,7 +62,7 @@ export default function App() {
   }, []);
 
   // 布局组件包装器
-  const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
+  const LayoutWrapper = ({ children }: { children?: React.ReactNode }) => {
     return isMobile ? (
       <MobileLayout>{children}</MobileLayout>
     ) : (

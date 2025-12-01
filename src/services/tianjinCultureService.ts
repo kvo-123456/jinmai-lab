@@ -207,8 +207,7 @@ class TianjinCultureService {
     const lowerQuery = query.toLowerCase();
     return this.knowledgeBase.filter(item => 
       item.title.toLowerCase().includes(lowerQuery) ||
-      item.content.toLowerCase().includes(lowerQuery) ||
-      item.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))
+      item.content.toLowerCase().includes(lowerQuery)
     );
   }
 

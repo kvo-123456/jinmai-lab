@@ -202,7 +202,7 @@ export async function pollVideoTask(
         default:
           progress = 0
       }
-      opts.onProgress(status, progress)
+      opts.onProgress(status || 'unknown', progress)
     }
     
     if (status === 'succeeded' || status === 'failed' || status === 'cancelled') {

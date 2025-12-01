@@ -763,8 +763,7 @@ class LLMService {
     if (apiBase) {
       try {
         const res = await fetch(`${apiBase}/api/health/llms`, { 
-          method: 'GET',
-          timeout: 5000 // 添加超时设置
+          method: 'GET'
         })
         if (res.ok) {
           const data = await res.json()

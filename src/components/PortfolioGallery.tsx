@@ -1,314 +1,367 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Post, PostCategory, getPosts } from '../services/postService';
+import { useTheme } from '@/hooks/useTheme';
 
-interface PortfolioGalleryProps {
-  userId?: string;
-  showFilters?: boolean;
-  showCategories?: boolean;
+// 作品类型定义
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  tags: string[];
+  images: string[];
+  likes: number;
+  views: number;
+  shares: number;
+  createdAt: Date;
+  updatedAt: Date;
+  author: {
+    name: string;
+    avatar: string;
+  };
+  isFeatured: boolean;
 }
 
-const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({
-  userId,
-  showFilters = true,
-  showCategories = true
-}) => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<PostCategory | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'likes' | 'views' | 'shares'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
+// 模拟数据
+const portfolioItems: PortfolioItem[] = [
+  {
+    id: '1',
+    title: '天津之眼创意设计',
+    description: '以天津之眼为主题的创意设计作品',
+    category: '设计',
+    tags: ['天津', '设计', '创意'],
+    images: [
+      'https://images.unsplash.com/photo-1568702840618-4d2604190349?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&h=600&fit=crop'
+    ],
+    likes: 125,
+    views: 2048,
+    shares: 36,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    author: {
+      name: '创意设计师',
+      avatar: 'https://via.placeholder.com/40'
+    },
+    isFeatured: true
+  },
+  {
+    id: '2',
+    title: '天津古文化街插画',
+    description: '天津古文化街的插画作品',
+    category: '插画',
+    tags: ['天津', '插画', '文化'],
+    images: [
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=800&h=600&fit=crop'
+    ],
+    likes: 98,
+    views: 1536,
+    shares: 24,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    author: {
+      name: '插画师小王',
+      avatar: 'https://via.placeholder.com/40'
+    },
+    isFeatured: false
+  },
+  {
+    id: '3',
+    title: '天津美食海报',
+    description: '天津特色美食的海报设计',
+    category: '海报',
+    tags: ['天津', '美食', '海报'],
+    images: [
+      'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1568702840618-4d2604190349?w=800&h=600&fit=crop'
+    ],
+    likes: 85,
+    views: 1280,
+    shares: 18,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    author: {
+      name: '设计师小李',
+      avatar: 'https://via.placeholder.com/40'
+    },
+    isFeatured: false
+  },
+  {
+    id: '4',
+    title: '天津建筑摄影',
+    description: '天津特色建筑的摄影作品',
+    category: '摄影',
+    tags: ['天津', '建筑', '摄影'],
+    images: [
+      'https://images.unsplash.com/photo-1568702840618-4d2604190349?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=800&h=600&fit=crop'
+    ],
+    likes: 112,
+    views: 1856,
+    shares: 32,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    author: {
+      name: '摄影师小张',
+      avatar: 'https://via.placeholder.com/40'
+    },
+    isFeatured: true
+  }
+];
 
-  // 加载作品数据
-  useEffect(() => {
-    const loadedPosts = getPosts();
-    // 如果指定了用户ID，只显示该用户的作品
-    const userPosts = userId ? loadedPosts.filter(post => post.author === userId) : loadedPosts;
-    setPosts(userPosts);
-    setFilteredPosts(userPosts);
-    
-    // 提取所有可用标签
-    const tags = new Set<string>();
-    userPosts.forEach(post => {
-      post.tags.forEach(tag => tags.add(tag));
-    });
-    setAvailableTags(Array.from(tags));
-  }, [userId]);
+const PortfolioGallery: React.FC = () => {
+  const { isDark } = useTheme();
+  const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showDetail, setShowDetail] = useState(false);
 
-  // 应用筛选和排序
-  useEffect(() => {
-    let result = [...posts];
-    
-    // 分类筛选
-    if (selectedCategory !== 'all') {
-      result = result.filter(post => post.category === selectedCategory);
-    }
-    
-    // 标签筛选
-    if (selectedTags.length > 0) {
-      result = result.filter(post => 
-        selectedTags.every(tag => post.tags.includes(tag))
-      );
-    }
-    
-    // 搜索筛选
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(post => 
-        post.title.toLowerCase().includes(query) ||
-        post.description.toLowerCase().includes(query) ||
-        post.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-    
-    // 排序
-    result.sort((a, b) => {
-      let aVal: any, bVal: any;
-      
-      switch (sortBy) {
-        case 'date':
-          aVal = new Date(a.date).getTime();
-          bVal = new Date(b.date).getTime();
-          break;
-        case 'likes':
-          aVal = a.likes;
-          bVal = b.likes;
-          break;
-        case 'views':
-          aVal = a.views;
-          bVal = b.views;
-          break;
-        case 'shares':
-          aVal = a.shares;
-          bVal = b.shares;
-          break;
-        default:
-          aVal = new Date(a.date).getTime();
-          bVal = new Date(b.date).getTime();
-      }
-      
-      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-    });
-    
-    setFilteredPosts(result);
-  }, [posts, selectedCategory, selectedTags, searchQuery, sortBy, sortOrder]);
+  // 分类列表
+  const categories = ['all', '设计', '插画', '海报', '摄影', '数字艺术'];
 
-  // 切换标签选择
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev => {
-      if (prev.includes(tag)) {
-        return prev.filter(t => t !== tag);
-      } else {
-        return [...prev, tag];
-      }
-    });
+  // 过滤作品
+  const filteredItems = portfolioItems.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // 打开作品详情
+  const openDetail = (item: PortfolioItem) => {
+    setSelectedItem(item);
+    setShowDetail(true);
   };
 
-  // 分类选项
-  const categoryOptions = [
-    { value: 'all', label: '全部' },
-    { value: 'design', label: '设计' },
-    { value: 'writing', label: '写作' },
-    { value: 'audio', label: '音频' },
-    { value: 'video', label: '视频' },
-    { value: 'other', label: '其他' }
-  ];
-
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">创作者作品集</h2>
-      
-      {showFilters && (
-        <div className="space-y-4 mb-6">
-          {/* 搜索框 */}
-          <div className="relative">
+    <div className={`min-h-screen p-4 ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6">作品画廊</h1>
+
+        {/* 搜索和分类 */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
             <input
               type="text"
-              placeholder="搜索作品标题、描述或标签..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
+              placeholder="搜索作品..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full px-4 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
             />
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-            </svg>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 分类筛选 */}
-            {showCategories && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">分类</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value as PostCategory | 'all')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {categoryOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            
-            {/* 排序选项 */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">排序依据</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'date' | 'likes' | 'views' | 'shares')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="date">日期</option>
-                  <option value="likes">点赞数</option>
-                  <option value="views">浏览量</option>
-                  <option value="shares">分享数</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">排序顺序</label>
-                <select
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="desc">降序</option>
-                  <option value="asc">升序</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          
-          {/* 标签筛选 */}
-          {availableTags.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">标签筛选</label>
-              <div className="flex flex-wrap gap-2">
-                {availableTags.map(tag => (
-                  <motion.button
-                    key={tag}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => toggleTag(tag)}
-                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${selectedTags.includes(tag) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                  >
-                    {tag}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* 作品展示 */}
-      {filteredPosts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredPosts.map((post, index) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
+          <div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className={`px-4 py-2 rounded-lg border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
             >
-              {/* 作品缩略图 */}
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category === 'all' ? '全部分类' : category}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 作品列表 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredItems.map(item => (
+            <motion.div
+              key={item.id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`rounded-lg overflow-hidden shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'} cursor-pointer`}
+              onClick={() => openDetail(item)}
+            >
               <div className="relative">
-                <img
-                  src={post.thumbnail}
-                  alt={post.title}
-                  className="w-full h-48 object-cover"
-                />
-                {/* 分类标签 */}
-                <div className="absolute top-2 left-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${post.category === 'design' ? 'bg-purple-100 text-purple-800' : post.category === 'writing' ? 'bg-blue-100 text-blue-800' : post.category === 'audio' ? 'bg-green-100 text-green-800' : post.category === 'video' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {categoryOptions.find(opt => opt.value === post.category)?.label || '其他'}
-                  </span>
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={item.images[0]}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                  />
                 </div>
-                {/* 特色标记 */}
-                {post.isFeatured && (
-                  <div className="absolute top-2 right-2">
-                    <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      精选
-                    </span>
+                {item.isFeatured && (
+                  <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-medium px-2 py-1 rounded-full">
+                    精选
                   </div>
                 )}
-                {/* 草稿标记 */}
-                {post.isDraft && (
-                  <div className="absolute top-2 right-2">
-                    <span className="bg-gray-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      草稿
-                    </span>
-                  </div>
-                )}
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs font-medium px-2 py-1 rounded-full">
+                  {item.category}
+                </div>
               </div>
-              
-              {/* 作品信息 */}
               <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{post.title}</h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{post.description}</p>
-                
-                {/* 标签 */}
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {post.tags.slice(0, 3).map(tag => (
-                    <span key={tag} className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xl font-semibold">{item.title}</h3>
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span className="text-sm">{item.likes}</span>
+                  </div>
+                </div>
+                <p className="text-sm opacity-70 mb-3 line-clamp-2">{item.description}</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <img
+                    src={item.author.avatar}
+                    alt={item.author.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span className="text-sm font-medium">{item.author.name}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {item.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className={`px-2 py-1 rounded-full text-xs ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
+                    >
                       {tag}
                     </span>
                   ))}
-                  {post.tags.length > 3 && (
-                    <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs">
-                      +{post.tags.length - 3}
-                    </span>
-                  )}
                 </div>
-                
-                {/* 统计信息 */}
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                      </svg>
-                      {post.likes}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                      </svg>
-                      {post.views}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7.707 10.293a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L5.586 11H2a1 1 0 110-2h3.586l-1.293-1.293a1 1 0 111.414-1.414l3 3zM13 12a1 1 0 100-2h-3.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 13H13z" clipRule="evenodd" />
-                      </svg>
-                      {post.shares}
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    {new Date(post.date).toLocaleDateString()}
-                  </span>
+                <div className="flex justify-between items-center mt-3 text-sm opacity-70">
+                  <span>{item.views} 次浏览</span>
+                  <span>{item.shares} 次分享</span>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-      )) : (
-        <div className="text-center py-12">
-          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-800 mb-2">暂无作品</h3>
-          <p className="text-gray-500">还没有符合条件的作品，快来创作吧！</p>
-        </div>
-      )}
+
+        {/* 无结果提示 */}
+        {filteredItems.length === 0 && (
+          <div className="text-center py-12">
+            <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 className="text-lg font-medium mb-2">暂无作品</h3>
+            <p className="opacity-70">请尝试调整搜索条件或分类</p>
+          </div>
+        )}
+
+        {/* 作品详情模态框 */}
+        {showDetail && selectedItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={() => setShowDetail(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className={`max-w-5xl w-full rounded-lg overflow-hidden shadow-2xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="h-96 overflow-hidden">
+                <img
+                  src={selectedItem.images[0]}
+                  alt={selectedItem.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">{selectedItem.title}</h2>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                        {selectedItem.category}
+                      </span>
+                      {selectedItem.isFeatured && (
+                        <span className="bg-red-600 text-white text-xs font-medium px-2 py-1 rounded-full">
+                          精选
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowDetail(false)}
+                    className={`p-2 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                    aria-label="关闭"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mb-4">
+                  <img
+                    src={selectedItem.author.avatar}
+                    alt={selectedItem.author.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div>
+                    <span className="font-medium">{selectedItem.author.name}</span>
+                    <span className="ml-2 text-sm opacity-70">{selectedItem.createdAt.toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {selectedItem.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className={`px-2 py-1 rounded-full text-xs ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">作品描述</h3>
+                  <p className="opacity-80">{selectedItem.description}</p>
+                </div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">作品图片</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedItem.images.map((image, index) => (
+                      <div key={index} className="rounded-lg overflow-hidden">
+                        <img
+                          src={image}
+                          alt={`${selectedItem.title} 图片 ${index + 1}`}
+                          className="w-full h-48 object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-4">
+                    <button className="flex items-center gap-2 text-sm opacity-70 hover:opacity-100 transition-colors">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                      </svg>
+                      <span>{selectedItem.likes} 点赞</span>
+                    </button>
+                    <button className="flex items-center gap-2 text-sm opacity-70 hover:opacity-100 transition-colors">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                      </svg>
+                      <span>{selectedItem.views} 浏览</span>
+                    </button>
+                    <button className="flex items-center gap-2 text-sm opacity-70 hover:opacity-100 transition-colors">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.707 10.293a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L5.586 11H2a1 1 0 110-2h3.586l-1.293-1.293a1 1 0 111.414-1.414l3 3zM13 12a1 1 0 100-2h-3.586l1.293-1.293a1 1 0 10-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 13H13z" clipRule="evenodd" />
+                      </svg>
+                      <span>{selectedItem.shares} 分享</span>
+                    </button>
+                  </div>
+                  <button
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isDark ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white`}
+                  >
+                    收藏作品
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };

@@ -5,7 +5,7 @@ import SidebarLayout from '@/components/SidebarLayout'
 import GradientHero from '@/components/GradientHero'
 import CommunityChat from '@/components/CommunityChat'
 import CommunityManagement from '@/components/CommunityManagement'
-import { DiscussionSection, CommunityDiscussion } from '@/components/DiscussionSection'
+import { CommunityDiscussion } from '@/components/DiscussionSection'
 import ScheduledPost from '@/components/ScheduledPost'
 import VirtualList from '@/components/VirtualList'
 import { useTheme } from '@/hooks/useTheme'
@@ -1083,7 +1083,17 @@ export default function Community() {
   const convertToSquarePost = (t: Thread) => {
     const title = t.title
     const thumb = `https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(title)}&image_size=square`
-    postsApi.addPost({ title, thumbnail: thumb })
+    postsApi.addPost({
+      title,
+      thumbnail: thumb,
+      category: 'design',
+      tags: [],
+      description: '',
+      creativeDirection: '',
+      culturalElements: [],
+      colorScheme: [],
+      toolsUsed: []
+    })
     const current = postsApi.getPosts()
     setPosts(current)
   }
@@ -1518,7 +1528,7 @@ export default function Community() {
           transition={{ duration: 0.4 }}
         >
           <h3 className="font-medium mb-3">社群讨论区</h3>
-          <DiscussionSection isDark={isDark} messages={messages} onSend={(text: string) => {
+          <CommunityDiscussionSection isDark={isDark} messages={messages} onSend={(text: string) => {
             const user = mockCreators.find(c => c.online) || mockCreators[0]
             const next = { id: `m-${Date.now()}`, user: user.name, text, avatar: user.avatar, createdAt: Date.now(), pinned: false }
             setMessages(prev => [next, ...prev])
@@ -1748,7 +1758,7 @@ export default function Community() {
                         <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}>加入后可发言</span>
                       )}
                     </div>
-                    <DiscussionSection
+                    <CommunityDiscussionSection
                       isDark={isDark}
                       messages={communityMessages[activeCommunity.id] || []}
                       onSend={(t: string) => sendCommunityMessage(activeCommunity.id, t)}
@@ -1769,7 +1779,7 @@ export default function Community() {
 }
 
 // 中文注释：社群讨论区（轻量消息）组件
-function DiscussionSection({ isDark, messages, onSend, canSend = true, onDelete, onTogglePin, showModeration = false }: { isDark: boolean; messages: ChatMessage[]; onSend: (text: string) => void; canSend?: boolean; onDelete?: (id: string) => void; onTogglePin?: (id: string) => void; showModeration?: boolean }) {
+function CommunityDiscussionSection({ isDark, messages, onSend, canSend = true, onDelete, onTogglePin, showModeration = false }: { isDark: boolean; messages: ChatMessage[]; onSend: (text: string) => void; canSend?: boolean; onDelete?: (id: string) => void; onTogglePin?: (id: string) => void; showModeration?: boolean }) {
   const [text, setText] = useState('');
   return (
     <div>

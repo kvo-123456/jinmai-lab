@@ -268,7 +268,7 @@ export const CommunityDiscussion: React.FC<CommunityDiscussionProps> = ({
     onThreadsChange(next);
     localStorage.setItem('jmzf_threads', JSON.stringify(next));
     
-    onReplyTextChange(prev => ({ ...prev, [id]: '' }));
+    onReplyTextChange({ ...replyText, [id]: '' });
     toast.success('回复已添加');
   };
 
@@ -584,7 +584,7 @@ export const CommunityDiscussion: React.FC<CommunityDiscussionProps> = ({
                 <div className="mt-3 flex items-center gap-2">
                   <input 
                     value={replyText[t.id] || ''}
-                    onChange={e => onReplyTextChange(prev => ({ ...prev, [t.id]: e.target.value }))}
+                    onChange={e => onReplyTextChange({ ...replyText, [t.id]: e.target.value })}
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();

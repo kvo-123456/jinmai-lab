@@ -68,7 +68,7 @@ export function getCreatorAnalytics(): CreatorAnalytics {
   
   // 按类型统计作品
   const worksByType = allWorks.reduce((acc, work) => {
-    const type = work.type || 'text';
+    const type = 'type' in work ? work.type || 'text' : 'post';
     acc[type] = (acc[type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -80,7 +80,10 @@ export function getCreatorAnalytics(): CreatorAnalytics {
   const totalLikes = allWorks.reduce((acc, work) => acc + (work.likes || 0), 0);
   const totalViews = allWorks.reduce((acc, work) => acc + (work.views || 0), 0);
   const totalShares = allWorks.reduce((acc, work) => acc + (work.shares || 0), 0);
-  const totalComments = allWorks.reduce((acc, work) => acc + (work.comments || 0), 0);
+  const totalComments = allWorks.reduce((acc, work) => {
+    const commentsCount = Array.isArray(work.comments) ? work.comments.length : (work.comments || 0);
+    return acc + commentsCount;
+  }, 0);
   
   // 计算月度互动数据
   const monthlyEngagement = calculateMonthlyEngagement(allWorks);
@@ -266,10 +269,15 @@ export function getWorkAnalytics(workId: string): any {
   }
   
   // 计算作品的各项指标
-  const engagementRate = work.views > 0 ? ((work.likes || 0) + (work.comments || 0) + (work.shares || 0)) / work.views : 0;
-  const likeRate = work.views > 0 ? (work.likes || 0) / work.views : 0;
-  const commentRate = work.views > 0 ? (work.comments || 0) / work.views : 0;
-  const shareRate = work.views > 0 ? (work.shares || 0) / work.views : 0;
+  const views = work.views || 0;
+  const likes = work.likes || 0;
+  const commentsCount = Array.isArray(work.comments) ? work.comments.length : (work.comments || 0);
+  const shares = work.shares || 0;
+  
+  const engagementRate = views > 0 ? (likes + commentsCount + shares) / views : 0;
+  const likeRate = views > 0 ? likes / views : 0;
+  const commentRate = views > 0 ? commentsCount / views : 0;
+  const shareRate = views > 0 ? shares / views : 0;
   
   return {
     ...work,

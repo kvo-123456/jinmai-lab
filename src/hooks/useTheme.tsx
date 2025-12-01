@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext } from 'react';
+import { useState, useEffect, createContext, ReactNode, useContext } from 'react';
 
 type Theme = 'light' | 'dark' | 'pink';
 
@@ -15,7 +15,12 @@ export const ThemeContext = createContext<ThemeContextType>({
   isDark: false
 });
 
-export function useTheme() {
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
+// 创建 ThemeProvider 组件
+export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) {
@@ -38,9 +43,19 @@ export function useTheme() {
     });
   };
 
-  return {
+  const value = {
     theme,
     toggleTheme,
     isDark: theme === 'dark'
   };
+
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
 }

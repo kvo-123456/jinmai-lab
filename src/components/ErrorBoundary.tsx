@@ -169,7 +169,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           </footer>
           
           {/* 错误反馈弹窗 */}
-          {showFeedback && <ErrorFeedback onClose={this.handleCloseFeedback} autoShow error={error} />}
+          {showFeedback && <ErrorFeedback onClose={this.handleCloseFeedback} autoShow error={error || undefined} />}
         </div>
       );
     }

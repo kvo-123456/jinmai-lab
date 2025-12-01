@@ -34,7 +34,17 @@ export default function Wizard() {
     // 中文注释：确保缩略图不为空，优先使用变体图片或上传图片，否则用标题生成占位图
     const baseThumb = state.variants?.[0]?.image || state.imageUrl || ''
     const thumb = baseThumb || `https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(title)}&image_size=square`
-    const p = postService.addPost({ title, thumbnail: thumb })
+    const p = postService.addPost({
+      title,
+      thumbnail: thumb,
+      category: 'design',
+      tags: [],
+      description: '',
+      creativeDirection: '',
+      culturalElements: [],
+      colorScheme: [],
+      toolsUsed: []
+    })
     reset()
     navigate('/square')
     return p

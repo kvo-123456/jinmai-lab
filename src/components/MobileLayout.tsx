@@ -223,10 +223,14 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               className={({ isActive }) => `flex flex-col items-center justify-center py-2.5 ${isActive ? (isDark ? 'text-red-400' : 'text-red-600') : (isDark ? 'text-gray-300' : 'text-gray-700')}`}
               aria-label="创作"
             >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 ${isActive ? (isDark ? 'bg-red-400/20' : 'bg-red-100') : (isDark ? 'bg-gray-800' : 'bg-gray-100')}`}>
-                <i className="fas fa-plus text-xl" style={{ color: isActive ? (isDark ? '#fb7185' : '#dc2626') : (isDark ? '#9ca3af' : '#6b7280') }}></i>
-              </div>
-              <span>创作</span>
+              {({ isActive }) => (
+                <>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 ${isActive ? (isDark ? 'bg-red-400/20' : 'bg-red-100') : (isDark ? 'bg-gray-800' : 'bg-gray-100')}`}>
+                    <i className="fas fa-plus text-xl" style={{ color: isActive ? (isDark ? '#fb7185' : '#dc2626') : (isDark ? '#9ca3af' : '#6b7280') }}></i>
+                  </div>
+                  <span>创作</span>
+                </>
+              )}
             </NavLink>
           </li>
           <li>

@@ -476,21 +476,26 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
         <div className={`p-6 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center space-x-3`}>
           <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>当前模型：{selectedModel.name}</span>
           <button
-            onClick={() => setModelConfig({
-              temperature: 0.7,
-              top_p: 0.9,
-              max_tokens: 2000,
-              timeout: 30000,
-              system_prompt: '你是一个帮助创作者进行设计构思与文化融合的助手。',
-              max_history: 10,
-              stream: false,
-              kimi_model: 'moonshot-v1-32k',
-              kimi_base_url: 'https://api.moonshot.cn/v1',
-              retry: 2,
-              backoff_ms: 800,
-              deepseek_model: 'deepseek-chat',
-              deepseek_base_url: 'https://api.deepseek.com'
-            })}
+            onClick={() => {
+              // 使用当前配置作为基础，只更新需要的属性
+              const currentConfig = llmService.getConfig();
+              setModelConfig({
+                ...currentConfig,
+                temperature: 0.7,
+                top_p: 0.9,
+                max_tokens: 2000,
+                timeout: 30000,
+                system_prompt: '你是一个帮助创作者进行设计构思与文化融合的助手。',
+                max_history: 10,
+                stream: false,
+                kimi_model: 'moonshot-v1-32k',
+                kimi_base_url: 'https://api.moonshot.cn/v1',
+                retry: 2,
+                backoff_ms: 800,
+                deepseek_model: 'deepseek-chat',
+                deepseek_base_url: 'https://api.deepseek.com'
+              });
+            }},
             className={`px-5 py-2.5 rounded-lg transition-colors ${
               isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
             }`}

@@ -11,22 +11,25 @@ import { WorkflowProvider } from './contexts/workflowContext.tsx';
 import "./index.css";
 import ErrorBoundary from './components/ErrorBoundary';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { ThemeProvider } from './hooks/useTheme';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
-      <BrowserRouter>
-        <AuthProvider>
-          <WorkflowProvider>
-            <App />
-            <Toaster />
-            {/* 挂载网站分析组件：仅在部署环境采集访问与页面浏览等数据 */}
-            <Analytics />
-            {/* 挂载速度洞察组件：采集 Web Vitals 性能指标用于优化 */}
-            <SpeedInsights />
-          </WorkflowProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <WorkflowProvider>
+              <App />
+              <Toaster />
+              {/* 挂载网站分析组件：仅在部署环境采集访问与页面浏览等数据 */}
+              <Analytics />
+              {/* 挂载速度洞察组件：采集 Web Vitals 性能指标用于优化 */}
+              <SpeedInsights />
+            </WorkflowProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </ErrorBoundary>
   </StrictMode>
 );

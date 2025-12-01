@@ -300,21 +300,21 @@ export async function generateContent(type: ContentType, prompt: string, params?
     addContent(result);
     
     // 更新任务状态为完成
-    updateGenerationTask(task.id, {
+    const completedTask = updateGenerationTask(task.id, {
       status: 'completed',
       result,
       progress: 100
     });
     
-    return updateGenerationTask(task.id, { status: 'completed', result, progress: 100 });
+    return completedTask as GenerationTask;
   } catch (error) {
     // 更新任务状态为失败
-    updateGenerationTask(task.id, {
+    const failedTask = updateGenerationTask(task.id, {
       status: 'failed',
       error: error instanceof Error ? error.message : '生成失败'
     });
     
-    return updateGenerationTask(task.id, { status: 'failed', error: error instanceof Error ? error.message : '生成失败' });
+    return failedTask as GenerationTask;
   }
 }
 

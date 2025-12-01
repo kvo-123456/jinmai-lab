@@ -402,8 +402,8 @@ class TemplateService {
       updatedAt: Date.now(),
       usageCount: 0,
       version: '1.0.0',
-      useCases: template.useCases || [],
-      language: template.language || 'zh-CN',
+      useCases: [],
+      language: 'zh-CN',
       downloadCount: 0,
       rating: 0
     };

@@ -58,13 +58,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return userData ? JSON.parse(userData) : null;
   });
 
+  // 定义API响应类型
+  interface AuthResponse {
+    token: string;
+    user: User;
+  }
+
   // 检查用户认证状态
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
       if (token && !user) {
         try {
-          const response = await apiClient.get('/api/auth/me');
+          const response = await apiClient.get<{ user: User }>('/api/auth/me');
           if (response.ok && response.data && response.data.user) {
             setUser(response.data.user);
             setIsAuthenticated(true);
@@ -91,7 +97,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 登录方法
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiClient.post('/api/auth/login', {
+      const response = await apiClient.post<AuthResponse>('/api/auth/login', {
         email,
         password
       });
@@ -118,7 +124,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 注册方法
   const register = async (username: string, email: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiClient.post('/api/auth/register', {
+      const response = await apiClient.post<AuthResponse>('/api/auth/register', {
         username,
         email,
         password
