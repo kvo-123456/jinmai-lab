@@ -2282,7 +2282,6 @@ export default function Neo() {
             </div>
           )}
         </div>
-        </div>
       </main>
       
       {/* 风格预设模态框 */}
