@@ -620,9 +620,16 @@ class LLMService {
 
   /**
    * 向模型发送请求
-   * 由于是模拟环境，我们返回预设的模拟响应
+   * 支持文本和图像输入（多模态）
    */
-  async generateResponse(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
+  async generateResponse(
+    prompt: string,
+    options?: {
+      onDelta?: (chunk: string) => void;
+      signal?: AbortSignal;
+      images?: string[]; // 支持多图像输入
+    }
+  ): Promise<string> {
     // 添加用户消息到历史
     const userMessage: Message = {
       role: 'user',
@@ -671,32 +678,42 @@ class LLMService {
         resolve(fallback);
       };
 
+      // 构建带有多模态支持的请求
+      const requestOptions = {
+        ...options,
+        images: options?.images || [],
+        multimodalConfig: {
+          enable_multimodal: this.modelConfig.enable_multimodal,
+          image_resolution: this.modelConfig.image_resolution
+        }
+      };
+
       if (this.currentModel.id === 'kimi') {
-        this.callKimi(prompt, options)
+        this.callKimi(prompt, requestOptions)
           .then(handleSuccess)
           .catch(handleError);
         return;
       }
       if (this.currentModel.id === 'deepseek') {
-        this.callDeepseek(prompt, options)
+        this.callDeepseek(prompt, requestOptions)
           .then(handleSuccess)
           .catch(handleError);
         return;
       }
       if (this.currentModel.id === 'wenxinyiyan') {
-        this.callWenxin(prompt, options)
+        this.callWenxin(prompt, requestOptions)
           .then(handleSuccess)
           .catch(handleError);
         return;
       }
       if (this.currentModel.id === 'doubao') {
-        this.callDoubao(prompt, options)
+        this.callDoubao(prompt, requestOptions)
           .then(handleSuccess)
           .catch(handleError);
         return;
       }
       if (this.currentModel.id === 'qwen') {
-        this.callQwen(prompt, options)
+        this.callQwen(prompt, requestOptions)
           .then(handleSuccess)
           .catch(handleError);
         return;
@@ -879,7 +896,7 @@ class LLMService {
     throw lastErr || new Error(`${modelId} API error`);
   }
   
-  private async callKimi(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
+  private async callKimi(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal; images?: string[]; multimodalConfig?: any }): Promise<string> {
     const envKey = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_KIMI_API_KEY) || '';
     const storedKey = localStorage.getItem('KIMI_API_KEY') || '';
     const key = storedKey || envKey;
@@ -893,12 +910,38 @@ class LLMService {
     const effectiveStream = useProxy ? false : (this.modelConfig.stream === true);
     
     const requestFn = async () => {
+      // 构建消息内容，支持多模态输入
+      const messages: any[] = [
+        { role: 'system', content: this.modelConfig.system_prompt }
+      ];
+      
+      // 处理图像输入
+      if (options?.images && options?.images.length > 0 && this.modelConfig.enable_multimodal) {
+        // 多模态消息格式
+        const messageContent: any[] = [
+          { type: 'text', text: prompt }
+        ];
+        
+        // 添加图像内容
+        for (const imageUrl of options.images) {
+          messageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+              detail: this.modelConfig.image_resolution === '2048x2048' ? 'high' : 'auto'
+            }
+          });
+        }
+        
+        messages.push({ role: 'user', content: messageContent });
+      } else {
+        // 纯文本消息格式
+        messages.push({ role: 'user', content: prompt });
+      }
+      
       const payload: any = {
         model: this.modelConfig.kimi_model || 'moonshot-v1-32k',
-        messages: [
-          { role: 'system', content: this.modelConfig.system_prompt },
-          { role: 'user', content: prompt }
-        ],
+        messages,
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.top_p,
         max_tokens: this.modelConfig.max_tokens,
@@ -960,7 +1003,7 @@ class LLMService {
     return this.callApiWithRetry('kimi', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
-  private async callDeepseek(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
+  private async callDeepseek(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal; images?: string[]; multimodalConfig?: any }): Promise<string> {
     const envKey = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_DEEPSEEK_API_KEY) || '';
     const storedKey = localStorage.getItem('DEEPSEEK_API_KEY') || '';
     const key = storedKey || envKey;
@@ -972,12 +1015,38 @@ class LLMService {
     const effectiveStream = useProxy ? false : (this.modelConfig.stream === true);
     
     const requestFn = async () => {
+      // 构建消息内容，支持多模态输入
+      const messages: any[] = [
+        { role: 'system', content: this.modelConfig.system_prompt }
+      ];
+      
+      // 处理图像输入
+      if (options?.images && options?.images.length > 0 && this.modelConfig.enable_multimodal) {
+        // 多模态消息格式
+        const messageContent: any[] = [
+          { type: 'text', text: prompt }
+        ];
+        
+        // 添加图像内容
+        for (const imageUrl of options.images) {
+          messageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+              detail: this.modelConfig.image_resolution === '2048x2048' ? 'high' : 'auto'
+            }
+          });
+        }
+        
+        messages.push({ role: 'user', content: messageContent });
+      } else {
+        // 纯文本消息格式
+        messages.push({ role: 'user', content: prompt });
+      }
+      
       const payload: any = {
         model: this.modelConfig.deepseek_model || 'deepseek-chat',
-        messages: [
-          { role: 'system', content: this.modelConfig.system_prompt },
-          { role: 'user', content: prompt }
-        ],
+        messages,
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.top_p,
         max_tokens: this.modelConfig.max_tokens,
@@ -1043,18 +1112,44 @@ class LLMService {
     return this.callApiWithRetry('deepseek', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
-  private async callWenxin(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
+  private async callWenxin(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal; images?: string[]; multimodalConfig?: any }): Promise<string> {
     const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL) || '';
     if (!apiBase) throw new Error('Missing API base for Wenxin');
     const url = `${apiBase}/api/qianfan/chat/completions`;
     
     const requestFn = async () => {
+      // 构建消息内容，支持多模态输入
+      const messages: any[] = [
+        { role: 'system', content: this.modelConfig.system_prompt }
+      ];
+      
+      // 处理图像输入
+      if (options?.images && options?.images.length > 0 && this.modelConfig.enable_multimodal) {
+        // 多模态消息格式
+        const messageContent: any[] = [
+          { type: 'text', text: prompt }
+        ];
+        
+        // 添加图像内容
+        for (const imageUrl of options.images) {
+          messageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+              detail: this.modelConfig.image_resolution === '2048x2048' ? 'high' : 'auto'
+            }
+          });
+        }
+        
+        messages.push({ role: 'user', content: messageContent });
+      } else {
+        // 纯文本消息格式
+        messages.push({ role: 'user', content: prompt });
+      }
+      
       const payload: any = {
         model: this.modelConfig.wenxin_model || 'ERNIE-Speed-8K',
-        messages: [
-          { role: 'system', content: this.modelConfig.system_prompt },
-          { role: 'user', content: prompt }
-        ],
+        messages,
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.top_p,
         max_tokens: this.modelConfig.max_tokens,
@@ -1091,18 +1186,44 @@ class LLMService {
     return this.callApiWithRetry('wenxin', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
-  private async callQwen(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
+  private async callQwen(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal; images?: string[]; multimodalConfig?: any }): Promise<string> {
     const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL) || '';
     if (!apiBase) throw new Error('Missing API base for Qwen');
     const url = `${apiBase}/api/dashscope/chat/completions`;
     
     const requestFn = async () => {
+      // 构建消息内容，支持多模态输入
+      const messages: any[] = [
+        { role: 'system', content: this.modelConfig.system_prompt }
+      ];
+      
+      // 处理图像输入
+      if (options?.images && options?.images.length > 0 && this.modelConfig.enable_multimodal) {
+        // 多模态消息格式
+        const messageContent: any[] = [
+          { type: 'text', text: prompt }
+        ];
+        
+        // 添加图像内容
+        for (const imageUrl of options.images) {
+          messageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+              detail: this.modelConfig.image_resolution === '2048x2048' ? 'high' : 'auto'
+            }
+          });
+        }
+        
+        messages.push({ role: 'user', content: messageContent });
+      } else {
+        // 纯文本消息格式
+        messages.push({ role: 'user', content: prompt });
+      }
+      
       const payload: any = {
         model: this.modelConfig.qwen_model || 'qwen-plus',
-        messages: [
-          { role: 'system', content: this.modelConfig.system_prompt },
-          { role: 'user', content: prompt }
-        ],
+        messages,
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.top_p,
         max_tokens: this.modelConfig.max_tokens,
@@ -1132,18 +1253,44 @@ class LLMService {
     return this.callApiWithRetry('qwen', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
-  private async callDoubao(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
+  private async callDoubao(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal; images?: string[]; multimodalConfig?: any }): Promise<string> {
     const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL) || '';
     if (!apiBase) throw new Error('Missing API base for Doubao');
     const url = `${apiBase}/api/doubao/chat/completions`;
     
     const requestFn = async () => {
+      // 构建消息内容，支持多模态输入
+      const messages: any[] = [
+        { role: 'system', content: this.modelConfig.system_prompt }
+      ];
+      
+      // 处理图像输入
+      if (options?.images && options?.images.length > 0 && this.modelConfig.enable_multimodal) {
+        // 多模态消息格式
+        const messageContent: any[] = [
+          { type: 'text', text: prompt }
+        ];
+        
+        // 添加图像内容
+        for (const imageUrl of options.images) {
+          messageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: imageUrl,
+              detail: this.modelConfig.image_resolution === '2048x2048' ? 'high' : 'auto'
+            }
+          });
+        }
+        
+        messages.push({ role: 'user', content: messageContent });
+      } else {
+        // 纯文本消息格式
+        messages.push({ role: 'user', content: prompt });
+      }
+      
       const payload: any = {
         model: this.modelConfig.doubao_model || 'doubao-pro-32k',
-        messages: [
-          { role: 'system', content: this.modelConfig.system_prompt },
-          { role: 'user', content: prompt }
-        ],
+        messages,
         temperature: this.modelConfig.temperature,
         top_p: this.modelConfig.top_p,
         max_tokens: this.modelConfig.max_tokens,

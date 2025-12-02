@@ -10,6 +10,7 @@ import errorService from '@/services/errorService'
 import doubao from '@/services/doubao'
 import { createVideoTask, pollVideoTask } from '@/services/doubao'
 import type { DoubaoVideoContent } from '@/services/doubao'
+import SpeechInput from '@/components/SpeechInput'
 
 const BRAND_STORIES: Record<string, string> = {
   mahua: '始于清末，以多褶形态与香酥口感著称，传统工艺要求条条分明，不含水分。',
@@ -215,7 +216,7 @@ export default function Neo() {
       id: 'generate',
       title: '生成内容',
       description: '点击"注入灵感"按钮，AI将开始生成创意内容。',
-      targetSelector: 'button:contains("注入灵感")',
+      targetSelector: '.generate-button',
       position: 'bottom',
       nextText: '完成',
       prevText: '上一步'
@@ -1672,38 +1673,12 @@ export default function Neo() {
                 enterKeyHint="send"
                 inputMode="text"
               />
-              <button
-                onClick={async () => {
-                  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                    const recognition = new SpeechRecognition();
-                    recognition.lang = 'zh-CN';
-                    recognition.interimResults = false;
-                    
-                    recognition.onstart = () => {
-                      toast.info('开始语音输入...');
-                    };
-                    
-                    recognition.onresult = (event: any) => {
-                      const speechResult = event.results[0][0].transcript;
-                      setPrompt(prev => prev + speechResult);
-                      toast.success('语音输入完成');
-                    };
-                    
-                    recognition.onerror = (event: any) => {
-                      toast.error('语音输入失败: ' + event.error);
-                    };
-                    
-                    recognition.start();
-                  } else {
-                    toast.error('您的浏览器不支持语音输入功能');
-                  }
-                }}
-                className={`absolute right-3 bottom-3 p-2 rounded-full ${isDark ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'} transition-all duration-300 hover:scale-110`}
-                aria-label="语音输入"
-              >
-                <i className="fas fa-microphone"></i>
-              </button>
+              <div className="absolute right-3 bottom-3">
+                <SpeechInput 
+                  onTextRecognized={(text) => setPrompt(prev => prev + text)} 
+                  language="zh-CN"
+                />
+              </div>
             </div>
             {(optimizing || optStatus !== 'idle') && (
               <div className={`text-xs mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`} aria-live="polite">
@@ -1716,7 +1691,7 @@ export default function Neo() {
 
             <button
               onClick={startGeneration}
-              className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 min-h-[44px] active:scale-98"
+              className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 min-h-[44px] active:scale-98 generate-button"
             >
               注入灵感
             </button>
@@ -2281,7 +2256,6 @@ export default function Neo() {
               )}
             </div>
           )}
-        </div>
         </div>
       </main>
       

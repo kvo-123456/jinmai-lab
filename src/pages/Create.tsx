@@ -9,6 +9,7 @@ import AID点评 from '@/components/AID点评';
  
 import LLMCommandPanel from '@/components/LLMCommandPanel';
 import ModelSelector from '@/components/ModelSelector';
+import PerformanceMonitor from '@/components/PerformanceMonitor';
 import { HaiheBoatTransition, TianjinImage } from '@/components/TianjinStyleComponents';
 
 import llmService from '../services/llmService';
@@ -1228,6 +1229,9 @@ export default function Create() {
             >
               AI点评
             </button>
+            
+            {/* 性能监控组件 */}
+            <PerformanceMonitor />
 
             {/* 中文注释：自动保存设置（开关与间隔） */}
             <div className="hidden md:flex items-center gap-2">
@@ -2528,15 +2532,15 @@ export default function Create() {
          )}
          
          {/* 页脚 */}
-      <footer className={`border-t ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'} py-6 px-4`}>
+      <footer className="border-t border-gray-200 bg-white py-6 px-4">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
-          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className="text-sm text-gray-600">
             © 2025 AI共创平台. 保留所有权利
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className={`text-sm ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>隐私政策</a>
-            <a href="#" className={`text-sm ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>服务条款</a>
-            <a href="#" className={`text-sm ${isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'} transition-colors`}>帮助中心</a>
+            <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">隐私政策</a>
+            <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">服务条款</a>
+            <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">帮助中心</a>
           </div>
         </div>
       </footer>
