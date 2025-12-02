@@ -3,7 +3,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const ORIGIN = process.env.CORS_ALLOW_ORIGIN || '*'
 const VOLC_TTS_APP_ID = process.env.VOLC_TTS_APP_ID || ''
 const VOLC_TTS_ACCESS_TOKEN = process.env.VOLC_TTS_ACCESS_TOKEN || ''
-const VOLC_TTS_SECRET_KEY = process.env.VOLC_TTS_SECRET_KEY || ''
+// VOLC_TTS_SECRET_KEY 未使用，已注释
+// const VOLC_TTS_SECRET_KEY = process.env.VOLC_TTS_SECRET_KEY || ''
 const VOLC_TTS_ENDPOINT = process.env.VOLC_TTS_ENDPOINT || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
