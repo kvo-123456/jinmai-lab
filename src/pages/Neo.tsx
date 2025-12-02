@@ -517,7 +517,7 @@ export default function Neo() {
       const csvContent = [
         headers.join(','),
         ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-      ].join('\n')
+      ].join('')
       
       data = csvContent
       fileName = `neo-history-${new Date().toISOString().slice(0, 10)}.csv`
@@ -1005,7 +1005,7 @@ export default function Neo() {
       if (chosen !== prev) llmService.setCurrentModel(chosen)
       llmService.updateConfig({ stream: true })
       const context = `${base} ${tags.join(' ')} ${brand}`.trim()
-      const instruction = `请将以下提示词优化为更清晰、可直接用于AI绘图的单句提示，包含主体、风格、构图、细节、光影、材质、配色，避免解释：\n${context}`
+      const instruction = `请将以下提示词优化为更清晰、可直接用于AI绘图的单句提示，包含主体、风格、构图、细节、光影、材质、配色，避免解释：${context}`
       const final = await llmService.generateResponse(instruction, { onDelta: (chunk: string) => setOptPreview(chunk) })
       const text = (final || base).trim()
       setPrompt(text)
@@ -1043,7 +1043,7 @@ export default function Neo() {
         creative: '创意、独特、富有想象力的风格',
         poetic: '诗意、优美、富有文采的风格'
       }
-      const instruction = `请基于以下方向输出一段不超过120字的中文文案，要求${styleDesc[textStyle]}，通俗易懂，便于朗读：\n方向：${dir}\n提示：${base || '天津文化设计灵感'}`
+      const instruction = `请基于以下方向输出一段不超过120字的中文文案，要求${styleDesc[textStyle]}，通俗易懂，便于朗读：方向：${dir}提示：${base || '天津文化设计灵感'}`
       const text = await llmService.generateResponse(instruction)
       setAiText((text || '').trim())
     } catch {
@@ -1510,7 +1510,7 @@ export default function Neo() {
 
             <div className="space-y-4 mb-4">
               <div>
-                <label className="text-sm mb-2 block">选择品牌<</label>
+                
                 <select
                   value={useCustomBrand ? 'custom' : brand}
                   onChange={(e) => {
@@ -1556,7 +1556,7 @@ export default function Neo() {
               </div>
 
               <div>
-                <label className="text-sm mb-2 block">创作标签<</label>
+                
                 <div className="flex flex-wrap gap-2 mb-3">
                   {/* 内置标签 */}
                   {TAGS.map(t => {
@@ -1757,7 +1757,7 @@ export default function Neo() {
                 <h3 className="text-sm font-medium mb-3">视频参数设置</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">时长（秒）<</label>
+                    
                     <input
                       type="number"
                       min="3"
@@ -1768,7 +1768,7 @@ export default function Neo() {
                     />
                   </div>
                   <div className="sm:col-span-1 lg:col-span-2">
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">分辨率<</label>
+                    
                     <select
                       value={videoParams.resolution}
                       onChange={(e) => setVideoParams(prev => ({ ...prev, resolution: e.target.value as '480p' | '720p' | '1080p' }))}
@@ -1780,7 +1780,7 @@ export default function Neo() {
                     </select>
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">相机模式<</label>
+                    
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 cursor-pointer text-sm">
                         <input
@@ -1792,7 +1792,7 @@ export default function Neo() {
                           className="text-red-600 h-4 w-4"
                         />
                         <span>动态</span>
-                      <</label>
+                      </label>
                       <label className="flex items-center gap-2 cursor-pointer text-sm">
                         <input
                           type="radio"
@@ -1803,7 +1803,7 @@ export default function Neo() {
                           className="text-red-600 h-4 w-4"
                         />
                         <span>固定</span>
-                      <</label>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -1894,7 +1894,7 @@ export default function Neo() {
                             
                             {/* 评分 */}
                             <div className="mb-4">
-                              <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">评分：<</label>
+                              
                               <div className="flex gap-2">
                                 {[1, 2, 3, 4, 5].map(star => (
                                   <button
@@ -1913,7 +1913,7 @@ export default function Neo() {
                             
                             {/* 文字反馈 */}
                             <div className="mb-4">
-                              <label className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">反馈意见：<</label>
+                              
                               <textarea
                                 value={feedbacks[`result-${i}`]?.comment || ''}
                                 onChange={(e) => {
@@ -1972,7 +1972,7 @@ export default function Neo() {
                 <div className="font-bold">AI文案</div>
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500 dark:text-gray-400">风格：<</label>
+                
                 <select
                   value={textStyle}
                   onChange={(e) => setTextStyle(e.target.value as any)}
@@ -2027,7 +2027,7 @@ export default function Neo() {
                 <div className="flex flex-wrap items-center gap-3">
                   {/* 筛选 */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs text-gray-500 dark:text-gray-400">筛选：<</label>
+                    
                     <select
                       value={historyFilter}
                       onChange={(e) => setHistoryFilter(e.target.value as any)}
@@ -2041,7 +2041,7 @@ export default function Neo() {
                   
                   {/* 排序 */}
                   <div className="flex items-center gap-2">
-                    <label className="text-xs text-gray-500 dark:text-gray-400">排序：<</label>
+                    
                     <select
                       value={historySort}
                       onChange={(e) => setHistorySort(e.target.value as any)}
@@ -2059,7 +2059,7 @@ export default function Neo() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* 日期范围 */}
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">日期范围<</label>
+                    
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="date"
@@ -2078,7 +2078,7 @@ export default function Neo() {
                   
                   {/* 分辨率 */}
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">分辨率<</label>
+                    
                     <input
                       type="text"
                       placeholder="例如：1920×1080"
@@ -2090,7 +2090,7 @@ export default function Neo() {
                   
                   {/* 时长范围 */}
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">时长范围（秒）<</label>
+                    
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="number"
@@ -2254,7 +2254,7 @@ export default function Neo() {
                   {historySearch ? '没有找到匹配的历史记录' : '没有历史记录'}
                 </div>
               )}
-            </div>\n      </main>
+            </div>      </main>
       
       {/* 风格预设模态框 */}
       {showPresetModal && (
@@ -2274,7 +2274,7 @@ export default function Neo() {
             <div className="space-y-4">
               {/* 预设名称 */}
               <div>
-                <label className="text-sm font-medium mb-2 block">预设名称 *<</label>
+                
                 <input
                   type="text"
                   value={presetForm.name}
@@ -2286,7 +2286,7 @@ export default function Neo() {
               
               {/* 预设描述 */}
               <div>
-                <label className="text-sm font-medium mb-2 block">预设描述<</label>
+                
                 <textarea
                   value={presetForm.description}
                   onChange={(e) => setPresetForm(prev => ({ ...prev, description: e.target.value }))}
@@ -2298,7 +2298,7 @@ export default function Neo() {
               
               {/* 品牌 */}
               <div>
-                <label className="text-sm font-medium mb-2 block">品牌<</label>
+                
                 <input
                   type="text"
                   value={presetForm.brand}
@@ -2310,7 +2310,7 @@ export default function Neo() {
               
               {/* 提示词 */}
               <div>
-                <label className="text-sm font-medium mb-2 block">提示词<</label>
+                
                 <textarea
                   value={presetForm.prompt}
                   onChange={(e) => setPresetForm(prev => ({ ...prev, prompt: e.target.value }))}
@@ -2322,7 +2322,7 @@ export default function Neo() {
               
               {/* 引擎选择 */}
               <div>
-                <label className="text-sm font-medium mb-2 block">生成引擎<</label>
+                
                 <div className="flex gap-2">
                   <button onClick={() => setPresetForm(prev => ({ ...prev, engine: 'sdxl' }))} className={`px-3 py-2 rounded-full text-sm transition-colors ${presetForm.engine==='sdxl' ? 'bg-red-600 hover:bg-red-700 text-white' : (isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700')}`}>SDXL</button>
                   <button onClick={() => setPresetForm(prev => ({ ...prev, engine: 'doubao' }))} className={`px-3 py-2 rounded-full text-sm transition-colors ${presetForm.engine==='doubao' ? 'bg-red-600 hover:bg-red-700 text-white' : (isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700')}`}>Doubao</button>
@@ -2331,7 +2331,7 @@ export default function Neo() {
               
               {/* 文本风格 */}
               <div>
-                <label className="text-sm font-medium mb-2 block">文本风格<</label>
+                
                 <select
                   value={presetForm.textStyle}
                   onChange={(e) => setPresetForm(prev => ({ ...prev, textStyle: e.target.value as any }))}
@@ -2346,10 +2346,10 @@ export default function Neo() {
               
               {/* 视频参数 */}
               <div>
-                <label className="text-sm font-medium mb-2 block">视频参数<</label>
+                
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">时长（秒）<</label>
+                    
                     <input
                       type="number"
                       min="3"
@@ -2360,7 +2360,7 @@ export default function Neo() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">分辨率<</label>
+                    
                     <select
                       value={presetForm.videoParams.resolution}
                       onChange={(e) => setPresetForm(prev => ({ ...prev, videoParams: { ...prev.videoParams, resolution: e.target.value as any } }))}
@@ -2373,7 +2373,7 @@ export default function Neo() {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <label className="text-xs text-gray-500 dark:text-gray-400 mb-2 block">相机模式<</label>
+                  
                   <div className="flex items-center gap-4">
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input
@@ -2385,7 +2385,7 @@ export default function Neo() {
                         className="text-red-600 h-4 w-4"
                       />
                       <span>动态</span>
-                    <</label>
+                    </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input
                         type="radio"
@@ -2396,7 +2396,7 @@ export default function Neo() {
                         className="text-red-600 h-4 w-4"
                       />
                       <span>固定</span>
-                    <</label>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -2478,7 +2478,7 @@ export default function Neo() {
                   <h3 className="text-sm font-medium mb-3 block">裁剪设置</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">裁剪比例<</label>
+                      
                       <div className="grid grid-cols-3 gap-2">
                         {(['自由', '1:1', '4:3', '16:9', '3:4', '9:16'] as const).map(ratio => (
                           <button
@@ -2528,7 +2528,7 @@ export default function Neo() {
                       </button>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">当前角度: {rotation}°<</label>
+                      
                     </div>
                   </div>
                 </div>
@@ -2581,7 +2581,7 @@ export default function Neo() {
                       </button>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">当前缩放: {(scale * 100).toFixed(0)}%<</label>
+                      
                     </div>
                   </div>
                 </div>
@@ -2643,7 +2643,7 @@ export default function Neo() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {/* 导出格式 */}
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">图片格式<</label>
+                    
                     <select
                       value={imageExportOptions.format}
                       onChange={(e) => setImageExportOptions(prev => ({ ...prev, format: e.target.value as any }))}
@@ -2657,7 +2657,7 @@ export default function Neo() {
                   
                   {/* 导出质量 */}
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">导出质量: {imageExportOptions.quality}%<</label>
+                    
                     <input
                       type="range"
                       min="10"
@@ -2670,7 +2670,7 @@ export default function Neo() {
                   
                   {/* 导出分辨率 */}
                   <div>
-                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">分辨率<</label>
+                    
                     <select
                       value={imageExportOptions.resolution}
                       onChange={(e) => setImageExportOptions(prev => ({ ...prev, resolution: e.target.value as any }))}
@@ -2817,5 +2817,6 @@ export default function Neo() {
     </>
   )
 }
+
 
 
