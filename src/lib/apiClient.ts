@@ -21,7 +21,19 @@ const DEFAULT_RETRIES = 1
 const getBaseUrl = () => {
   const envUrl = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined
   if (envUrl && envUrl.trim()) return envUrl
-  // 中文注释：使用相对路径，让Vite开发服务器处理API请求
+  // 中文注释：自动判断本地开发环境（localhost/127.0.0.1/file协议），统一指向本地服务端 3001
+  try {
+    const w = typeof window !== 'undefined' ? window : undefined
+    if (w) {
+      const { protocol, hostname, port } = w.location
+      const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
+      const isFile = protocol === 'file:'
+      const isDev = isLocalHost || isFile
+      // 中文注释：当前端端口不是 3001（避免自指），使用后端端口 3001
+      if (isDev && port !== '3001') return 'http://localhost:3001'
+    }
+  } catch {}
+  // 中文注释：默认返回空字符串，使用相对路径（生产环境由同源后端提供路由）
   return ''
 }
 
