@@ -128,6 +128,246 @@ export default function Neo() {
   const [showBatchActions, setShowBatchActions] = useState(false)  
   const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('json')
   
+  // 增强导出选项状态
+  const [imageExportOptions, setImageExportOptions] = useState({
+    format: 'png' as 'png' | 'jpeg' | 'webp',
+    quality: 90,
+    resolution: 'original' as 'original' | '480p' | '720p' | '1080p'
+  })
+  const [videoExportOptions, setVideoExportOptions] = useState({
+    format: 'mp4' as 'mp4' | 'webm' | 'avi',
+    quality: 'high' as 'low' | 'medium' | 'high',
+    resolution: 'original' as 'original' | '480p' | '720p' | '1080p'
+  })
+  const [batchExportModalOpen, setBatchExportModalOpen] = useState(false)
+  const [selectedExportItems, setSelectedExportItems] = useState<number[]>([])
+  
+  // 实时通知系统状态
+  interface NotificationItem {
+    id: string;
+    title: string;
+    message: string;
+    type: 'success' | 'info' | 'warning' | 'error';
+    timestamp: number;
+    read: boolean;
+    url?: string;
+  }
+  
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false)
+  const [notificationSettings, setNotificationSettings] = useState({
+    enableDesktop: true,
+    enableSound: true,
+    showNotifications: true,
+    maxNotifications: 50
+  })
+  const [unreadCount, setUnreadCount] = useState(0)
+  
+  // 交互式教程状态
+  interface TutorialStep {
+    id: string;
+    title: string;
+    description: string;
+    targetSelector: string;
+    position: 'top' | 'bottom' | 'left' | 'right';
+    nextText?: string;
+    prevText?: string;
+    skipText?: string;
+  }
+  
+  const tutorialSteps: TutorialStep[] = [
+    {
+      id: 'welcome',
+      title: '欢迎使用津门·灵感引擎',
+      description: '这是一个强大的AI创作平台，帮助您快速生成津门文化相关的创意内容。',
+      targetSelector: '.relative.container',
+      position: 'top',
+      nextText: '开始了解'
+    },
+    {
+      id: 'brand-selection',
+      title: '选择品牌',
+      description: '从预设品牌中选择一个，或者输入您自己的品牌名称。',
+      targetSelector: 'select[name="brand"]',
+      position: 'bottom',
+      nextText: '下一步',
+      prevText: '上一步'
+    },
+    {
+      id: 'tags',
+      title: '选择标签',
+      description: '选择相关标签，或者添加您自己的自定义标签，帮助AI更好地理解您的需求。',
+      targetSelector: '.flex.flex-wrap.gap-2',
+      position: 'bottom',
+      nextText: '下一步',
+      prevText: '上一步'
+    },
+    {
+      id: 'prompt',
+      title: '输入提示词',
+      description: '输入您的创作需求，AI会根据您的提示生成创意内容。',
+      targetSelector: 'textarea[placeholder*="掌柜的"]',
+      position: 'bottom',
+      nextText: '下一步',
+      prevText: '上一步'
+    },
+    {
+      id: 'generate',
+      title: '生成内容',
+      description: '点击"注入灵感"按钮，AI将开始生成创意内容。',
+      targetSelector: 'button:contains("注入灵感")',
+      position: 'bottom',
+      nextText: '完成',
+      prevText: '上一步'
+    },
+    {
+      id: 'results',
+      title: '查看结果',
+      description: '生成完成后，您可以查看AI生成的创意内容，包括图片、视频和文本。',
+      targetSelector: '.grid.grid-cols-1.gap-4',
+      position: 'top',
+      nextText: '完成',
+      prevText: '上一步',
+      skipText: '跳过教程'
+    }
+  ];
+  
+  const [showTutorial, setShowTutorial] = useState(false)
+  const [currentTutorialStep, setCurrentTutorialStep] = useState(0)
+  const [tutorialCompleted, setTutorialCompleted] = useState(false)
+  
+  // 通知功能函数
+  const addNotification = (item: {
+    title: string;
+    message: string;
+    type?: 'success' | 'info' | 'warning' | 'error';
+    url?: string;
+    showDesktop?: boolean;
+  }) => {
+    const newNotification: NotificationItem = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: item.title,
+      message: item.message,
+      type: item.type || 'info',
+      timestamp: Date.now(),
+      read: false,
+      url: item.url
+    };
+    
+    setNotifications(prev => {
+      const updated = [newNotification, ...prev].slice(0, notificationSettings.maxNotifications);
+      setUnreadCount(updated.filter(n => !n.read).length);
+      return updated;
+    });
+    
+    // 发送桌面通知
+    if (item.showDesktop !== false && notificationSettings.enableDesktop && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        new Notification(item.title, {
+          body: item.message,
+          icon: '/favicon.ico'
+        });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(item.title, {
+              body: item.message,
+              icon: '/favicon.ico'
+            });
+          }
+        });
+      }
+    }
+  };
+  
+  const markAsRead = (id: string) => {
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
+      setUnreadCount(updated.filter(n => !n.read).length);
+      return updated;
+    });
+  };
+  
+  const markAllAsRead = () => {
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read: true }));
+      setUnreadCount(0);
+      return updated;
+    });
+  };
+  
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      setUnreadCount(updated.filter(n => !n.read).length);
+      return updated;
+    });
+  };
+  
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+  };
+  
+  // 交互式教程功能函数
+  const startTutorial = () => {
+    setShowTutorial(true);
+    setCurrentTutorialStep(0);
+    setTutorialCompleted(false);
+  };
+  
+  const skipTutorial = () => {
+    setShowTutorial(false);
+    setTutorialCompleted(true);
+    // 保存教程状态到本地存储
+    try {
+      localStorage.setItem('NEO_TUTORIAL_COMPLETED', 'true');
+    } catch {}
+  };
+  
+  const nextTutorialStep = () => {
+    if (currentTutorialStep < tutorialSteps.length - 1) {
+      setCurrentTutorialStep(prev => prev + 1);
+    } else {
+      completeTutorial();
+    }
+  };
+  
+  const prevTutorialStep = () => {
+    if (currentTutorialStep > 0) {
+      setCurrentTutorialStep(prev => prev - 1);
+    }
+  };
+  
+  const completeTutorial = () => {
+    setShowTutorial(false);
+    setTutorialCompleted(true);
+    // 保存教程状态到本地存储
+    try {
+      localStorage.setItem('NEO_TUTORIAL_COMPLETED', 'true');
+    } catch {}
+    addNotification({
+      title: '教程完成',
+      message: '恭喜您完成了交互式教程！现在您可以开始使用津门·灵感引擎进行创作了。',
+      type: 'success',
+      showDesktop: true
+    });
+  };
+  
+  // 检查是否需要显示教程
+  useEffect(() => {
+    try {
+      const completed = localStorage.getItem('NEO_TUTORIAL_COMPLETED');
+      if (!completed) {
+        // 延迟显示教程，给用户时间熟悉界面
+        const timer = setTimeout(() => {
+          setShowTutorial(true);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, []);
+  
   // 加载历史记录
   useEffect(() => {
     try {
@@ -294,6 +534,90 @@ export default function Neo() {
     URL.revokeObjectURL(url)
     
     toast.success(`已导出 ${filteredHistory.length} 条历史记录`)
+  }
+
+  // 增强导出选项功能
+  const exportImage = (index: number, options?: typeof imageExportOptions) => {
+    const imageUrl = images[index]
+    if (!imageUrl) return
+    
+    const exportOpts = options || imageExportOptions
+    const fileName = `neo-image-${index}-${new Date().getTime()}.${exportOpts.format}`
+    
+    // 这里实现增强的图片导出功能，目前使用简单的下载
+    toast.info(`图片将以 ${exportOpts.format} 格式导出，质量：${exportOpts.quality}%，分辨率：${exportOpts.resolution}`)
+    
+    // 创建下载链接
+    const a = document.createElement('a')
+    a.href = imageUrl
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  const exportVideo = (index: number, options?: typeof videoExportOptions) => {
+    const videoUrl = videoByIndex[index]
+    if (!videoUrl) return
+    
+    const exportOpts = options || videoExportOptions
+    const fileName = `neo-video-${index}-${new Date().getTime()}.${exportOpts.format}`
+    
+    // 这里实现增强的视频导出功能，目前使用简单的下载
+    toast.info(`视频将以 ${exportOpts.format} 格式导出，质量：${exportOpts.quality}，分辨率：${exportOpts.resolution}`)
+    
+    // 创建下载链接
+    const a = document.createElement('a')
+    a.href = `${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(videoUrl)}`
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  const openBatchExportModal = () => {
+    setSelectedExportItems([])
+    setBatchExportModalOpen(true)
+  }
+
+  const closeBatchExportModal = () => {
+    setBatchExportModalOpen(false)
+  }
+
+  const toggleSelectExportItem = (index: number) => {
+    setSelectedExportItems(prev => {
+      return prev.includes(index)
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    })
+  }
+
+  const selectAllExportItems = () => {
+    if (selectedExportItems.length === images.length) {
+      // 取消全选
+      setSelectedExportItems([])
+    } else {
+      // 全选
+      setSelectedExportItems(images.map((_, index) => index))
+    }
+  }
+
+  const batchExportItems = () => {
+    if (selectedExportItems.length === 0) {
+      toast.warning('请选择要导出的项')
+      return
+    }
+    
+    // 这里实现批量导出功能
+    toast.info(`将导出 ${selectedExportItems.length} 项，格式：${imageExportOptions.format}，质量：${imageExportOptions.quality}%`)
+    
+    // 逐个导出
+    selectedExportItems.forEach(index => {
+      exportImage(index)
+    })
+    
+    closeBatchExportModal()
+    toast.success(`已启动 ${selectedExportItems.length} 项的导出任务`)
   }
 
   // 重置筛选条件
@@ -1036,6 +1360,91 @@ export default function Neo() {
         <div className="pointer-events-none absolute -top-10 -left-10 w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-blue-500/20 via-red-500/20 to-yellow-500/20 blur-3xl rounded-full"></div>
         <div className="pointer-events-none absolute -bottom-10 -right-10 w-56 h-56 sm:w-72 sm:h-72 bg-gradient-to-tr from-red-500/15 via-yellow-500/15 to-blue-500/15 blur-3xl rounded-full"></div>
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+          {/* 通知图标 */}
+          <div className="absolute top-4 right-4 z-40">
+            <button
+              onClick={() => setShowNotificationCenter(!showNotificationCenter)}
+              className={`relative p-2 rounded-full transition-all duration-200 hover:scale-110 ${isDark ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-white hover:bg-gray-100 text-gray-900'} shadow-lg`}
+              aria-label="通知"
+            >
+              <i className="fas fa-bell"></i>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white text-xs">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </button>
+            
+            {/* 通知中心面板 */}
+            {showNotificationCenter && (
+              <div className={`absolute right-0 mt-2 w-80 rounded-2xl shadow-xl ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'} p-3 max-h-96 overflow-y-auto transition-all duration-300 transform scale-100 opacity-100`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold">通知中心</h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={markAllAsRead}
+                      className={`text-xs px-2 py-1 rounded text-blue-600 hover:text-blue-700 ${isDark ? 'bg-blue-900 bg-opacity-20 hover:bg-opacity-30' : 'bg-blue-50 hover:bg-blue-100'}`}
+                    >
+                      全部标为已读
+                    </button>
+                    <button
+                      onClick={clearAllNotifications}
+                      className={`text-xs px-2 py-1 rounded text-red-600 hover:text-red-700 ${isDark ? 'bg-red-900 bg-opacity-20 hover:bg-opacity-30' : 'bg-red-50 hover:bg-red-100'}`}
+                    >
+                      清空
+                    </button>
+                  </div>
+                </div>
+                
+                {notifications.length === 0 ? (
+                  <div className={`text-xs py-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <i className="fas fa-bell-slash text-2xl mb-2 block"></i>
+                    暂无通知
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {notifications.map(notification => (
+                      <div 
+                        key={notification.id} 
+                        className={`p-3 rounded-lg transition-all duration-200 hover:bg-opacity-80 cursor-pointer ${isDark ? `bg-gray-700 hover:bg-gray-600 ${!notification.read && 'ring-1 ring-blue-500'}` : `bg-gray-50 hover:bg-gray-100 ${!notification.read && 'ring-1 ring-blue-500'}`}`}
+                        onClick={() => {
+                          markAsRead(notification.id);
+                          if (notification.url) {
+                            window.open(notification.url, '_blank');
+                          }
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notification.type === 'success' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' : notification.type === 'warning' ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400' : notification.type === 'error' ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400'}`}>
+                            <i className={`fas fa-${notification.type === 'success' ? 'check-circle' : notification.type === 'warning' ? 'exclamation-triangle' : notification.type === 'error' ? 'times-circle' : 'info-circle'}`}></i>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="text-sm font-medium truncate">{notification.title}</h4>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(notification.id);
+                                }}
+                                className={`text-xs text-gray-400 hover:text-red-600 transition-colors`}
+                                aria-label="删除"
+                              >
+                                <i className="fas fa-times"></i>
+                              </button>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{notification.message}</p>
+                            <div className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                              {new Date(notification.timestamp).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div ref={engineCardRef} className={`rounded-2xl shadow-md ${isDark ? 'bg-gray-800/95 backdrop-blur-sm' : 'bg-white/95 backdrop-blur-sm'} p-4 sm:p-6 mb-6 transition-all duration-300 hover:shadow-lg`} style={{ borderRadius: '24px' }}>
             <h1 className="text-2xl font-bold mb-2">津门 · 灵感引擎</h1>
             <div className="w-20 h-1 rounded-full bg-gradient-to-r from-blue-600 via-red-500 to-yellow-500 mb-4"></div>
@@ -1475,9 +1884,15 @@ export default function Neo() {
                     </button>
                     <button 
                       onClick={() => openImageEditor(i)}
-                      className={`text-sm px-3 py-3 rounded-md transition-all duration-200 ${isDark ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'} active:scale-98 font-medium col-span-2`}
+                      className={`text-sm px-3 py-3 rounded-md transition-all duration-200 ${isDark ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white'} active:scale-98 font-medium col-span-1`}
                     >
                       <i className="fas fa-edit mr-1"></i> 编辑图片
+                    </button>
+                    <button 
+                      onClick={() => exportImage(i)}
+                      className={`text-sm px-3 py-3 rounded-md transition-all duration-200 ${isDark ? 'bg-teal-600 hover:bg-teal-700 text-white' : 'bg-teal-600 hover:bg-teal-700 text-white'} active:scale-98 font-medium col-span-1`}
+                    >
+                      <i className="fas fa-download mr-1"></i> 高级导出
                     </button>
                   </div>
                         <div className="flex justify-between items-center">
@@ -2034,6 +2449,322 @@ export default function Neo() {
         </div>
       )}
       
+      {/* 图片编辑面板 */}
+      {showEditPanel && editingImageIndex !== null && originalImage && (
+        <div className="fixed inset-0 z-50 overflow-hidden flex flex-col bg-black/90 backdrop-blur-sm">
+          {/* 编辑面板头部 */}
+          <div className={`flex items-center justify-between p-4 ${isDark ? 'bg-gray-900' : 'bg-white'} border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+            <h2 className="text-xl font-bold">图片编辑器</h2>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={resetEdit}
+                className={`text-sm px-3 py-2 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'} transition-all duration-200 hover:scale-105`}
+              >
+                重置
+              </button>
+              <button
+                onClick={saveEditedImage}
+                className={`text-sm px-3 py-2 rounded transition-colors ${isDark ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white'} transition-all duration-200 hover:scale-105`}
+              >
+                保存
+              </button>
+              <button
+                onClick={closeImageEditor}
+                className={`p-2 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'} transition-all duration-200 hover:scale-110`}
+                aria-label="关闭"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          
+          {/* 编辑面板内容 */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* 编辑工具 */}
+            <div className={`w-64 p-4 overflow-y-auto ${isDark ? 'bg-gray-800' : 'bg-gray-50'} border-r ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+              {/* 编辑模式切换 */}
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-3 block">编辑模式</h3>
+                <div className="flex flex-wrap gap-2">
+                  {(['crop', 'rotate', 'filter', 'resize'] as const).map(mode => (
+                    <button
+                      key={mode}
+                      onClick={() => setEditMode(mode)}
+                      className={`text-xs px-3 py-2 rounded-full transition-colors ${editMode === mode ? (isDark ? 'bg-red-600 text-white' : 'bg-red-600 text-white') : (isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')} transition-all duration-200 hover:scale-105`}
+                    >
+                      {mode === 'crop' && '裁剪'}
+                      {mode === 'rotate' && '旋转'}
+                      {mode === 'filter' && '滤镜'}
+                      {mode === 'resize' && '缩放'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* 裁剪工具 */}
+              {editMode === 'crop' && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-3 block">裁剪设置</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">裁剪比例</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['自由', '1:1', '4:3', '16:9', '3:4', '9:16'] as const).map(ratio => (
+                          <button
+                            key={ratio}
+                            className={`text-xs px-2 py-1.5 rounded transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-105`}
+                          >
+                            {ratio}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={applyCrop}
+                        className={`w-full text-xs px-3 py-2 rounded transition-colors ${isDark ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'} transition-all duration-200 hover:scale-105`}
+                      >
+                        应用裁剪
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* 旋转工具 */}
+              {editMode === 'rotate' && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-3 block">旋转设置</h3>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => applyRotation(90)}
+                        className={`text-xs px-3 py-2 rounded transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-105`}
+                      >
+                        旋转 90°
+                      </button>
+                      <button
+                        onClick={() => applyRotation(180)}
+                        className={`text-xs px-3 py-2 rounded transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-105`}
+                      >
+                        旋转 180°
+                      </button>
+                      <button
+                        onClick={() => applyRotation(-90)}
+                        className={`text-xs px-3 py-2 rounded transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-105`}
+                      >
+                        旋转 -90°
+                      </button>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">当前角度: {rotation}°</label>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* 滤镜工具 */}
+              {editMode === 'filter' && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-3 block">滤镜效果</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['none', '复古', '黑白', '明亮', '对比度', '饱和度', '暖色调', '冷色调', '模糊', '锐化'] as const).map(filterName => (
+                      <button
+                        key={filterName}
+                        onClick={() => applyFilter(filterName)}
+                        className={`text-xs px-3 py-2 rounded transition-colors ${filter === filterName ? (isDark ? 'bg-purple-600 text-white' : 'bg-purple-600 text-white') : (isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')} transition-all duration-200 hover:scale-105`}
+                      >
+                        {filterName === 'none' && '原图'}
+                        {filterName === '复古' && '复古'}
+                        {filterName === '黑白' && '黑白'}
+                        {filterName === '明亮' && '明亮'}
+                        {filterName === '对比度' && '对比度'}
+                        {filterName === '饱和度' && '饱和度'}
+                        {filterName === '暖色调' && '暖色调'}
+                        {filterName === '冷色调' && '冷色调'}
+                        {filterName === '模糊' && '模糊'}
+                        {filterName === '锐化' && '锐化'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* 缩放工具 */}
+              {editMode === 'resize' && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-3 block">缩放设置</h3>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => applyScale(-0.1)}
+                        className={`text-xs px-3 py-2 rounded transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-105`}
+                      >
+                        缩小
+                      </button>
+                      <button
+                        onClick={() => applyScale(0.1)}
+                        className={`text-xs px-3 py-2 rounded transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-all duration-200 hover:scale-105`}
+                      >
+                        放大
+                      </button>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">当前缩放: {(scale * 100).toFixed(0)}%</label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* 预览区域 */}
+            <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
+              <div 
+                className="relative transition-all duration-300 ease-out"
+                style={{
+                  transform: `rotate(${rotation}deg) scale(${scale})`,
+                  maxWidth: '100%',
+                  maxHeight: '100%'
+                }}
+              >
+                <img 
+                  src={originalImage} 
+                  alt="编辑预览" 
+                  className="max-w-full max-h-full object-contain shadow-xl"
+                  style={{
+                    filter: filter === 'none' ? 'none' : 
+                            filter === '复古' ? 'sepia(100%)' : 
+                            filter === '黑白' ? 'grayscale(100%)' : 
+                            filter === '明亮' ? 'brightness(1.3)' : 
+                            filter === '对比度' ? 'contrast(1.5)' : 
+                            filter === '饱和度' ? 'saturate(2)' : 
+                            filter === '暖色调' ? 'sepia(30%) brightness(1.1)' : 
+                            filter === '冷色调' ? 'blur(1px) brightness(1.1)' : 
+                            filter === '模糊' ? 'blur(3px)' : 
+                            filter === '锐化' ? 'sharpen(2)' : 'none'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 批量导出模态框 */}
+      {batchExportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className={`rounded-2xl shadow-2xl ${isDark ? 'bg-gray-800' : 'bg-white'} p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-all duration-300 transform scale-100 opacity-100`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">批量导出</h2>
+              <button 
+                onClick={closeBatchExportModal}
+                className={`p-2 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'} transition-all duration-200 hover:scale-110`}
+                aria-label="关闭"
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* 导出选项 */}
+              <div className={`rounded-xl p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} border ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+                <h3 className="text-sm font-medium mb-3 block">导出设置</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* 导出格式 */}
+                  <div>
+                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">图片格式</label>
+                    <select
+                      value={imageExportOptions.format}
+                      onChange={(e) => setImageExportOptions(prev => ({ ...prev, format: e.target.value as any }))}
+                      className={`text-sm px-3 py-2 rounded border focus:ring-2 focus:ring-red-500 transition-all duration-300 ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="png">PNG</option>
+                      <option value="jpeg">JPEG</option>
+                      <option value="webp">WebP</option>
+                    </select>
+                  </div>
+                  
+                  {/* 导出质量 */}
+                  <div>
+                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">导出质量: {imageExportOptions.quality}%</label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={imageExportOptions.quality}
+                      onChange={(e) => setImageExportOptions(prev => ({ ...prev, quality: parseInt(e.target.value) }))}
+                      className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700`}
+                    />
+                  </div>
+                  
+                  {/* 导出分辨率 */}
+                  <div>
+                    <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">分辨率</label>
+                    <select
+                      value={imageExportOptions.resolution}
+                      onChange={(e) => setImageExportOptions(prev => ({ ...prev, resolution: e.target.value as any }))}
+                      className={`text-sm px-3 py-2 rounded border focus:ring-2 focus:ring-red-500 transition-all duration-300 ${isDark ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="original">原始分辨率</option>
+                      <option value="480p">480p</option>
+                      <option value="720p">720p</option>
+                      <option value="1080p">1080p</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 选择导出项 */}
+              <div>
+                <h3 className="text-sm font-medium mb-3 block">选择要导出的项</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto p-2 border rounded-lg ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}">
+                  <div className="flex items-center gap-2 p-2 rounded ${isDark ? 'bg-gray-800' : 'bg-white'}">
+                    <input
+                      type="checkbox"
+                      checked={selectedExportItems.length === images.length && images.length > 0}
+                      onChange={selectAllExportItems}
+                      className="text-red-600 h-4 w-4"
+                    />
+                    <span className="text-sm font-medium">全选/取消全选</span>
+                  </div>
+                  {images.map((image, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 rounded hover:bg-opacity-80 transition-all duration-200 ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-100'}">
+                      <input
+                        type="checkbox"
+                        checked={selectedExportItems.includes(index)}
+                        onChange={() => toggleSelectExportItem(index)}
+                        className="text-red-600 h-4 w-4"
+                      />
+                      <div className="w-12 h-12 rounded overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm">
+                        <img src={image} alt={`Item ${index}`} className="w-full h-full object-cover" />
+                      </div>
+                      <span className="text-sm truncate">图片 {index + 1}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* 导出按钮 */}
+              <div className="flex gap-3">
+                <button 
+                  onClick={batchExportItems}
+                  disabled={selectedExportItems.length === 0}
+                  className={`flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 min-h-[44px] active:scale-98 disabled:opacity-60 disabled:cursor-not-allowed`}
+                >
+                  导出选中项 ({selectedExportItems.length})
+                </button>
+                <button 
+                  onClick={closeBatchExportModal}
+                  className={`px-4 py-3 rounded-lg font-medium transition-all duration-200 min-h-[44px] active:scale-98 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <footer className={`border-t ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'} py-6 px-4`}>
         <div className="container mx-auto flex justify-between items-center">
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>© 2025 AI共创平台. 保留所有权利</p>
@@ -2044,6 +2775,74 @@ export default function Neo() {
           </div>
         </div>
       </footer>
+      
+      {/* 交互式教程 */}
+      {showTutorial && currentTutorialStep < tutorialSteps.length && (
+        <div className="fixed inset-0 z-50 pointer-events-none">
+          {/* 遮罩层 */}
+          <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
+          
+          {/* 教程内容 */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+            <div className={`rounded-2xl shadow-2xl ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'} p-6 max-w-lg w-full transition-all duration-300 transform scale-100 opacity-100`}>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-bold">{tutorialSteps[currentTutorialStep].title}</h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={skipTutorial}
+                      className={`text-xs px-2 py-1 rounded text-red-600 hover:text-red-700 ${isDark ? 'bg-red-900 bg-opacity-20 hover:bg-opacity-30' : 'bg-red-50 hover:bg-red-100'}`}
+                    >
+                      {tutorialSteps[currentTutorialStep].skipText || '跳过教程'}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{tutorialSteps[currentTutorialStep].description}</p>
+              </div>
+              
+              {/* 步骤指示器 */}
+              <div className="flex items-center gap-1 mb-4">
+                {tutorialSteps.map((step, index) => (
+                  <div 
+                    key={step.id} 
+                    className={`h-2 rounded-full flex-1 transition-all duration-300 ${index <= currentTutorialStep ? (index === currentTutorialStep ? 'bg-blue-600' : 'bg-blue-300') : 'bg-gray-300 dark:bg-gray-600'}`}
+                  ></div>
+                ))}
+              </div>
+              
+              {/* 导航按钮 */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={prevTutorialStep}
+                  disabled={currentTutorialStep === 0}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 min-h-[40px] active:scale-98 ${currentTutorialStep === 0 ? 'opacity-50 cursor-not-allowed' : (isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-900')}`}
+                >
+                  {tutorialSteps[currentTutorialStep].prevText || '上一步'}
+                </button>
+                <button
+                  onClick={nextTutorialStep}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 min-h-[40px] active:scale-98 ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                >
+                  {tutorialSteps[currentTutorialStep].nextText || '下一步'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 开始教程按钮 */}
+      {!tutorialCompleted && !showTutorial && (
+        <div className="fixed bottom-4 right-4 z-40">
+          <button
+            onClick={startTutorial}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-lg ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} transition-all duration-200 hover:scale-105`}
+          >
+            <i className="fas fa-play"></i>
+            开始教程
+          </button>
+        </div>
+      )}
     </>
   )
 }

@@ -822,6 +822,63 @@ class LLMService {
     return selectedModelId
   }
 
+  /**
+   * 通用API调用方法，实现指数退避重试策略
+   */
+  private async callApiWithRetry(
+    modelId: string,
+    requestFn: () => Promise<string>,
+    maxRetries: number,
+    initialBackoffMs: number
+  ): Promise<string> {
+    let lastErr: any;
+    let backoffMs = initialBackoffMs;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await requestFn();
+      } catch (e) {
+        lastErr = e;
+        
+        // 如果是最后一次尝试，直接抛出错误
+        if (attempt >= maxRetries) {
+          break;
+        }
+        
+        // 分析错误类型，决定是否重试
+        const errorMessage = typeof e === 'string' ? e : (e as Error).message;
+        
+        // 这些错误类型适合重试
+        const retryableErrors = [
+          'timeout',
+          'network',
+          '500',
+          '502',
+          '503',
+          '504',
+          'service unavailable',
+          'connection reset',
+          'request failed'
+        ];
+        
+        const shouldRetry = retryableErrors.some(err => 
+          errorMessage.toLowerCase().includes(err)
+        );
+        
+        if (!shouldRetry) {
+          break;
+        }
+        
+        // 指数退避，每次重试间隔增加
+        await new Promise(r => setTimeout(r, backoffMs));
+        // 指数退避因子为2，加上随机抖动
+        backoffMs = Math.min(backoffMs * 2 + Math.random() * 100, 5000); // 最大等待5秒
+      }
+    }
+    
+    throw lastErr || new Error(`${modelId} API error`);
+  }
+  
   private async callKimi(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
     const envKey = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_KIMI_API_KEY) || '';
     const storedKey = localStorage.getItem('KIMI_API_KEY') || '';
@@ -834,22 +891,23 @@ class LLMService {
     const base = this.modelConfig.kimi_base_url || 'https://api.moonshot.cn/v1';
     const url = useProxy ? `${apiBase}/api/kimi/chat/completions` : (base + '/chat/completions');
     const effectiveStream = useProxy ? false : (this.modelConfig.stream === true);
-    const payload: any = {
-      model: this.modelConfig.kimi_model || 'moonshot-v1-32k',
-      messages: [
-        { role: 'system', content: this.modelConfig.system_prompt },
-        { role: 'user', content: prompt }
-      ],
-      temperature: this.modelConfig.temperature,
-      top_p: this.modelConfig.top_p,
-      max_tokens: this.modelConfig.max_tokens,
-      presence_penalty: this.modelConfig.presence_penalty,
-      frequency_penalty: this.modelConfig.frequency_penalty,
-      stop: this.modelConfig.stop
-    };
-    if (effectiveStream) payload.stream = true;
-
-    const doFetch = async () => {
+    
+    const requestFn = async () => {
+      const payload: any = {
+        model: this.modelConfig.kimi_model || 'moonshot-v1-32k',
+        messages: [
+          { role: 'system', content: this.modelConfig.system_prompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: this.modelConfig.temperature,
+        top_p: this.modelConfig.top_p,
+        max_tokens: this.modelConfig.max_tokens,
+        presence_penalty: this.modelConfig.presence_penalty,
+        frequency_penalty: this.modelConfig.frequency_penalty,
+        stop: this.modelConfig.stop
+      };
+      if (effectiveStream) payload.stream = true;
+      
       const headers: any = { 'Content-Type': 'application/json' };
       if (!useProxy) headers['Authorization'] = `Bearer ${key}`;
       const res = await fetch(url, {
@@ -858,7 +916,12 @@ class LLMService {
         body: JSON.stringify(payload),
         signal: options?.signal
       });
-      if (!res.ok) throw new Error('Kimi API error');
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Kimi API error: ${res.status} ${errorText}`);
+      }
+      
       if (effectiveStream && res.body) {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -880,7 +943,9 @@ class LLMService {
                 full += delta;
                 if (options?.onDelta) options.onDelta(full);
               }
-            } catch {}
+            } catch (e) {
+              console.error('Failed to parse Kimi stream chunk:', e);
+            }
           }
         }
         return full || 'Kimi未返回内容';
@@ -891,18 +956,8 @@ class LLMService {
         return content || 'Kimi未返回内容';
       }
     };
-
-    let attempt = 0;
-    let lastErr: any;
-    while (attempt <= this.modelConfig.retry) {
-      try { return await doFetch(); } catch (e) {
-        lastErr = e;
-        attempt++;
-        if (attempt > this.modelConfig.retry) break;
-        await new Promise(r => setTimeout(r, this.modelConfig.backoff_ms * attempt));
-      }
-    }
-    throw lastErr || new Error('Kimi API error');
+    
+    return this.callApiWithRetry('kimi', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
   private async callDeepseek(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
@@ -915,22 +970,23 @@ class LLMService {
     const base = this.modelConfig.deepseek_base_url || 'https://api.deepseek.com';
     const url = useProxy ? `${apiBase}/api/deepseek/chat/completions` : ((base.endsWith('/v1') ? base : base + '/v1') + '/chat/completions');
     const effectiveStream = useProxy ? false : (this.modelConfig.stream === true);
-    const payload: any = {
-      model: this.modelConfig.deepseek_model || 'deepseek-chat',
-      messages: [
-        { role: 'system', content: this.modelConfig.system_prompt },
-        { role: 'user', content: prompt }
-      ],
-      temperature: this.modelConfig.temperature,
-      top_p: this.modelConfig.top_p,
-      max_tokens: this.modelConfig.max_tokens,
-      presence_penalty: this.modelConfig.presence_penalty,
-      frequency_penalty: this.modelConfig.frequency_penalty,
-      stop: this.modelConfig.stop
-    };
-    if (effectiveStream) payload.stream = true;
-
-    const doFetch = async () => {
+    
+    const requestFn = async () => {
+      const payload: any = {
+        model: this.modelConfig.deepseek_model || 'deepseek-chat',
+        messages: [
+          { role: 'system', content: this.modelConfig.system_prompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: this.modelConfig.temperature,
+        top_p: this.modelConfig.top_p,
+        max_tokens: this.modelConfig.max_tokens,
+        presence_penalty: this.modelConfig.presence_penalty,
+        frequency_penalty: this.modelConfig.frequency_penalty,
+        stop: this.modelConfig.stop
+      };
+      if (effectiveStream) payload.stream = true;
+      
       const headers: any = { 'Content-Type': 'application/json' };
       if (!useProxy) headers['Authorization'] = `Bearer ${key}`;
       const res = await fetch(url, {
@@ -939,7 +995,12 @@ class LLMService {
         body: JSON.stringify(payload),
         signal: options?.signal
       });
-      if (!res.ok) throw new Error('DeepSeek API error');
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`DeepSeek API error: ${res.status} ${errorText}`);
+      }
+      
       if (effectiveStream && res.body) {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -965,7 +1026,9 @@ class LLMService {
               if (rdelta) {
                 // 可扩展：保存推理内容
               }
-            } catch {}
+            } catch (e) {
+              console.error('Failed to parse DeepSeek stream chunk:', e);
+            }
           }
         }
         return full || 'DeepSeek未返回内容';
@@ -976,100 +1039,138 @@ class LLMService {
         return content || 'DeepSeek未返回内容';
       }
     };
-
-    let attempt = 0;
-    let lastErr: any;
-    while (attempt <= this.modelConfig.retry) {
-      try { return await doFetch(); } catch (e) {
-        lastErr = e;
-        attempt++;
-        if (attempt > this.modelConfig.retry) break;
-        await new Promise(r => setTimeout(r, this.modelConfig.backoff_ms * attempt));
-      }
-    }
-    throw lastErr || new Error('DeepSeek API error');
+    
+    return this.callApiWithRetry('deepseek', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
   private async callWenxin(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
     const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL) || '';
     if (!apiBase) throw new Error('Missing API base for Wenxin');
     const url = `${apiBase}/api/qianfan/chat/completions`;
-    const payload: any = {
-      model: this.modelConfig.wenxin_model || 'ERNIE-Speed-8K',
-      messages: [
-        { role: 'system', content: this.modelConfig.system_prompt },
-        { role: 'user', content: prompt }
-      ],
-      temperature: this.modelConfig.temperature,
-      top_p: this.modelConfig.top_p,
-      max_tokens: this.modelConfig.max_tokens,
-      presence_penalty: this.modelConfig.presence_penalty,
-      frequency_penalty: this.modelConfig.frequency_penalty,
-      stop: this.modelConfig.stop
-    };
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: options?.signal });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      // 检测配额用完错误
-      if (res.status === 429 || data.error === 'QUOTA_EXCEEDED') {
-        throw new Error('QUOTA_EXCEEDED: 百度千帆API免费额度已用完');
+    
+    const requestFn = async () => {
+      const payload: any = {
+        model: this.modelConfig.wenxin_model || 'ERNIE-Speed-8K',
+        messages: [
+          { role: 'system', content: this.modelConfig.system_prompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: this.modelConfig.temperature,
+        top_p: this.modelConfig.top_p,
+        max_tokens: this.modelConfig.max_tokens,
+        presence_penalty: this.modelConfig.presence_penalty,
+        frequency_penalty: this.modelConfig.frequency_penalty,
+        stop: this.modelConfig.stop
+      };
+      
+      const res = await fetch(url, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload), 
+        signal: options?.signal 
+      });
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const errorText = JSON.stringify(data) || await res.text();
+        
+        // 检测配额用完错误
+        if (res.status === 429 || data.error === 'QUOTA_EXCEEDED') {
+          throw new Error('QUOTA_EXCEEDED: 百度千帆API免费额度已用完');
+        }
+        
+        throw new Error(`Wenxin API error: ${res.status} ${errorText}`);
       }
-      throw new Error('Wenxin API error');
-    }
-    const data = await res.json();
-    const raw = data?.data || {};
-    const content = raw?.result || raw?.choices?.[0]?.message?.content || '';
-    return content || '文心一言未返回内容';
+      
+      const data = await res.json();
+      const raw = data?.data || {};
+      const content = raw?.result || raw?.choices?.[0]?.message?.content || '';
+      return content || '文心一言未返回内容';
+    };
+    
+    return this.callApiWithRetry('wenxin', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
   private async callQwen(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
     const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL) || '';
     if (!apiBase) throw new Error('Missing API base for Qwen');
     const url = `${apiBase}/api/dashscope/chat/completions`;
-    const payload: any = {
-      model: this.modelConfig.qwen_model || 'qwen-plus',
-      messages: [
-        { role: 'system', content: this.modelConfig.system_prompt },
-        { role: 'user', content: prompt }
-      ],
-      temperature: this.modelConfig.temperature,
-      top_p: this.modelConfig.top_p,
-      max_tokens: this.modelConfig.max_tokens,
-      presence_penalty: this.modelConfig.presence_penalty,
-      frequency_penalty: this.modelConfig.frequency_penalty,
-      stop: this.modelConfig.stop
+    
+    const requestFn = async () => {
+      const payload: any = {
+        model: this.modelConfig.qwen_model || 'qwen-plus',
+        messages: [
+          { role: 'system', content: this.modelConfig.system_prompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: this.modelConfig.temperature,
+        top_p: this.modelConfig.top_p,
+        max_tokens: this.modelConfig.max_tokens,
+        presence_penalty: this.modelConfig.presence_penalty,
+        frequency_penalty: this.modelConfig.frequency_penalty,
+        stop: this.modelConfig.stop
+      };
+      
+      const res = await fetch(url, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload), 
+        signal: options?.signal 
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Qwen API error: ${res.status} ${errorText}`);
+      }
+      
+      const data = await res.json();
+      const raw = data?.data || {};
+      const content = raw?.choices?.[0]?.message?.content || raw?.output_text || '';
+      return content || '通义千问未返回内容';
     };
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: options?.signal });
-    if (!res.ok) throw new Error('Qwen API error');
-    const data = await res.json();
-    const raw = data?.data || {};
-    const content = raw?.choices?.[0]?.message?.content || raw?.output_text || '';
-    return content || '通义千问未返回内容';
+    
+    return this.callApiWithRetry('qwen', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
   private async callDoubao(prompt: string, options?: { onDelta?: (chunk: string) => void; signal?: AbortSignal }): Promise<string> {
     const apiBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL) || '';
     if (!apiBase) throw new Error('Missing API base for Doubao');
     const url = `${apiBase}/api/doubao/chat/completions`;
-    const payload: any = {
-      model: this.modelConfig.doubao_model || 'doubao-pro-32k',
-      messages: [
-        { role: 'system', content: this.modelConfig.system_prompt },
-        { role: 'user', content: prompt }
-      ],
-      temperature: this.modelConfig.temperature,
-      top_p: this.modelConfig.top_p,
-      max_tokens: this.modelConfig.max_tokens,
-      presence_penalty: this.modelConfig.presence_penalty,
-      frequency_penalty: this.modelConfig.frequency_penalty,
-      stop: this.modelConfig.stop
+    
+    const requestFn = async () => {
+      const payload: any = {
+        model: this.modelConfig.doubao_model || 'doubao-pro-32k',
+        messages: [
+          { role: 'system', content: this.modelConfig.system_prompt },
+          { role: 'user', content: prompt }
+        ],
+        temperature: this.modelConfig.temperature,
+        top_p: this.modelConfig.top_p,
+        max_tokens: this.modelConfig.max_tokens,
+        presence_penalty: this.modelConfig.presence_penalty,
+        frequency_penalty: this.modelConfig.frequency_penalty,
+        stop: this.modelConfig.stop
+      };
+      
+      const res = await fetch(url, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload), 
+        signal: options?.signal 
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Doubao API error: ${res.status} ${errorText}`);
+      }
+      
+      const data = await res.json();
+      const raw = data?.data || {};
+      const content = raw?.choices?.[0]?.message?.content || '';
+      return content || '豆包未返回内容';
     };
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: options?.signal });
-    if (!res.ok) throw new Error('Doubao API error');
-    const data = await res.json();
-    const raw = data?.data || {};
-    const content = raw?.choices?.[0]?.message?.content || '';
-    return content || '豆包未返回内容';
+    
+    return this.callApiWithRetry('doubao', requestFn, this.modelConfig.retry, this.modelConfig.backoff_ms);
   }
 
   /**

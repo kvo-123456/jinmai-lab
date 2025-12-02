@@ -412,12 +412,104 @@ async function createPostgreSQLTables(pool) {
       );
     `)
     
+    // 创建分类表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        description TEXT,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL
+      );
+    `)
+    
+    // 创建标签表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS tags (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) UNIQUE NOT NULL,
+        description TEXT,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL
+      );
+    `)
+    
+    // 创建帖子表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS posts (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        category_id INTEGER,
+        status VARCHAR(20) DEFAULT 'published',
+        views INTEGER DEFAULT 0,
+        likes_count INTEGER DEFAULT 0,
+        comments_count INTEGER DEFAULT 0,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+      );
+    `)
+    
+    // 创建帖子标签关联表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS post_tags (
+        post_id INTEGER NOT NULL,
+        tag_id INTEGER NOT NULL,
+        PRIMARY KEY (post_id, tag_id),
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+      );
+    `)
+    
+    // 创建评论表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        content TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        post_id INTEGER NOT NULL,
+        parent_id INTEGER,
+        created_at BIGINT NOT NULL,
+        updated_at BIGINT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+      );
+    `)
+    
+    // 创建点赞表
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS likes (
+        user_id INTEGER NOT NULL,
+        post_id INTEGER NOT NULL,
+        created_at BIGINT NOT NULL,
+        PRIMARY KEY (user_id, post_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+      );
+    `)
+    
     // 创建索引
     await client.query('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);')
     await client.query('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);')
     await client.query('CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id);')
     await client.query('CREATE INDEX IF NOT EXISTS idx_video_tasks_status ON video_tasks(status);')
     await client.query('CREATE INDEX IF NOT EXISTS idx_video_tasks_created_at ON video_tasks(created_at);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_posts_category_id ON posts(category_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_post_tags_post_id ON post_tags(post_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_post_tags_tag_id ON post_tags(tag_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments(parent_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_likes_post_id ON likes(post_id);')
+    await client.query('CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id);')
     
     client.release()
     console.log('PostgreSQL表和索引初始化成功')
