@@ -78,7 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
       }
       
-      const { title, content, category_id, tags } = req.body || {}
+      const { title, content, category_id } = req.body || {}
       
       // 验证必填字段
       if (!title || !content) {

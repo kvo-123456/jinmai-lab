@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-const { sendErrorResponse, sendSuccessResponse, API_ERRORS } = require('../../server/api-error-handler.mjs')
+const { sendErrorResponse, API_ERRORS } = require('../../server/api-error-handler.mjs')
 
 // 点赞是基于user_id和post_id的组合操作，通常不需要单独操作某个点赞记录
 export default async function handler(req: VercelRequest, res: VercelResponse) {

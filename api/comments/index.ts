@@ -3,7 +3,17 @@ const { verifyToken } = require('../../server/jwt.mjs')
 const { sendErrorResponse, sendSuccessResponse, API_ERRORS } = require('../../server/api-error-handler.mjs')
 
 // 模拟评论数据，后续会替换为数据库操作
-const comments = [
+interface Comment {
+  id: number;
+  content: string;
+  user_id: number;
+  post_id: number;
+  parent_id: number | null;
+  created_at: number;
+  updated_at: number;
+}
+
+const comments: Comment[] = [
   {
     id: 1,
     content: '这篇文章写得非常好！',
