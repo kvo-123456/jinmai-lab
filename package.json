@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.typecheck.json --noEmit"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "@types/bcryptjs": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/react-window": "^2.0.0",

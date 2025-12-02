@@ -360,27 +360,27 @@ export default function Home() {
       
       {/* 首页主标题区域 */}
       <div className="max-w-7xl mx-auto mb-8">
-        {/* 首页主标题：采用清晰的实色文字，确保在所有背景下都有良好的可读性 */}
-        <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-4 text-primary text-center">
+        {/* 首页主标题：采用渐变文字与阴影效果，提升视觉吸引力 */}
+        <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-4 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent text-center drop-shadow-md">
           创作者，您好
         </h1>
-        {/* 首页副标题：提升可读性（更大字号/行距），限制最大宽度，并根据主题切换不同灰度 */}
-        <p className={`text-sm sm:text-base md:text-lg leading-relaxed opacity-85 max-w-2xl text-center mx-auto ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
+        {/* 首页副标题：提升可读性，限制最大宽度，并根据主题切换不同灰度 */}
+        <p className={`text-sm sm:text-base md:text-lg leading-relaxed opacity-90 max-w-2xl text-center mx-auto ${isDark ? 'text-gray-200' : 'text-gray-600'} mb-8`}>
           {heroVariant === 'A' 
             ? '输入你的问题或灵感，我们帮你更快抵达答案与创作' 
             : '一句话描述创作目标，获得灵感、生成方案与优化建议'}
         </p>
         
         {/* 搜索与功能按钮区域 */}
-        <div className={`rounded-3xl shadow-sm ring-1 ${isDark ? 'bg-gray-800 ring-gray-700 hover:shadow-md' : 'bg-white ring-gray-200 hover:shadow-md'} p-4 md:p-6 transition-all duration-300`}> 
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-3 md:space-y-0">
+        <div className={`rounded-3xl shadow-lg ring-1 ${isDark ? 'bg-gray-800/80 backdrop-blur-sm ring-gray-700 hover:shadow-xl' : 'bg-white/80 backdrop-blur-sm ring-gray-200 hover:shadow-xl'} p-4 md:p-6 transition-all duration-300`}> 
+          <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
             <div className="relative flex-1">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleGenerateClick(); }}
                 placeholder="请输入创作问题或灵感关键词"
-                className={`w-full px-4 py-3 rounded-lg ${isDark ? 'bg-gray-700 text-white ring-1 ring-gray-600 focus:ring-2 focus:ring-primary' : 'bg-white ring-1 ring-gray-300 focus:ring-2 focus:ring-primary'} focus:outline-none text-base transition-all duration-300 hover:ring-primary/50`}
+                className={`w-full px-4 py-3 rounded-lg ${isDark ? 'bg-gray-700/90 text-white ring-2 ring-gray-600 focus:ring-primary' : 'bg-white/90 ring-2 ring-gray-300 focus:ring-primary'} focus:outline-none text-base transition-all duration-300 hover:ring-primary/50`}
                 autoCapitalize="none"
                 autoCorrect="off"
                 enterKeyHint="search"
@@ -391,38 +391,44 @@ export default function Home() {
                   aria-label="清空输入"
                   title="清空"
                   onClick={() => { setSearch(''); setSelectedTags([]); }}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded ${isDark ? 'bg-gray-600 text-white hover:bg-gray-500' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-all duration-200 hover:opacity-90 hover:shadow-sm`}
-                >清空</button>
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 text-sm px-2 py-1 rounded-full ${isDark ? 'bg-gray-600 text-white hover:bg-gray-500' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-all duration-200 hover:opacity-90 hover:shadow-md`}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
               )}
             </div>
             
             {/* 功能按钮组 */}
             <div className="flex flex-wrap items-center justify-center gap-2 w-full sm:w-auto">
-              <button onClick={handleInspireClick} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-900'} ring-1 ${isDark ? 'ring-gray-600 hover:ring-primary' : 'ring-gray-200 hover:ring-primary'} transition-all duration-300 flex items-center hover:shadow-md hover:-translate-y-0.5 flex-1 sm:flex-none justify-center`}>
+              <button onClick={handleInspireClick} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-900'} ring-2 ${isDark ? 'ring-gray-600 hover:ring-primary' : 'ring-gray-200 hover:ring-primary'} transition-all duration-300 flex items-center hover:shadow-md hover:-translate-y-0.5 flex-1 sm:flex-none justify-center`}>
                 <i className="fas fa-bolt mr-1 transition-transform duration-300 hover:scale-110"></i>
                 灵感
               </button>
-              <button onClick={handleGenerateClick} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${isDark ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-primary hover:bg-primary/90 text-white'} ring-1 ${isDark ? 'ring-primary/50 hover:ring-primary' : 'ring-primary/50 hover:ring-primary'} transition-all duration-300 flex items-center hover:shadow-md hover:-translate-y-0.5 flex-1 sm:flex-none justify-center`}>
+              <button onClick={handleGenerateClick} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${isDark ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-primary hover:bg-primary/90 text-white'} ring-2 ${isDark ? 'ring-primary/50 hover:ring-primary' : 'ring-primary/50 hover:ring-primary'} transition-all duration-300 flex items-center hover:shadow-md hover:-translate-y-0.5 flex-1 sm:flex-none justify-center`}>
                 <i className="fas fa-wand-magic-sparkles mr-1 transition-transform duration-300 hover:scale-110"></i>
                 生成
-              </button>
-              <button onClick={handleOptimizeClick} disabled={isOptimizing} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-900'} ring-1 ${isDark ? 'ring-gray-600 hover:ring-primary' : 'ring-gray-200 hover:ring-primary'} transition-all duration-300 flex items-center hover:shadow-md hover:-translate-y-0.5 ${isOptimizing ? 'opacity-60 cursor-not-allowed hover:shadow-none hover:-translate-y-0' : ''} flex-1 sm:flex-none justify-center`}>
-                <i className="fas fa-adjust mr-1 transition-transform duration-300 hover:scale-110"></i>
-                {isOptimizing ? '优化中…' : '优化'}
-              </button>
-              <button onClick={toggleInspire} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${inspireOn ? 'bg-primary text-white' : isDark ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'} ring-1 ${inspireOn ? 'ring-primary hover:ring-primary/80' : isDark ? 'ring-gray-600 hover:ring-primary' : 'ring-gray-200 hover:ring-primary'} transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 flex-1 sm:flex-none justify-center`}>
-                灵感加持 {inspireOn ? 'ON' : 'OFF'}
               </button>
             </div>
           </div>
           
+          {/* 功能按钮组 - 第二行 */}
+          <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+            <button onClick={handleOptimizeClick} disabled={isOptimizing} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-900'} ring-2 ${isDark ? 'ring-gray-600 hover:ring-primary' : 'ring-gray-200 hover:ring-primary'} transition-all duration-300 flex items-center hover:shadow-md hover:-translate-y-0.5 ${isOptimizing ? 'opacity-60 cursor-not-allowed hover:shadow-none hover:-translate-y-0' : ''} flex-1 sm:flex-none justify-center`}>
+              <i className="fas fa-adjust mr-1 transition-transform duration-300 hover:scale-110"></i>
+              {isOptimizing ? '优化中…' : '优化'}
+            </button>
+            <button onClick={toggleInspire} className={`px-3 py-2 rounded-lg text-xs sm:text-sm ${inspireOn ? 'bg-primary text-white' : isDark ? 'bg-gray-700 text-white' : 'bg-white text-gray-900'} ring-2 ${inspireOn ? 'ring-primary hover:ring-primary/80' : isDark ? 'ring-gray-600 hover:ring-primary' : 'ring-gray-200 hover:ring-primary'} transition-all duration-300 flex items-center hover:shadow-md hover:-translate-y-0.5 flex-1 sm:flex-none justify-center`}>
+              灵感加持 {inspireOn ? 'ON' : 'OFF'}
+            </button>
+          </div>
+          
           {/* 快速标签 */}
-          <div className="mt-4 flex flex-wrap gap-2 scroll-mt-24">
+          <div className="mt-5 flex flex-wrap gap-3 scroll-mt-24">
             {quickTags.map((t, i) => {
               const active = selectedTags.includes(t);
-              const base = 'ring-1 text-xs px-3 py-1 rounded-full transition-all duration-300 hover:shadow-sm hover:-translate-y-0.5';
+              const base = 'ring-2 text-xs px-3 py-1 rounded-full transition-all duration-300 hover:shadow-md hover:-translate-y-0.5';
               const activeCls = isDark ? 'bg-primary text-white ring-primary/50' : 'bg-primary/10 text-primary ring-primary';
-              const normalCls = isDark ? 'bg-gray-800 text-gray-300 ring-gray-700 hover:bg-gray-700 hover:ring-primary/50' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50 hover:ring-primary/50';
+              const normalCls = isDark ? 'bg-gray-800 text-gray-200 ring-gray-700 hover:bg-gray-700 hover:ring-primary/50' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50 hover:ring-primary/50';
               return (
                 <button
                   key={i}
@@ -437,25 +443,25 @@ export default function Home() {
           </div>
           
           {/* 社会证明与CTA按钮 */}
-          <div className="mt-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2 w-full justify-center md:justify-start">
-              <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} transition-all duration-200 hover:shadow-sm`}>
+          <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3 w-full justify-center md:justify-start">
+              <span className={`text-xs px-3 py-1.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-white text-gray-700'} ring-1 ${isDark ? 'ring-gray-600' : 'ring-gray-200'} transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}>
                 <i className="fas fa-users mr-1"></i> 12,536 人
               </span>
-              <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} transition-all duration-200 hover:shadow-sm`}>
+              <span className={`text-xs px-3 py-1.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-white text-gray-700'} ring-1 ${isDark ? 'ring-gray-600' : 'ring-gray-200'} transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}>
                 <i className="fas fa-image mr-1"></i> 2,148 项
               </span>
-              <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} transition-all duration-200 hover:shadow-sm`}>
+              <span className={`text-xs px-3 py-1.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-white text-gray-700'} ring-1 ${isDark ? 'ring-gray-600' : 'ring-gray-200'} transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}>
                 <i className="fas fa-handshake mr-1"></i> 36 次
               </span>
-              <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} transition-all duration-200 hover:shadow-sm`}>
+              <span className={`text-xs px-3 py-1.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-white text-gray-700'} ring-1 ${isDark ? 'ring-gray-600' : 'ring-gray-200'} transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}>
                 <i className="fas fa-star mr-1"></i> 96%
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
               <button
                 onClick={handleGenerateClick}
-                className={`px-4 py-2 rounded-full font-medium ${isDark ? 'bg-primary hover:bg-primary/90 text-white ring-primary/50' : 'bg-primary hover:bg-primary/90 text-white ring-primary/20'} transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 flex-1 justify-center`}
+                className={`px-6 py-3 rounded-full font-medium ${isDark ? 'bg-primary hover:bg-primary/90 text-white ring-2 ring-primary/50' : 'bg-primary hover:bg-primary/90 text-white ring-2 ring-primary/20'} transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 flex-1 justify-center`}
               >
                 立即开始创作
               </button>

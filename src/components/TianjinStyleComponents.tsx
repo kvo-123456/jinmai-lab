@@ -514,6 +514,8 @@ export const TianjinImage: React.FC<{
   fit?: 'cover' | 'contain';
   onClick?: () => void;
   sizes?: string;
+  priority?: boolean;
+  blurDataURL?: string;
 }> = ({
   src,
   alt,
@@ -525,11 +527,14 @@ export const TianjinImage: React.FC<{
   fit = 'cover',
   onClick,
   sizes,
+  priority = false,
+  blurDataURL,
 }) => {
   const { isDark } = useTheme();
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const reduceMotion = useReducedMotion();
+  
   useEffect(() => {
     if (!src) {
       setError(true);
@@ -539,6 +544,7 @@ export const TianjinImage: React.FC<{
     setError(false);
     setLoaded(false);
   }, [src]);
+  
   const ratioStyle =
     ratio === 'square'
       ? { paddingTop: '100%' }
@@ -547,6 +553,7 @@ export const TianjinImage: React.FC<{
       : ratio === 'portrait'
       ? { paddingTop: '133%' }
       : undefined;
+  
   const roundedMap: Record<string, string> = {
     none: '',
     sm: 'rounded-sm',
@@ -556,39 +563,78 @@ export const TianjinImage: React.FC<{
     '2xl': 'rounded-2xl',
     full: 'rounded-full',
   };
+  
+  // 生成低质量占位图URL
+  const getLowQualityUrl = (url: string) => {
+    // 如果是本地开发环境或已知的图片服务，添加低质量参数
+    if (url.includes('trae-api-sg.mchost.guru')) {
+      return `${url}&quality=20`;
+    }
+    return url;
+  };
+  
   return (
     <div
       className={`relative overflow-hidden ${roundedMap[rounded]} ${className} ${withBorder ? (isDark ? 'ring-1 ring-gray-700' : 'ring-1 ring-gray-200') : ''}`}
       style={ratioStyle}
       onClick={onClick}
     >
+      {/* 骨架屏占位 - 优化版 */}
       {!loaded && !error && (
-        <div className={`absolute inset-0 ${isDark ? 'bg-gray-800' : 'bg-gray-100'} animate-pulse`} />
+        <div className={`absolute inset-0 ${isDark ? 'bg-gray-800' : 'bg-gray-100'} animate-pulse`}>
+          {/* 更丰富的骨架屏效果 */}
+          <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800' : 'bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100'} animate-pulse`} style={{ backgroundSize: '200% 100%' }}></div>
+        </div>
       )}
+      
       {error ? (
-        <div className={`absolute inset-0 flex items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-          <i className={`fas fa-image ${isDark ? 'text-gray-500' : 'text-gray-400'} text-2xl`}></i>
+        <div className={`absolute inset-0 flex flex-col items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-white'} text-center p-4`}>
+          <i className={`fas fa-image ${isDark ? 'text-gray-500' : 'text-gray-400'} text-3xl mb-2`}></i>
+          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>图片加载失败</div>
         </div>
       ) : (
-        <motion.img
-          src={src}
-          alt={alt}
-          className={`absolute inset-0 w-full h-full object-${fit}`}
-          loading="lazy"
-          decoding="async"
-          sizes={sizes}
-          onLoad={() => setLoaded(true)}
-          onError={() => setError(true)}
-          initial={reduceMotion ? undefined : { opacity: 0 }}
-          animate={reduceMotion ? undefined : { opacity: loaded ? 1 : 0 }}
-          transition={reduceMotion ? undefined : { duration: 0.4 }}
-        />
+        <>
+          {/* 低质量占位图 - 渐进式加载 */}
+          {!loaded && (
+            <div className="absolute inset-0 w-full h-full overflow-hidden">
+              <img
+                src={getLowQualityUrl(src)}
+                alt={alt}
+                className={`w-full h-full object-${fit} blur-sm`}
+                loading={priority ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </div>
+          )}
+          
+          {/* 主图片 - 优化动画 */}
+          <motion.img
+            src={src}
+            alt={alt}
+            className={`absolute inset-0 w-full h-full object-${fit}`}
+            loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
+            sizes={sizes}
+            onLoad={() => setLoaded(true)}
+            onError={() => setError(true)}
+            initial={reduceMotion ? undefined : { opacity: 0, scale: 1.05 }}
+            animate={reduceMotion ? undefined : { 
+              opacity: loaded ? 1 : 0,
+              scale: loaded ? 1 : 1.05
+            }}
+            transition={reduceMotion ? undefined : { 
+              duration: 0.6,
+              ease: "easeOut"
+            }}
+          />
+        </>
       )}
+      
       {badge && (
         <span
           className={`absolute top-3 left-3 text-xs px-2 py-1 rounded-full ${
             isDark ? 'bg-gray-800/70 ring-1 ring-gray-700 text-gray-200' : 'bg-white/80 ring-1 ring-gray-200 text-gray-700'
-          }`}
+          } backdrop-blur-sm`}
         >
           {badge}
         </span>

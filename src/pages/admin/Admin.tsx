@@ -91,6 +91,8 @@ export default function Admin() {
   
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
   
   // 检查是否已登录且为管理员
   useEffect(() => {
@@ -103,6 +105,37 @@ export default function Admin() {
       }, 800);
     }
   }, [isAuthenticated, user, navigate]);
+  
+  // 获取用户数据
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users);
+      } else {
+        toast.error('获取用户数据失败');
+      }
+    } catch (error) {
+      console.error('获取用户数据失败:', error);
+      toast.error('获取用户数据失败');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+  
+  // 当切换到用户管理标签时获取用户数据
+  useEffect(() => {
+    if (activeTab === 'users' && !isLoading) {
+      fetchUsers();
+    }
+  }, [activeTab, isLoading]);
   
   const handleLogout = () => {
     logout();
@@ -673,8 +706,170 @@ export default function Admin() {
           </motion.div>
         )}
         
-         {/* 其他标签页的内容可以按照类似的方式实现 */}
-        {(activeTab === 'analytics' || activeTab === 'adoption' || activeTab === 'users' || activeTab === 'settings') && (
+         {/* 用户管理页面 */}
+        {activeTab === 'users' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className={`p-6 rounded-2xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-md`}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">用户管理</h2>
+              <div className="flex space-x-2">
+                <div className={`relative ${isDark ? 'bg-gray-700' : 'bg-gray-100'} rounded-full px-4 py-1.5`}>
+                  <input
+                    type="text"
+                    placeholder="搜索用户..."
+                    className="bg-transparent border-none outline-none w-40 text-sm"
+                  />
+                  <i className="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                </div>
+                <select className={`px-3 py-1.5 rounded-lg text-sm ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-300'} border`}>
+                  <option value="all">全部状态</option>
+                  <option value="active">活跃</option>
+                  <option value="inactive">不活跃</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* 用户数据概览 */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {[
+                { title: '总用户数', value: '3,842', icon: 'users', color: 'blue' },
+                { title: '活跃用户', value: '2,560', icon: 'user-check', color: 'green' },
+                { title: '新增用户', value: '128', icon: 'user-plus', color: 'yellow' },
+                { title: '管理员', value: '15', icon: 'shield-alt', color: 'purple' },
+              ].map((stat, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm mb-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{stat.title}</p>
+                      <h3 className="text-xl font-bold">{stat.value}</h3>
+                    </div>
+                    <div className={`p-2 rounded-full bg-${stat.color}-100 text-${stat.color}-600`}>
+                      <i className={`fas fa-${stat.icon} text-lg`}></i>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* 用户列表 */}
+            <div className={`overflow-x-auto rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+              <table className="min-w-full">
+                <thead>
+                  <tr className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <th className="px-4 py-3 text-left text-sm font-medium">ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">用户名</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">邮箱</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">年龄</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">兴趣标签</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">注册时间</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">状态</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {usersLoading ? (
+                    // 加载状态
+                    <tr>
+                      <td colSpan={8} className="px-4 py-10 text-center">
+                        <div className="flex items-center justify-center">
+                          <i className="fas fa-spinner fa-spin text-xl mr-2"></i>
+                          <span>加载用户数据中...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : users.length === 0 ? (
+                    // 无数据状态
+                    <tr>
+                      <td colSpan={8} className="px-4 py-10 text-center">
+                        <div className="text-gray-400">
+                          <i className="fas fa-users text-4xl mb-2"></i>
+                          <p>暂无用户数据</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    // 真实用户数据
+                    users.map((user) => (
+                      <tr key={user.id} className="hover:bg-gray-700/50">
+                        <td className="px-4 py-3 text-sm">{user.id}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex items-center">
+                            <img 
+                              src={user.avatar_url || `https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=User%20avatar%20${user.username}`} 
+                              alt={user.username} 
+                              className="w-8 h-8 rounded-full mr-3" 
+                            />
+                            <span>{user.username}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm">{user.email}</td>
+                        <td className="px-4 py-3 text-sm">{user.age || '-'}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex flex-wrap gap-1">
+                            {user.tags && user.tags.length > 0 ? (
+                              user.tags.map((tag, index) => (
+                                <span key={index} className={`px-2 py-0.5 rounded-full text-xs ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
+                                  {tag}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-gray-400 text-xs">暂无标签</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs bg-green-100 text-green-600`}>
+                            活跃
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex space-x-2">
+                            <button className={`p-1.5 rounded ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}>
+                              <i className="fas fa-eye text-blue-500"></i>
+                            </button>
+                            <button className={`p-1.5 rounded ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}>
+                              <i className="fas fa-edit text-green-500"></i>
+                            </button>
+                            <button className={`p-1.5 rounded ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'}`}>
+                              <i className="fas fa-trash text-red-500"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* 分页 */}
+            <div className="mt-8 flex justify-center">
+              <div className="flex space-x-1">
+                {[1, 2, 3, 4, 5].map((page) => (
+                  <button 
+                    key={page}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${page === 1 ? 'bg-red-600 text-white' : isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
+        {/* 其他标签页的内容可以按照类似的方式实现 */}
+        {(activeTab === 'analytics' || activeTab === 'adoption' || activeTab === 'settings') && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

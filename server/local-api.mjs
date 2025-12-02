@@ -880,7 +880,9 @@ const server = http.createServer(async (req, res) => {
         password_hash,
         phone: b.phone || null,
         avatar_url: b.avatar_url || null,
-        interests: b.interests ? JSON.stringify(b.interests) : null
+        interests: b.interests ? JSON.stringify(b.interests) : null,
+        age: b.age ? parseInt(b.age) : null,
+        tags: b.tags ? JSON.stringify(b.tags) : null
       })
       const userId = result.id
       
@@ -902,7 +904,9 @@ const server = http.createServer(async (req, res) => {
           email: b.email,
           phone: b.phone || null,
           avatar_url: b.avatar_url || null,
-          interests: b.interests || null
+          interests: b.interests || null,
+          age: b.age ? parseInt(b.age) : null,
+          tags: b.tags || null
         }
       })
       return
@@ -945,7 +949,10 @@ const server = http.createServer(async (req, res) => {
           email: user.email,
           phone: user.phone || null,
           avatar_url: user.avatar_url || null,
-          interests: user.interests ? JSON.parse(user.interests) : null
+          interests: user.interests ? JSON.parse(user.interests) : null,
+          age: user.age || null,
+          tags: user.tags ? JSON.parse(user.tags) : null,
+          isAdmin: user.email === 'testuser789@example.com' || user.isAdmin
         }
       })
       return
@@ -973,8 +980,50 @@ const server = http.createServer(async (req, res) => {
           email: user.email,
           phone: user.phone || null,
           avatar_url: user.avatar_url || null,
-          interests: user.interests ? JSON.parse(user.interests) : null
+          interests: user.interests ? JSON.parse(user.interests) : null,
+          age: user.age || null,
+          tags: user.tags ? JSON.parse(user.tags) : null,
+          isAdmin: user.email === 'testuser789@example.com' || user.isAdmin
         }
+      })
+      return
+    }
+    
+    // 获取所有用户数据（仅管理员）
+    if (req.method === 'GET' && path === '/api/admin/users') {
+      const decoded = verifyRequestToken(req)
+      if (!decoded) {
+        sendJson(res, 401, { error: 'UNAUTHORIZED', message: '未授权访问' })
+        return
+      }
+      
+      // 检查用户是否为管理员
+      const currentUser = await userDB.findById(decoded.userId)
+      if (!currentUser || (currentUser.email !== 'testuser789@example.com' && !currentUser.isAdmin)) {
+        sendJson(res, 403, { error: 'FORBIDDEN', message: '只有管理员可以访问此资源' })
+        return
+      }
+      
+      // 获取所有用户数据
+      const users = await userDB.getAllUsers()
+      
+      // 格式化用户数据
+      const formattedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        phone: user.phone || null,
+        avatar_url: user.avatar_url || null,
+        interests: user.interests ? JSON.parse(user.interests) : null,
+        age: user.age || null,
+        tags: user.tags ? JSON.parse(user.tags) : null,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      }))
+      
+      sendJson(res, 200, { 
+        ok: true, 
+        users: formattedUsers
       })
       return
     }

@@ -161,16 +161,51 @@ function createSQLiteTables(db) {
       );
     `)
     
+    // 添加age列（如果不存在）
+    try {
+      db.exec(`ALTER TABLE users ADD COLUMN age INTEGER`)
+    } catch (e) {
+      // 如果列已经存在，忽略错误
+      if (!e.message.includes('duplicate column name')) {
+        throw e
+      }
+    }
+    
+    // 添加tags列（如果不存在）
+    try {
+      db.exec(`ALTER TABLE users ADD COLUMN tags TEXT`)
+    } catch (e) {
+      // 如果列已经存在，忽略错误
+      if (!e.message.includes('duplicate column name')) {
+        throw e
+      }
+    }
+    
     // 创建收藏表
     db.exec(`
       CREATE TABLE IF NOT EXISTS favorites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
         tutorial_id INTEGER NOT NULL,
-        created_at INTEGER NOT NULL,
-        UNIQUE(user_id, tutorial_id)
+        created_at INTEGER NOT NULL
       );
     `)
+    
+    // 添加user_id列（如果不存在）
+    try {
+      db.exec(`ALTER TABLE favorites ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0`)
+    } catch (e) {
+      // 如果列已经存在，忽略错误
+      if (!e.message.includes('duplicate column name')) {
+        throw e
+      }
+    }
+    
+    // 添加唯一约束
+    try {
+      db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_favorites_user_tutorial ON favorites(user_id, tutorial_id)`)
+    } catch (e) {
+      // 如果约束已经存在，忽略错误
+    }
     
     // 创建视频任务表
     db.exec(`
@@ -494,29 +529,29 @@ export const userDB = {
    */
   async createUser(userData) {
     const db = await getDB()
-    const { username, email, password_hash, phone = null, avatar_url = null, interests = null } = userData
+    const { username, email, password_hash, phone = null, avatar_url = null, interests = null, age = null, tags = null } = userData
     const now = Date.now()
     
     switch (config.dbType) {
       case DB_TYPE.SQLITE:
         return db.prepare(`
-          INSERT INTO users (username, email, password_hash, phone, avatar_url, interests, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO users (username, email, password_hash, phone, avatar_url, interests, age, tags, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           RETURNING id
-        `).get(username, email, password_hash, phone, avatar_url, interests, now, now)
+        `).get(username, email, password_hash, phone, avatar_url, interests, age, tags, now, now)
         
       case DB_TYPE.MONGODB:
         const result = await db.collection('users').insertOne({
-          username, email, password_hash, phone, avatar_url, interests, created_at: now, updated_at: now
+          username, email, password_hash, phone, avatar_url, interests, age, tags, created_at: now, updated_at: now
         })
         return { id: result.insertedId }
         
       case DB_TYPE.POSTGRESQL:
         const { rows } = await db.query(`
-          INSERT INTO users (username, email, password_hash, phone, avatar_url, interests, created_at, updated_at)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          INSERT INTO users (username, email, password_hash, phone, avatar_url, interests, age, tags, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           RETURNING id
-        `, [username, email, password_hash, phone, avatar_url, interests, now, now])
+        `, [username, email, password_hash, phone, avatar_url, interests, age, tags, now, now])
         return rows[0]
         
       default:
@@ -584,6 +619,28 @@ export const userDB = {
       case DB_TYPE.POSTGRESQL:
         const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [id])
         return rows[0]
+        
+      default:
+        throw new Error(`不支持的数据库类型: ${config.dbType}`)
+    }
+  },
+  
+  /**
+   * 获取所有用户
+   */
+  async getAllUsers() {
+    const db = await getDB()
+    
+    switch (config.dbType) {
+      case DB_TYPE.SQLITE:
+        return db.prepare('SELECT * FROM users ORDER BY created_at DESC').all()
+        
+      case DB_TYPE.MONGODB:
+        return await db.collection('users').find({}).sort({ created_at: -1 }).toArray()
+        
+      case DB_TYPE.POSTGRESQL:
+        const { rows } = await db.query('SELECT * FROM users ORDER BY created_at DESC')
+        return rows
         
       default:
         throw new Error(`不支持的数据库类型: ${config.dbType}`)
