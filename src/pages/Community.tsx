@@ -1326,7 +1326,7 @@ export default function Community() {
                   )}
                   itemHeight={300} // 调整为适合社群卡片的高度
                   itemWidth={300} // 调整为适合社群卡片的宽度
-                  columns={3} // 根据屏幕尺寸调整列数
+                  columns={3} // 根据屏幕尺寸动态调整列数（组件内部会自动响应式处理）
                   isDark={isDark}
                 />
               </div>

@@ -220,7 +220,7 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
               className={`${isDark ? 'bg-gray-800 text-white ring-1 ring-gray-700' : 'bg-white text-gray-900 ring-1 ring-gray-300'} px-3 py-2 rounded-lg flex-1 focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-purple-500' : 'focus:ring-pink-300'}`} 
             />
           </div>
-          <ul className="space-y-2 max-h-[38vh] overflow-y-auto">
+          <ul className="space-y-2 max-h-[38vh] overflow-y-auto sm:max-h-[50vh]">
             {chatJoinedList.length === 0 ? (
               <li className="text-sm opacity-60">暂无已加入社群</li>
             ) : (
@@ -233,7 +233,7 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="font-medium truncate mr-2">{c.name}</div>
                     </div>
-                    <div className="text-xs opacity-70 mt-1 text-gray-300">{c.tags.slice(0, 3).join(' · ')}</div>
+                    <div className="text-xs opacity-70 mt-1 text-gray-300">{c.tags.slice(0, 2).join(' · ')}</div>
                   </button>
                 </li>
               ))
@@ -262,7 +262,7 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
                   </button>
                 </div>
               </div>
-              <div className="space-y-3 mb-4 max-h-72 overflow-y-auto pr-1">
+              <div className="space-y-3 mb-4 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto pr-1">
                 {currentMessages.length === 0 ? (
                   <div className="text-sm opacity-60 text-center py-4">暂无消息，快来发第一条消息吧！</div>
                 ) : (
@@ -279,33 +279,33 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
                           loading="lazy" 
                           decoding="async"
                         />
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           {/* 回复引用 */}
                           {msg.replyTo && (
-                            <div className={`mb-2 p-2 rounded-lg text-sm ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                            <div className={`mb-2 p-2 rounded-lg text-xs ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
                               <div className="font-medium">回复 {msg.replyTo.user}:</div>
-                              <div className="text-xs opacity-80">{msg.replyTo.text}</div>
+                              <div className="text-xs opacity-80 line-clamp-2">{msg.replyTo.text}</div>
                             </div>
                           )}
                           
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <div className="text-sm font-medium">{msg.user}</div>
+                              <div className="text-sm font-medium truncate">{msg.user}</div>
                             </div>
                             <div className="text-xs text-gray-400">
-                              {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString() : ''}
+                              {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                             </div>
                           </div>
-                          <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-2`}>{msg.text}</div>
+                          <div className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'} mb-2 break-words`}>{msg.text}</div>
                           
                           {/* 表情反应 */}
                           {msg.reactions && Object.keys(msg.reactions).length > 0 && (
-                            <div className="flex items-center gap-1 mb-2">
+                            <div className="flex items-center gap-1 mb-2 flex-wrap">
                               {Object.entries(msg.reactions).map(([emoji, users]) => (
                                 <button 
                                   key={emoji} 
                                   onClick={() => msg.id && addReaction(activeCommunity.id, msg.id, emoji)} 
-                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white text-gray-800 hover:bg-gray-100'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${isDark ? 'bg-gray-800 text-white hover:bg-gray-700' : 'bg-white text-gray-800 hover:bg-gray-200'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
                                 >
                                   <span>{emoji}</span>
                                   <span>{users.length}</span>
@@ -314,23 +314,23 @@ const CommunityChat: React.FC<CommunityChatProps> = ({
                             </div>
                           )}
                           
-                          {/* 操作按钮 */}
-                          <div className="flex items-center gap-2">
+                          {/* 操作按钮 - 在移动端简化显示 */}
+                          <div className="flex items-center gap-1 flex-wrap">
                             <button 
                               onClick={() => msg.id && startReply(msg)} 
-                              className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-2 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
+                              className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-2 py-0.5 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
                             >
                               回复
                             </button>
                             <button 
                               onClick={() => msg.id && togglePinCommunityMessage(activeCommunity.id, msg.id)} 
-                              className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-2 py-1 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
+                              className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} px-2 py-0.5 rounded-lg text-xs ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-300'} transition-colors`}
                             >
                               {msg.pinned ? '取消置顶' : '置顶'}
                             </button>
                             <button 
                               onClick={() => msg.id && deleteCommunityMessage(activeCommunity.id, msg.id)} 
-                              className={`${isDark ? 'bg-red-700 text-white' : 'bg-red-100 text-red-800'} px-2 py-1 rounded-lg text-xs transition-colors`}
+                              className={`${isDark ? 'bg-red-700 text-white' : 'bg-red-100 text-red-800'} px-2 py-0.5 rounded-lg text-xs transition-colors`}
                             >
                               删除
                             </button>

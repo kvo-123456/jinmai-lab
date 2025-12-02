@@ -301,7 +301,7 @@ const CommunityManagement: React.FC<CommunityManagementProps> = ({
       {communityTab === 'user' && (
         <div className={`${isDark ? 'bg-gray-700' : 'bg-white/70'} p-4 rounded-xl mb-4 ring-1 ${isDark ? 'ring-gray-700' : 'ring-rose-200'}`}>
           <div className="text-sm opacity-70 mb-2">创建新社群</div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <input 
               value={newCommunityName} 
               onChange={e => setNewCommunityName(e.target.value)} 
@@ -338,7 +338,7 @@ const CommunityManagement: React.FC<CommunityManagementProps> = ({
           {userCommunities.length === 0 ? (
             <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>暂无自建社群，快来创建吧～</div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {userCommunities.map(c => (
                 <motion.div 
                   key={c.id} 
@@ -348,12 +348,12 @@ const CommunityManagement: React.FC<CommunityManagementProps> = ({
                   <img src={c.cover} alt={c.name} className="w-full aspect-[4/3] object-cover" />
                   <div className="p-4">
                     <div className="font-medium mb-1 flex items-center gap-2">
-                      {c.name}
+                      <span className="truncate">{c.name}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-rose-100 text-rose-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-rose-200'}`}>个人</span>
                     </div>
-                    <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{c.description}</div>
+                    <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'} line-clamp-2`}>{c.description}</div>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {c.tags.map((t, i) => (
+                      {c.tags.slice(0, 3).map((t, i) => (
                         <span key={i} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>#{t}</span>
                       ))}
                     </div>
@@ -368,10 +368,10 @@ const CommunityManagement: React.FC<CommunityManagementProps> = ({
                         <span>{expandedMembersId === c.id ? '▼' : '▶'}</span>
                       </div>
                       {expandedMembersId === c.id && (
-                        <div className="mt-2 space-y-1 text-xs">
+                        <div className="mt-2 space-y-1 text-xs max-h-[120px] overflow-y-auto">
                           {[currentEmail, ...(memberStore[c.id] || [])].map((email, i) => (
                             <div key={i} className="flex items-center justify-between">
-                              <span>{email}</span>
+                              <span className="truncate">{email}</span>
                               <span className={`px-1.5 py-0.5 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
                                 {adminStore[c.id]?.includes(email) ? '管理员' : '成员'}
                               </span>
@@ -385,17 +385,17 @@ const CommunityManagement: React.FC<CommunityManagementProps> = ({
                       <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {privacyStore[c.id] === 'private' ? '私密' : '公开'}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 flex-wrap">
                         {editDraft?.id === c.id ? (
                           <>
-                            <button onClick={saveEditCommunity} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-green-600 text-white' : 'bg-green-500 text-white'}`}>保存</button>
-                            <button onClick={cancelEditCommunity} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}>取消</button>
+                            <button onClick={saveEditCommunity} className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-green-600 text-white' : 'bg-green-500 text-white'}`}>保存</button>
+                            <button onClick={cancelEditCommunity} className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}>取消</button>
                           </>
                         ) : (
                           <>
-                            <button onClick={() => startEditCommunity(c)} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}>编辑</button>
-                            <button onClick={() => openManage(c.id)} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`}>管理</button>
-                            <button onClick={() => deleteCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-red-600 text-white' : 'bg-red-500 text-white'}`}>删除</button>
+                            <button onClick={() => startEditCommunity(c)} className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}>编辑</button>
+                            <button onClick={() => openManage(c.id)} className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'}`}>管理</button>
+                            <button onClick={() => deleteCommunity(c.id)} className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-red-600 text-white' : 'bg-red-500 text-white'}`}>删除</button>
                           </>
                         )}
                       </div>
