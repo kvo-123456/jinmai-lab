@@ -419,7 +419,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
             <NavLink 
               to="/"
               onTouchStart={() => prefetchRoute('/')}
-              className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+              className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300 hover:text-white' : theme === 'pink' ? 'text-pink-700 hover:text-pink-900' : 'text-gray-700 hover:text-gray-900'}`}
               aria-label="首页"
             >
               <i className="fas fa-home text-lg"></i>
@@ -430,7 +430,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
             <NavLink 
               to="/explore"
               onTouchStart={() => prefetchRoute('/explore')}
-              className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+              className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300 hover:text-white' : theme === 'pink' ? 'text-pink-700 hover:text-pink-900' : 'text-gray-700 hover:text-gray-900'}`}
               aria-label="探索"
             >
               <i className="fas fa-compass text-lg"></i>
@@ -444,17 +444,17 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out`}
               aria-label="创作"
             >
-              <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center -mt-4 shadow-lg">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center -mt-4 shadow-lg ${isDark ? 'bg-red-600 hover:bg-red-500' : theme === 'pink' ? 'bg-pink-600 hover:bg-pink-500' : 'bg-red-500 hover:bg-red-600'}`}>
                 <i className="fas fa-plus text-xl text-white"></i>
               </div>
-              <span className="mt-1 font-medium" style={{ color: isDark ? '#f87171' : '#dc2626' }}>创作</span>
+              <span className="mt-1 font-medium" style={{ color: isDark ? '#f87171' : theme === 'pink' ? '#db2777' : '#dc2626' }}>创作</span>
             </NavLink>
           </li>
           <li className="flex items-center justify-center">
             <NavLink 
               to="/neo"
               onTouchStart={() => prefetchRoute('/neo')}
-              className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+              className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300 hover:text-white' : theme === 'pink' ? 'text-pink-700 hover:text-pink-900' : 'text-gray-700 hover:text-gray-900'}`}
               aria-label="灵感"
             >
               <i className="fas fa-bolt text-lg"></i>
@@ -466,7 +466,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               <NavLink 
                 to="/dashboard"
                 onTouchStart={() => prefetchRoute('/dashboard')}
-                className={`relative flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                className={`relative flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300 hover:text-white' : theme === 'pink' ? 'text-pink-700 hover:text-pink-900' : 'text-gray-700 hover:text-gray-900'}`}
                 aria-label="我的"
               >
                 <i className="fas fa-user text-lg"></i>
@@ -478,7 +478,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
             ) : (
               <NavLink 
                 to="/login"
-                className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300 hover:text-white' : theme === 'pink' ? 'text-pink-700 hover:text-pink-900' : 'text-gray-700 hover:text-gray-900'}`}
                 aria-label="登录"
               >
                 <i className="fas fa-sign-in-alt text-lg"></i>
