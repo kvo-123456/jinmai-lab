@@ -1001,46 +1001,6 @@ export default function Neo() {
                             <i className="fas fa-share-alt"></i> 分享
                           </button>
                         </div>
-                        {val && (
-                          hasUrl ? (
-                            <div className="mt-2 space-y-2">
-                              <div className="text-xs break-all text-blue-600 flex flex-wrap items-center gap-1 sm:gap-2">
-                                <a href={val} target="_blank" rel="noreferrer" className="underline hover:text-blue-800 transition-colors truncate flex-1" title={val}>{shortenUrl(val)}</a>
-                                <div className="flex gap-1 flex-wrap">
-                                  <button className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => { try { navigator.clipboard.writeText(val); toast.success('已复制链接') } catch { } }}>复制</button>
-                                  <button className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => { try { window.open(val, '_blank') } catch {} }}>打开</button>
-                                  <a className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} href={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(val)}`} download>下载</a>
-                                </div>
-                              </div>
-                              <video
-                                controls
-                                src={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(val)}`}
-                                className="w-full mt-1 rounded"
-                                onLoadedMetadata={(e) => {
-                                  const el = e.currentTarget
-                                  const metaNew = { duration: el.duration, width: el.videoWidth, height: el.videoHeight }
-                                  setVideoMetaByIndex(prev => {
-                                    const next = [...prev]
-                                    next[i] = { ...(next[i] || {}), ...metaNew }
-                                    return next
-                                  })
-                                  updateHistoryMeta(val, metaNew)
-                                }}
-                              />
-                              <div className={`mt-1 text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} flex flex-wrap gap-x-2 gap-y-1`}>
-                                {videoMetaByIndex[i]?.width && videoMetaByIndex[i]?.height ? (<span>分辨率：{videoMetaByIndex[i]!.width}×{videoMetaByIndex[i]!.height}</span>) : null}
-                                {videoMetaByIndex[i]?.duration ? (<span>时长：{formatDuration(videoMetaByIndex[i]!.duration)}</span>) : null}
-                                {videoMetaByIndex[i]?.createdAt ? (<span>生成时间：{formatTime(videoMetaByIndex[i]!.createdAt)}</span>) : null}
-                                {videoMetaByIndex[i]?.sizeBytes ? (<span>大小：{(videoMetaByIndex[i]!.sizeBytes!/1024/1024).toFixed(2)} MB</span>) : null}
-                                {videoMetaByIndex[i]?.contentType ? (<span>类型：{videoMetaByIndex[i]!.contentType}</span>) : null}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className={`mt-2 text-xs break-all ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{val}</div>
-                          )
-                        )}
-                        
-                        {/* 用户反馈按钮 */}
                         <div className="mt-2 flex justify-between items-center">
                           <button
                             onClick={() => setShowFeedback(`result-${i}`)}
