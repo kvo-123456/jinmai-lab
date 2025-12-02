@@ -10,7 +10,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "outDir": "./api-build",
-    "rootDir": "./api",
+    "rootDir": "./",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "allowJs": true,
@@ -22,6 +22,6 @@
     },
     "types": ["@types/node", "@vercel/node"]
   },
-  "include": ["api/**/*.ts", "api/types/**/*.d.ts", "server/**/*.mjs"],
+  "include": ["api/**/*.ts", "api/types/**/*.d.ts"],
   "exclude": ["node_modules"]
 }
