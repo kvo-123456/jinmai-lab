@@ -27,8 +27,7 @@
       }
     },
     {
-      "src": "\\.(js|css|png|jpg|gif|ico|svg|woff|woff2|ttf|eot)$",
-      "dest": "/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
