@@ -44,8 +44,8 @@ const saveCustomTags = (tags: string[]) => {
 }
 
 export default function Neo() {
-  // 为useTheme解构添加默认值，防止返回undefined导致崩溃
-  const { isDark = false } = useTheme() || {}
+  // 获取主题信息
+  const { isDark } = useTheme()
   const location = useLocation()
   const apiBase = ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined)?.trim() || (typeof window !== 'undefined' && /localhost:3000$/.test(window.location.host) ? 'http://localhost:3001' : '')
   const shortenUrl = (u: string) => {
