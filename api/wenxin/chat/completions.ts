@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from 'vercel'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const BASE_URL = process.env.QIANFAN_BASE_URL || 'https://qianfan.baidubce.com'
 const MODEL_ID = process.env.QIANFAN_MODEL_ID || 'ERNIE-Speed-8K'

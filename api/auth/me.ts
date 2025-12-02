@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from 'vercel'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { verifyToken } from '../../server/jwt.mjs'
 import { userDB } from '../../server/database.mjs'
 import { sendErrorResponse, sendSuccessResponse, API_ERRORS } from '../../server/api-error-handler.mjs'

@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from 'vercel'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 const ORIGIN = process.env.CORS_ALLOW_ORIGIN || '*'
 const VOLC_TTS_APP_ID = process.env.VOLC_TTS_APP_ID || ''

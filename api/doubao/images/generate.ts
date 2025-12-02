@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from 'vercel';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const BASE_URL = process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
 const API_KEY = process.env.DOUBAO_API_KEY || '';

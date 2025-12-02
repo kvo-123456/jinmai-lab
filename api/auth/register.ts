@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from 'vercel'
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import bcryptjs from 'bcryptjs'
 import { generateToken } from '../../server/jwt.mjs'
 import { userDB } from '../../server/database.mjs'
