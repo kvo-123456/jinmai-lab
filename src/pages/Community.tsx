@@ -1334,7 +1334,7 @@ export default function Community() {
                           <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} text-xs px-3 py-1 rounded-lg transition-colors`}>查看详情</button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
                   itemHeight={300} // 调整为适合社群卡片的高度
                   itemWidth={300} // 调整为适合社群卡片的宽度
@@ -1446,7 +1446,7 @@ export default function Community() {
                           <button onClick={() => openManage(c.id)} className={`ml-2 text-xs px-3 py-1 rounded-lg ${isDark ? 'bg-gray-700 text-white' : 'bg-indigo-100 text-indigo-700'}`}>成员/公告</button>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
