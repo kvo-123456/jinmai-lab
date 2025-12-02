@@ -10,7 +10,7 @@ import AID点评 from '@/components/AID点评';
 import LLMCommandPanel from '@/components/LLMCommandPanel';
 import ModelSelector from '@/components/ModelSelector';
 import { HaiheBoatTransition, TianjinImage } from '@/components/TianjinStyleComponents';
-import SidebarLayout from '@/components/SidebarLayout'
+
 import llmService from '../services/llmService';
 import doubao, { createVideoTask, pollVideoTask } from '@/services/doubao'
 import { promptTemplates } from '@/data/promptTemplates';
@@ -1069,7 +1069,7 @@ export default function Create() {
   // 骨架屏加载状态
   if (isLoading) {
     return (
-      <SidebarLayout>
+      <>
         {/* 导航栏 */}
         <nav className={`sticky top-0 z-50 ${isDark ? 'bg-gray-800' : 'bg-white'} border-b ${isDark ? 'border-gray-700' : 'border-gray-200'} px-4 py-3`}>
         <div className="container mx-auto flex justify-between items-center">
@@ -1112,12 +1112,12 @@ export default function Create() {
             </div>
           </div>
         </main>
-      </SidebarLayout>
+      </>
     );
   }
   
   return (
-    <SidebarLayout>
+    <>
       {/* 顶部导航 */}
       <header className={`sticky top-0 z-50 ${isDark ? 'bg-gray-800' : 'bg-white'} border-b ${isDark ? 'border-gray-700' : 'border-gray-200'} px-4 py-3`}>
         <div className="container mx-auto flex justify-between items-center">
@@ -2474,5 +2474,6 @@ export default function Create() {
           </div>
         </div>
       </footer>
+    </>
   );
 }
