@@ -64,7 +64,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
     if (isOpen) {
       setSelectedModel(llmService.getCurrentModel());
       setModelConfig(llmService.getConfig());
-    }}, [isOpen]);
+    }
+  }, [isOpen]);
 
   const handleModelChange = (modelId: string) => {
     const model = AVAILABLE_MODELS.find(m => m.id === modelId);
@@ -73,7 +74,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
       setTimeout(() => {
         if (configRef.current) {
           configRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}, 50);
+        }
+      }, 50);
     }
   };
 
@@ -303,13 +305,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
                   role="radio"
                   aria-checked={selectedModel.id === model.id}
                   tabIndex={0}
-                  className={`relative w-full text-left p-4 rounded-xl border transition-all ${
-                    selectedModel.id === model.id
-                      ? 'border-red-600 bg-red-100 dark:bg-red-900/20 ring-2 ring-red-500 shadow-md'
-                      : isDark
-                      ? 'border-gray-700 hover:border-gray-600'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`relative w-full text-left p-4 rounded-xl border transition-all ${selectedModel.id === model.id ? 'border-red-600 bg-red-100 dark:bg-red-900/20 ring-2 ring-red-500 shadow-md' : isDark ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300'}`}
                   whileHover={{ y: -2 }}
                   onClick={() => handleModelChange(model.id)}
                   onKeyDown={(e) => handleModelKeyDown(e, idx)}
@@ -322,13 +318,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
                         {model.description}
                       </p>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 ${
-                      selectedModel.id === model.id
-                        ? 'border-red-600'
-                        : isDark
-                        ? 'border-gray-600'
-                        : 'border-gray-300'
-                    } flex items-center justify-center`}>
+                    <div className={`w-5 h-5 rounded-full border-2 ${selectedModel.id === model.id ? 'border-red-600' : isDark ? 'border-gray-600' : 'border-gray-300'} flex items-center justify-center`}>
                       {selectedModel.id === model.id && (
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
                       )}
@@ -338,9 +328,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
                     {model.strengths.map((strength, index) => (
                       <span
                         key={index}
-                        className={`text-xs px-2 py-0.5 rounded-full ${
-                          isDark ? 'bg-gray-700' : 'bg-gray-100'
-                        }`}
+                        className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
                       >
                         {strength}
                       </span>
@@ -671,13 +659,24 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">启用流式输出</label>
-                  <input type="checkbox" checked={modelConfig.stream} onChange={(e) => handleConfigChange('stream', e.target.checked)} disabled={isLoading} />
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-medium">启用流式输出</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={modelConfig.stream}
+                      onChange={(e) => handleConfigChange('stream', e.target.checked)}
+                      disabled={isLoading}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">{modelConfig.stream ? '启用' : '禁用'}</span>
+                  </div>
+                  <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    启用后，模型会实时返回生成的内容，而不是等待完整生成后一次性返回，提供更好的交互体验。
+                  </p>
                 </div>
-                <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  启用后，模型会实时返回生成的内容，而不是等待完整生成后一次性返回，提供更好的交互体验。
-                </p>
 
                 {/* 最大token设置 */}
                 <div>
@@ -1009,7 +1008,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
               setWenxinVariant('ERNIE-Speed-8K');
               setQwenBase('https://dashscope.aliyuncs.com/api/v1');
               setQwenVariant('qwen-plus');
-            }},
+            }}
             className={`px-5 py-2.5 rounded-lg transition-colors ${
               isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
             }`}
