@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     console.log('收到注册请求:', { method: req.method, path: req.url })
     
-    const { username, email, password } = req.body || {}
+    const { username, email, password, age, tags } = req.body || {}
     
     console.log('注册请求参数:', { username, email, hasPassword: !!password })
     
@@ -56,12 +56,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
     }
     
-    // 验证密码强度
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    // 验证密码强度（简化要求，至少8个字符，包含字母和数字）
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/
     if (!passwordRegex.test(password)) {
       console.log('注册失败: 密码强度不足')
       return sendErrorResponse(res, API_ERRORS.PASSWORD_STRENGTH_INVALID, {
-        message: '密码至少8个字符，包含至少一个大写字母、一个小写字母、一个数字和一个特殊字符(@$!%*?&)'
+        message: '密码至少8个字符，包含至少一个字母和一个数字'
       })
     }
     
@@ -95,7 +95,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await userDB.createUser({
       username,
       email,
-      password_hash: passwordHash
+      password_hash: passwordHash,
+      age: age ? parseInt(age) : null,
+      tags: tags ? JSON.stringify(tags) : null
     })
     
     const userId = result.id.toString()
