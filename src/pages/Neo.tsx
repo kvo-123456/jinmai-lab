@@ -1037,7 +1037,7 @@ export default function Neo() {
                             </div>
                           ) : (
                             <div className={`mt-2 text-xs break-all ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{val}</div>
-                          )
+                          )}
                         
                         {/* 用户反馈按钮 */}
                         <div className="mt-2 flex justify-between items-center">
