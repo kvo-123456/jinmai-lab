@@ -414,7 +414,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
       
       {/* 底部导航 */}
       <nav className={`fixed bottom-0 inset-x-0 md:hidden ${isDark ? 'bg-[#0b0e13]/90 backdrop-blur-xl ring-1 ring-gray-800/70' : theme === 'pink' ? 'bg-white/90 backdrop-blur-xl ring-1 ring-pink-200/70' : 'bg-white/90 backdrop-blur-xl ring-1 ring-gray-200/70'} z-40 transform transition-all duration-300 ease-in-out shadow-2xl`} style={{ paddingBottom: 'env(safe-area-inset-bottom)', transform: showMobileNav ? 'translateY(0)' : 'translateY(100%)' }}>
-        <ul className="grid grid-cols-5 text-xs px-2 py-1">
+        <ul className="grid grid-cols-6 text-xs px-2 py-1">
           <li className="flex items-center justify-center">
             <NavLink 
               to="/"
@@ -435,6 +435,17 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
             >
               <i className="fas fa-compass text-lg"></i>
               <span className="mt-0.5 font-medium">探索</span>
+            </NavLink>
+          </li>
+          <li className="flex items-center justify-center">
+            <NavLink 
+              to="/community?context=cocreation&tab=joined"
+              onTouchStart={() => prefetchRoute('/community')}
+              className={`flex flex-col items-center justify-center py-2 transition-all duration-300 ease-in-out ${isDark ? 'text-gray-300 hover:text-white' : theme === 'pink' ? 'text-pink-700 hover:text-pink-900' : 'text-gray-700 hover:text-gray-900'}`}
+              aria-label="社群"
+            >
+              <i className="fas fa-comments text-lg"></i>
+              <span className="mt-0.5 font-medium">社群</span>
             </NavLink>
           </li>
           <li className="flex items-center justify-center">
