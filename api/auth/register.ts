@@ -116,7 +116,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       user: {
         id: userId,
         username,
-        email
+        email,
+        age: age ? parseInt(age) : null,
+        tags
       }
     }, {
       statusCode: 201,

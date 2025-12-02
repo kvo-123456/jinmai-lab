@@ -626,7 +626,7 @@ export default function Neo() {
         <div className="pointer-events-none absolute -top-10 -left-10 w-48 h-48 sm:w-64 sm:h-64 bg-gradient-to-br from-blue-500/20 via-red-500/20 to-yellow-500/20 blur-3xl rounded-full"></div>
         <div className="pointer-events-none absolute -bottom-10 -right-10 w-56 h-56 sm:w-72 sm:h-72 bg-gradient-to-tr from-red-500/15 via-yellow-500/15 to-blue-500/15 blur-3xl rounded-full"></div>
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
-          <div ref={engineCardRef} className={`rounded-2xl shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'} p-6 mb-6`}>
+          <div ref={engineCardRef} className={`rounded-2xl shadow-md ${isDark ? 'bg-gray-800/95 backdrop-blur-sm' : 'bg-white/95 backdrop-blur-sm'} p-4 sm:p-6 mb-6 transition-all duration-300 hover:shadow-lg`} style={{ borderRadius: '24px' }}>
             <h1 className="text-2xl font-bold mb-2">津门 · 灵感引擎</h1>
             <div className="w-20 h-1 rounded-full bg-gradient-to-r from-blue-600 via-red-500 to-yellow-500 mb-4"></div>
             <div className="flex items-center gap-3 mb-4">
@@ -637,7 +637,7 @@ export default function Neo() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="space-y-4 mb-4">
               <div>
                 <label className="text-sm mb-2 block">选择品牌</label>
                 <select
@@ -658,7 +658,7 @@ export default function Neo() {
                       updateStory(v)
                     }
                   }}
-                  className={`${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} w-full px-3 py-2 rounded-lg border focus:outline-none`}
+                  className={`${isDark ? 'bg-gray-700/80 border-gray-600 text-white' : 'bg-white/80 border-gray-300'} w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300 min-h-[48px] text-sm sm:text-base`}
                 >
                   <option value="mahua">桂发祥十八街麻花</option>
                   <option value="baozi">狗不理包子</option>
@@ -679,7 +679,7 @@ export default function Neo() {
                       updateStory(val)
                     }}
                     placeholder="输入品牌名称（支持自定义）"
-                    className={`${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'} w-full mt-2 px-3 py-2 rounded-lg border focus:outline-none`}
+                    className={`${isDark ? 'bg-gray-700/80 border-gray-600 text-white' : 'bg-white/80 border-gray-300 text-gray-900'} w-full mt-2 px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300 min-h-[48px] text-sm sm:text-base`}
                   />
                 )}
               </div>
@@ -694,7 +694,7 @@ export default function Neo() {
                       <button
                         key={`built-in-${t}`}
                         onClick={() => toggleTag(t)}
-                        className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+                        className={`text-sm sm:text-xs px-3 py-2 rounded-xl border transition-all duration-200 transform hover:scale-105 active:scale-95 ${
                           active
                             ? isDark
                               ? 'border-red-500 text-red-400 bg-red-900 bg-opacity-20 hover:bg-opacity-30'
@@ -703,6 +703,7 @@ export default function Neo() {
                               ? 'border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
                               : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-100'
                         }`}
+                        style={{ minWidth: '65px', textAlign: 'center', fontSize: '0.85rem' }}
                       >
                         {t}
                       </button>
@@ -715,7 +716,7 @@ export default function Neo() {
                       <div key={`custom-${t}`} className="relative group">
                         <button
                           onClick={() => toggleTag(t)}
-                          className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
+                          className={`text-sm sm:text-xs px-3 py-2 rounded-xl border transition-all duration-200 transform hover:scale-105 active:scale-95 ${
                             active
                               ? isDark
                                 ? 'border-purple-500 text-purple-400 bg-purple-900 bg-opacity-20 hover:bg-opacity-30'
@@ -724,19 +725,22 @@ export default function Neo() {
                                 ? 'border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
                                 : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-100'
                           }`}
+                          style={{ minWidth: '65px', textAlign: 'center', fontSize: '0.85rem' }}
                         >
                           {t}
                         </button>
-                        <div className="absolute right-0 -top-1 -translate-x-full group-hover:flex hidden flex-col gap-1 ml-1 bg-white dark:bg-gray-800 p-1 rounded-md shadow-lg border dark:border-gray-700">
+                        <div className="absolute right-0 -top-1 -translate-x-full group-hover:flex hidden flex-col gap-1 ml-1 bg-white dark:bg-gray-800 p-1 rounded-lg shadow-lg border dark:border-gray-700 z-10">
                           <button
                             onClick={() => startEditTag(t)}
-                            className="text-[10px] px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                            className="text-xs px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex items-center justify-center"
+                            style={{ minWidth: '45px' }}
                           >
                             编辑
                           </button>
                           <button
                             onClick={() => removeCustomTag(t)}
-                            className="text-[10px] px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                            className="text-xs px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors flex items-center justify-center"
+                            style={{ minWidth: '45px' }}
                           >
                             删除
                           </button>
@@ -753,19 +757,19 @@ export default function Neo() {
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (editingTag ? saveEditedTag() : addCustomTag())}
                     placeholder={editingTag ? '编辑标签...' : '添加自定义标签...'}
-                    className={`flex-1 text-sm px-3 py-1 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none`}
+                    className={`flex-1 text-sm px-3 py-2 rounded-lg border ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'} focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-300`}
                   />
                   {editingTag ? (
                     <div className="flex gap-1">
                       <button
                         onClick={saveEditedTag}
-                        className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="text-xs px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         保存
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="text-xs px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                        className="text-xs px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                       >
                         取消
                       </button>
@@ -773,7 +777,7 @@ export default function Neo() {
                   ) : (
                     <button
                       onClick={addCustomTag}
-                      className="text-xs px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="text-xs px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                       添加
                     </button>

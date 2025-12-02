@@ -32,7 +32,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(true);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [age, setAge] = useState('');
   const [tags, setTags] = useState<string[]>(['国潮爱好者']);
   
