@@ -101,7 +101,7 @@ export default function Dashboard() {
   }
   
   return (
-    <SidebarLayout>
+    <>
       <OnboardingGuide
         isOpen={showOnboarding}
         onClose={(completed) => {
@@ -510,6 +510,6 @@ export default function Dashboard() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
+    </>
   );
 }

@@ -201,7 +201,7 @@ export default function Tools() {
   }
 
   return (
-    <SidebarLayout>
+    <>
       <main className="relative container mx-auto px-6 md:px-8 py-12">
         <div className={`pointer-events-none absolute -top-10 -left-10 w-64 h-64 bg-gradient-to-br ${fusionMode ? 'from-indigo-500/20 via-fuchsia-500/20 to-amber-400/20' : 'from-blue-500/20 via-red-500/20 to-yellow-500/20'} blur-3xl rounded-full`}></div>
         <div className={`pointer-events-none absolute -bottom-10 -right-10 w-72 h-72 bg-gradient-to-tr ${fusionMode ? 'from-cyan-500/15 via-indigo-500/15 to-fuchsia-500/15' : 'from-red-500/15 via-yellow-500/15 to-blue-500/15'} blur-3xl rounded-full`}></div>
@@ -468,6 +468,6 @@ export default function Tools() {
         <TianjinDivider />
       </main>
       <Footer variant="simple" simpleText="© 2025 AI共创平台" />
-    </SidebarLayout>
+    </>
   )
 }

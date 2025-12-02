@@ -13,26 +13,35 @@
   -moz-osx-font-smoothing: grayscale;
   
   /* 天津特色配色系统 */
-  --color-tianjin-blue: #a78bfa;         /* 津门蓝 (替换为紫色) */
-  --color-mudman-red: #f87171;           /* 泥人张红 (调整为更柔和的红色) */
-  --color-yangliuqing-green: #34d399;    /* 杨柳青绿 (调整为更柔和的绿色) */
-  --color-water-transport-brown: #92400e; /* 漕运褐 (Pantone 18-1320) */
+  --color-primary: #f87171;              /* 主色调：泥人张红 - 统一品牌识别 */
+  --color-secondary: #a78bfa;            /* 辅助色：津门蓝紫 - 用于强调和交互 */
+  --color-accent: #34d399;               /* 强调色：杨柳青绿 - 用于成功状态和亮点 */
+  --color-neutral: #92400e;              /* 中性色：漕运褐 - 用于次要信息和背景 */
   
   /* 高级灰度梯度 */
-  --color-gray-1: #f7f7f8;
-  --color-gray-2: #edeef0;
-  --color-gray-3: #dcdfe3;
-  --color-gray-4: #a3a9b3;
-  --color-gray-5: #6b7280;
+  --color-gray-1: #f9fafb;
+  --color-gray-2: #f3f4f6;
+  --color-gray-3: #e5e7eb;
+  --color-gray-4: #d1d5db;
+  --color-gray-5: #9ca3af;
+  --color-gray-6: #6b7280;
+  --color-gray-7: #4b5563;
+  --color-gray-8: #374151;
+  --color-gray-9: #111827;
   
   /* 亮色主题专用 */
   --bg-primary: #ffffff;
-  --bg-secondary: #f7f7f8;
-  --bg-tertiary: #edeef0;
-  --text-primary: #1f2937;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-hover: #e5e7eb;
+  --text-primary: #111827;
   --text-secondary: #6b7280;
-  --border-primary: #dcdfe3;
-  --border-secondary: #edeef0;
+  --text-tertiary: #9ca3af;
+  --border-primary: #e5e7eb;
+  --border-secondary: #f3f4f6;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* 暗色主题高级色彩方案 */
@@ -55,16 +64,16 @@
   --border-secondary: #475569;   /* 钢蓝灰 - 次边框 */
   --border-tertiary: #64748b;    /* 雾蓝灰 - 辅助边框 */
   
-  /* 暗色主题强调色 */
-  --accent-blue: #a78bfa;        /* 紫铜色 - 主强调色 (替换蓝色为紫色) */
-  --accent-red: #f87171;         /* 泥人张红 - 警告强调色 (调整为更柔和的红色) */
-  --accent-green: #34d399;       /* 杨柳青绿 - 成功强调色 (调整为更柔和的绿色) */
-  --accent-purple: #a78bfa;      /* 紫铜色 - 特殊强调色 (调整为更柔和的紫色) */
+  /* 暗色主题强调色 - 与亮色主题保持一致的品牌色彩 */
+  --color-primary: #f87171;      /* 主色调：泥人张红 - 统一品牌识别 */
+  --color-secondary: #a78bfa;    /* 辅助色：津门蓝紫 - 用于强调和交互 */
+  --color-accent: #34d399;       /* 强调色：杨柳青绿 - 用于成功状态和亮点 */
+  --color-neutral: #92400e;      /* 中性色：漕运褐 - 用于次要信息和背景 */
   
   /* 渐变色彩 */
   --gradient-primary: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   --gradient-secondary: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-  --gradient-accent: linear-gradient(135deg, #a78bfa 0%, #f87171 100%);
+  --gradient-accent: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
   
   /* 阴影色彩 */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
@@ -98,7 +107,7 @@ input { transition: box-shadow 0.2s ease; }
 
 /* 全局主题过渡效果 */
 * {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
 }
 
 /* 主题切换平滑过渡动画 */
@@ -234,6 +243,54 @@ body {
 
 .dark .pulse-subtle {
   animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* 淡入动画 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+/* 滚动触发动画 */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+/* 缩放动画 */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out forwards;
 }
 
 /* 渐变文字效果 */

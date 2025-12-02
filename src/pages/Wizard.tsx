@@ -1,3 +1,4 @@
+import React from 'react'
 import { useState } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import { motion } from 'framer-motion'
@@ -8,7 +9,6 @@ import UploadBox from '@/components/UploadBox'
 import { scoreAuthenticity } from '@/services/authenticityService'
 import postService from '@/services/postService'
 import { useNavigate } from 'react-router-dom'
-import SidebarLayout from '@/components/SidebarLayout'
 import llmService from '@/services/llmService'
 import { TianjinImage } from '@/components/TianjinStyleComponents'
 import { toast } from 'sonner'
@@ -73,7 +73,6 @@ export default function Wizard() {
   }
 
   return (
-    <SidebarLayout>
       <main className="relative container mx-auto px-6 md:px-8 py-12">
         <div className="pointer-events-none absolute -top-10 -left-10 w-64 h-64 bg-gradient-to-br from-blue-500/20 via-red-500/20 to-yellow-500/20 blur-3xl rounded-full"></div>
         <div className="pointer-events-none absolute -bottom-10 -right-10 w-72 h-72 bg-gradient-to-tr from-red-500/15 via-yellow-500/15 to-blue-500/15 blur-3xl rounded-full"></div>
@@ -450,6 +449,5 @@ export default function Wizard() {
         )}
         </div>
       </main>
-    </SidebarLayout>
   )
 }

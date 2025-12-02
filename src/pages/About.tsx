@@ -15,7 +15,7 @@ export default function About() {
   ]
 
   return (
-    <SidebarLayout>
+    <>
       <main className={`relative container mx-auto px-6 md:px-8 py-12`}>
         <div className="pointer-events-none absolute -top-10 -left-10 w-64 h-64 bg-gradient-to-br from-blue-500/20 via-red-500/20 to-yellow-500/20 blur-3xl rounded-full"></div>
         <div className="pointer-events-none absolute -bottom-10 -right-10 w-72 h-72 bg-gradient-to-tr from-red-500/15 via-yellow-500/15 to-blue-500/15 blur-3xl rounded-full"></div>
@@ -89,7 +89,7 @@ export default function About() {
         <TianjinDivider />
      </main>
       <footer className={`border-t ${isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'} py-6 px-4`}>
-        <div className="container mx-auto flex flex-col md:flex-row justify之间 items-center">
+        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             © 2025 AI共创平台. 保留所有权利
           </p>
@@ -100,6 +100,6 @@ export default function About() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
+    </>
   )
 }

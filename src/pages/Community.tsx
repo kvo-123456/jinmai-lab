@@ -1204,7 +1204,7 @@ export default function Community() {
   }, [joinedList, joinedSearch, pinnedJoined, preferPinned, hideMuted, mutedCommunities])
 
   return (
-    <SidebarLayout>
+
       <main className="container mx-auto px-4 py-10">
         {/* 中文注释：统一使用通用渐变英雄组件 */}
         <GradientHero
@@ -1287,45 +1287,49 @@ export default function Community() {
             )}
           </div>
           {communityTab === 'recommended' && communityContext === 'creator' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-3 mb-2 flex items-center gap-2">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <input value={communitySearch} onChange={e => setCommunitySearch(e.target.value)} placeholder="搜索社群关键词..." className={`${isDark ? 'bg-gray-800 text-white ring-1 ring-gray-700' : 'bg-white text-gray-900 ring-1 ring-gray-300'} px-3 py-2 rounded-lg flex-1 focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-purple-500' : 'focus:ring-pink-300'}`} />
-                <button onClick={() => setCommunitySort('members')} className={`text-xs px-3 py-2 rounded-lg ring-1 ${communitySort === 'members' ? 'bg-purple-600 text-white ring-purple-600' : (isDark ? 'bg-gray-800 text-gray-300 ring-gray-700' : 'bg-white text-gray-700 ring-gray-200')}`}>按人数</button>
-                <button onClick={() => setCommunitySort('alphabet')} className={`text-xs px-3 py-2 rounded-lg ring-1 ${communitySort === 'alphabet' ? 'bg-purple-600 text-white ring-purple-600' : (isDark ? 'bg-gray-800 text-gray-300 ring-gray-700' : 'bg-white text-gray-700 ring-gray-200')}`}>按名称</button>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button onClick={() => setCommunitySort('members')} className={`text-xs px-3 py-2 rounded-lg ring-1 ${communitySort === 'members' ? 'bg-purple-600 text-white ring-purple-600' : (isDark ? 'bg-gray-800 text-gray-300 ring-gray-700' : 'bg-white text-gray-700 ring-gray-200')}`}>按人数</button>
+                  <button onClick={() => setCommunitySort('alphabet')} className={`text-xs px-3 py-2 rounded-lg ring-1 ${communitySort === 'alphabet' ? 'bg-purple-600 text-white ring-purple-600' : (isDark ? 'bg-gray-800 text-gray-300 ring-gray-700' : 'bg-white text-gray-700 ring-gray-200')}`}>按名称</button>
+                </div>
               </div>
-              <VirtualList
-                items={displayRecommended}
-                renderItem={(c) => (
-                  <motion.div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'} rounded-xl overflow-hidden shadow-sm`} whileHover={{ y: -4 }}>
-                    <div className="relative">
-                      <img src={c.cover} alt={c.name} className="w-full aspect-[4/3] object-cover" />
-                      <div className="absolute top-3 right-3">
-                        <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-black/40 text-gray-200' : 'bg-white/70 text-gray-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>官方</span>
+              <div className="rounded-xl overflow-hidden shadow-md">
+                <VirtualList
+                  items={displayRecommended}
+                  renderItem={(c) => (
+                    <motion.div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'} rounded-xl overflow-hidden shadow-sm transition-all duration-300`} whileHover={{ y: -2, shadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+                      <div className="relative">
+                        <img src={c.cover} alt={c.name} className="w-full aspect-[4/3] object-cover transition-transform duration-500 hover:scale-105" />
+                        <div className="absolute top-3 right-3">
+                          <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-black/40 text-gray-200' : 'bg-white/70 text-gray-700'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`}>官方</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="font-medium mb-1">{c.name}</div>
-                      <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{c.description}</div>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {c.tags.map((t, i) => (
-                          <button key={i} onClick={() => setSelectedStyle(t)} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>#{t}</button>
-                        ))}
+                      <div className="p-4">
+                        <div className="font-medium mb-1 line-clamp-1">{c.name}</div>
+                        <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'} line-clamp-2`}>{c.description}</div>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {c.tags.map((t, i) => (
+                            <button key={i} onClick={() => setSelectedStyle(t)} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} transition-colors hover:opacity-80`}>#{t}</button>
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.members + (joinedCommunities.includes(c.id) ? 1 : 0)} 人加入</div>
+                          <button onClick={() => toggleJoinCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full transition-all ${joinedCommunities.includes(c.id) ? 'bg-blue-600 text-white hover:bg-blue-700' : (isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}`}>{joinedCommunities.includes(c.id) ? '已加入' : '加入'}</button>
+                        </div>
+                        <div className="mt-3 flex justify-end">
+                          <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} text-xs px-3 py-1 rounded-lg transition-colors`}>查看详情</button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.members + (joinedCommunities.includes(c.id) ? 1 : 0)} 人加入</div>
-                        <button onClick={() => toggleJoinCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(c.id) ? 'bg-blue-600 text-white' : (isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700')}`}>{joinedCommunities.includes(c.id) ? '已加入' : '加入'}</button>
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-lg`}>查看详情</button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                itemHeight={300} // 调整为适合社群卡片的高度
-                itemWidth={300} // 调整为适合社群卡片的宽度
-                columns={3} // 根据屏幕尺寸调整列数
-                isDark={isDark}
-              />
+                    </motion.div>
+                  )}
+                  itemHeight={300} // 调整为适合社群卡片的高度
+                  itemWidth={300} // 调整为适合社群卡片的宽度
+                  columns={3} // 根据屏幕尺寸调整列数
+                  isDark={isDark}
+                />
+              </div>
             </div>
           )}
           {communityTab === 'user' && (
@@ -1774,7 +1778,6 @@ export default function Community() {
           </motion.div>
         )}
       </main>
-    </SidebarLayout>
   )
 }
 

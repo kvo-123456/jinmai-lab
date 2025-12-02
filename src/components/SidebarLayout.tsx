@@ -142,22 +142,26 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
       return k || 'home'
     })()
     if (isPrefetched(key)) return
-    switch (path) {
-      case '/': import('@/pages/Home'); markPrefetched('home', ttlMs); break
-      case '/explore': import('@/pages/Explore'); markPrefetched('explore', ttlMs); break
-      case '/create': import('@/pages/Create'); markPrefetched('create', ttlMs); break
-      case '/tools': import('@/pages/Tools'); markPrefetched('tools', ttlMs); break
-      case '/neo': import('@/pages/Neo'); markPrefetched('neo', ttlMs); break
-      case '/lab': import('@/pages/Lab'); markPrefetched('lab', ttlMs); break
-      case '/wizard': import('@/pages/Wizard'); markPrefetched('wizard', ttlMs); break
-      case '/square': import('@/pages/Square'); markPrefetched('square', ttlMs); break
-      case '/community': import('@/pages/Community'); markPrefetched('community', ttlMs); break
-      case '/knowledge': import('@/pages/CulturalKnowledge'); markPrefetched('knowledge', ttlMs); break
-      case '/tianjin': import('@/components/TianjinCreativeActivities'); markPrefetched('tianjin', ttlMs); break
-      case '/brand': import('@/pages/BrandGuide'); markPrefetched('brand', ttlMs); break
-      case '/about': import('@/pages/About'); markPrefetched('about', ttlMs); break
-      case '/dashboard': import('@/pages/Dashboard'); markPrefetched('dashboard', ttlMs); break
-      default: break
+    try {
+      switch (path) {
+        case '/': import('@/pages/Home').then(() => markPrefetched('home', ttlMs)); break
+        case '/explore': import('@/pages/Explore').then(() => markPrefetched('explore', ttlMs)); break
+        case '/create': import('@/pages/Create').then(() => markPrefetched('create', ttlMs)); break
+        case '/tools': import('@/pages/Tools').then(() => markPrefetched('tools', ttlMs)); break
+        case '/neo': import('@/pages/Neo').then(() => markPrefetched('neo', ttlMs)); break
+        case '/lab': import('@/pages/Lab').then(() => markPrefetched('lab', ttlMs)); break
+        case '/wizard': import('@/pages/Wizard').then(() => markPrefetched('wizard', ttlMs)); break
+        case '/square': import('@/pages/Square').then(() => markPrefetched('square', ttlMs)); break
+        case '/community': import('@/pages/Community').then(() => markPrefetched('community', ttlMs)); break
+        case '/knowledge': import('@/pages/CulturalKnowledge').then(() => markPrefetched('knowledge', ttlMs)); break
+        case '/tianjin': import('@/components/TianjinCreativeActivities').then(() => markPrefetched('tianjin', ttlMs)); break
+        case '/brand': import('@/pages/BrandGuide').then(() => markPrefetched('brand', ttlMs)); break
+        case '/about': import('@/pages/About').then(() => markPrefetched('about', ttlMs)); break
+        case '/dashboard': import('@/pages/Dashboard').then(() => markPrefetched('dashboard', ttlMs)); break
+        default: break
+      }
+    } catch (error) {
+      console.error(`Failed to prefetch ${path}:`, error)
     }
   }
 
@@ -295,7 +299,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-[#0b0e13] via-[#0e1218] to-[#0b0e13] text-gray-100' : theme === 'pink' ? 'bg-gradient-to-br from-[#fff0f5] via-[#ffe4ec] to-[#fff0f5] text-gray-900' : 'bg-white text-gray-900'}`}> 
+    <div className={`flex min-h-screen ${isDark ? 'bg-gradient-to-br from-[#0b0e13] via-[#0e1218] to-[#0b0e13] text-gray-100' : theme === 'pink' ? 'bg-gradient-to-br from-[#fff0f5] via-[#ffe4ec] to-[#fff0f5] text-gray-900' : 'bg-white text-gray-900'}`}> 
       {/* 仅在桌面端显示侧边栏 */}
       <aside 
         className={`${isDark ? 'bg-[#10151d]/95 backdrop-blur-sm border-gray-800' : theme === 'pink' ? 'bg-white/90 backdrop-blur-sm border-pink-200' : 'bg-white border-gray-200'} border-r relative ring-1 ${isDark ? 'ring-gray-800' : theme === 'pink' ? 'ring-pink-200' : 'ring-gray-200'}`} 
@@ -401,7 +405,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
       </aside>
       {/* 中文注释：当用户点击右侧内容区域时，自动收起左侧导航栏，减少视觉占用、聚焦内容 */}
       <div 
-        className="flex-1 min-w-0 md:pb-0 pt-[73px]"
+        className="flex-1 min-w-0 md:pb-0 pt-0 flex flex-col overflow-y-auto"
         onClick={() => { if (!collapsed) setCollapsed(true) }}
       >
         {/* 中文注释：暗色头部采用半透明背景与毛玻璃，弱化硬边 */}
@@ -417,68 +421,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
               </button>
               <h2 className="text-lg font-bold">{title}</h2>
             </div>
-            <div className="flex items-center space-x-3 w-full md:w-1/2">
-              {/* 中文注释：桌面端搜索框支持“建议与最近搜索”下拉 */}
-              <div className="relative hidden md:flex flex-1">
-                <div className={`w-full rounded-lg ring-1 ${isDark ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-gray-200'} px-3 py-2 items-center flex`}>
-                  <i className={`fas fa-search ${isDark ? 'text-gray-400' : 'text-gray-500'} mr-2`}></i>
-                  <input
-                    ref={searchRef}
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') onSearchSubmit() }}
-                  onFocus={() => setShowSearchDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowSearchDropdown(false), 150)}
-                    placeholder="搜索作品、素材或用户"
-                    className={`flex-1 outline-none ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-                  />
-                  <button
-                    onClick={onSearchSubmit}
-                    className="ml-2 px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    搜索
-                  </button>
-                  {search && (
-                    <button
-                      onClick={() => setSearch('')}
-                      className={`ml-2 p-2 rounded-lg ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                      aria-label="清空"
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
-                </div>
-                {showSearchDropdown && (
-                  <div className={`absolute left-0 right-0 mt-2 rounded-xl shadow-lg ring-1 ${isDark ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-gray-200'}`} role="listbox" aria-label="搜索建议">
-                    <div className="px-3 py-2">
-                      <div className="text-xs mb-2 opacity-70">热门分类</div>
-                      <div className="flex flex-wrap gap-2">
-                        {suggestions.map((s) => (
-                          <button
-                            key={s}
-                            className={`text-xs px-2.5 py-1 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}
-                            onMouseDown={(e) => { e.preventDefault(); setSearch(s); onSearchSubmit(); }}
-                          >{s}</button>
-                        ))}
-                      </div>
-                    </div>
-                    {recentSearches.length > 0 && (
-                      <div className={`border-t ${isDark ? 'border-gray-700' : 'border-gray-200'} px-3 py-2`}>
-                        <div className="text-xs mb-2 opacity-70">最近搜索</div>
-                        <div className="flex flex-wrap gap-2">
-                          {recentSearches.map((r) => (
-                            <button
-                              key={r}
-                              className={`text-xs px-2.5 py-1 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}
-                              onMouseDown={(e) => { e.preventDefault(); setSearch(r); onSearchSubmit(); }}
-                            >{r}</button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+            <div className="flex items-center space-x-3">
               {/* 中文注释：快捷键提示入口 */}
               <div className="relative" ref={shortcutsRef}>
                 <button

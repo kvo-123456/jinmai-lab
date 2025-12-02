@@ -350,8 +350,6 @@ export default function Generation() {
     }
   }, [variants.length])
   return (
-    // 中文注释：主内容区域采用容器布局，保证页面一致性
-    <SidebarLayout>
       <main className="container mx-auto px-4 py-10">
         <h1 className="text-2xl font-bold mb-6">AI生成引擎</h1>
         <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-md p-6 mb-6`}>
@@ -460,6 +458,5 @@ export default function Generation() {
           ))}
         </div>
       </main>
-    </SidebarLayout>
   )
 }

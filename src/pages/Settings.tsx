@@ -7,7 +7,7 @@ export default function Settings() {
   const { theme, isDark, toggleTheme } = useTheme()
   const [showModelSelector, setShowModelSelector] = useState(false)
   return (
-    <SidebarLayout>
+    <>
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">设置</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -28,6 +28,6 @@ export default function Settings() {
       {showModelSelector && (
         <ModelSelector isOpen={showModelSelector} onClose={() => setShowModelSelector(false)} />
       )}
-    </SidebarLayout>
+    </>
   )
 }

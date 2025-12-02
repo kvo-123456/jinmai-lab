@@ -2075,7 +2075,7 @@ export default function CulturalKnowledge() {
   // 骨架屏加载状态
   if (isLoading) {
     return (
-      <SidebarLayout>
+  
         <main className="container mx-auto px-4 py-8">
           <div className="space-y-8">
             <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} h-8 w-1/3 rounded animate-pulse`}></div>
@@ -2095,15 +2095,11 @@ export default function CulturalKnowledge() {
             </div>
           </div>
         </main>
-      </SidebarLayout>
     );
   }
   
   return (
-    <SidebarLayout>
-      {/* 顶部导航 */}
-      
-      
+    <>
       {/* 主内容 */}
       <main className="flex-1 container mx-auto px-4 py-8">
         {/* 中文注释：新增统一的渐变英雄区 */}
@@ -2772,6 +2768,6 @@ export default function CulturalKnowledge() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
+    </>
   );
 }

@@ -5,7 +5,7 @@ import BRANDS from '@/lib/brands'
 import ipService from '@/services/ipService'
 // 可选：如需调用大模型生成灵感，可引入llmService（无密钥则走本地规则）
 // import llmService from '@/services/llmService'
-import SidebarLayout from '@/components/SidebarLayout'
+
 import { toast } from 'sonner'
 
 export default function BrandGuide() {
@@ -156,8 +156,7 @@ export default function BrandGuide() {
   }
   // 中文注释：移除页面锚点导航后，不再需要可视区监测逻辑
   return (
-    <SidebarLayout>
-      <main className="container mx-auto px-4 py-10 scroll-smooth" aria-label="主要内容">
+      <main className="container mx-auto px-4 py-8 py-10 scroll-smooth" aria-label="主要内容">
         {/* 中文注释：页面头部采用轻量渐变与说明文字，提升高级感 */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -324,6 +323,5 @@ export default function BrandGuide() {
           </motion.div>
         </div>
       </main>
-    </SidebarLayout>
   )
 }

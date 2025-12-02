@@ -37,17 +37,14 @@ const VirtualList = <T,>({
 
   return (
     <div 
-      className="overflow-y-auto"
+      className={`overflow-y-auto p-2 grid gap-4`}
       style={{ 
-        height, 
-        padding: '8px',
-        display: 'grid',
+        height,
         gridTemplateColumns: `repeat(${responsiveColumns}, 1fr)`,
-        gap: '16px',
       }}
     >
       {items.map((item, index) => (
-        <div key={index}>
+        <div key={index} className="h-full">
           {renderItem(item, index)}
         </div>
       ))}

@@ -4,7 +4,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { useContext } from 'react';
-import SidebarLayout from '@/components/SidebarLayout';
+
 import postsApi from '@/services/postService';
 import { Post } from '@/services/postService';
 
@@ -46,20 +46,17 @@ export default function UserCollection() {
 
   if (isLoading) {
     return (
-      <SidebarLayout>
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center py-20">
-            <div className="text-5xl text-gray-400 mb-4"><i className="fas fa-spinner fa-spin"></i></div>
-            <h2 className="text-xl font-semibold mb-2">加载中...</h2>
-            <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>正在获取您的收藏和点赞作品</p>
-          </div>
-        </main>
-      </SidebarLayout>
+      <main className="container mx-auto px-4 py-8">
+        <div className="text-center py-20">
+          <div className="text-5xl text-gray-400 mb-4"><i className="fas fa-spinner fa-spin"></i></div>
+          <h2 className="text-xl font-semibold mb-2">加载中...</h2>
+          <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>正在获取您的收藏和点赞作品</p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <SidebarLayout>
       <main className="container mx-auto px-4 py-8">
         {/* 页面标题 */}
         <motion.div 
@@ -210,6 +207,5 @@ export default function UserCollection() {
           )}
         </motion.div>
       </main>
-    </SidebarLayout>
   );
 }

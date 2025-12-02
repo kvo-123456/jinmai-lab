@@ -423,7 +423,7 @@ export default function Square() {
   // 中文注释：空缩略图兜底（避免img出现src=""）
   const getFallbackThumb = (p: Post) => `https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?prompt=${encodeURIComponent(p.title)}&image_size=square`
   return (
-    <SidebarLayout>
+
       <main className="container mx-auto px-4 py-10">
         {/* 中文注释：统一使用通用渐变英雄组件 */}
         <GradientHero
@@ -731,6 +731,5 @@ export default function Square() {
           </div>
         )}
       </main>
-    </SidebarLayout>
   )
 }

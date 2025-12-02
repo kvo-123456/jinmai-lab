@@ -1,6 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Outlet } from "react-router-dom";
 import { Suspense, lazy, useState, useEffect } from 'react'
-import Home from "@/pages/Home";
+const Home = lazy(() => import("@/pages/Home"));
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -61,12 +61,57 @@ export default function App() {
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
+  // 右侧内容组件
+  const RightContent = () => (
+    <aside className="w-64 p-4 overflow-y-auto">
+      <div className="space-y-4">
+        {/* 用户信息卡片 */}
+        <div className="rounded-xl p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 border border-gray-100 dark:border-gray-700">
+          <h3 className="font-semibold text-lg mb-2">欢迎使用</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">探索AI创作的无限可能</p>
+          <div className="flex flex-wrap gap-2">
+            <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded-full hover:bg-blue-700">开始创作</button>
+            <button className="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-full hover:bg-gray-300 dark:hover:bg-gray-600">了解更多</button>
+          </div>
+        </div>
+        
+        {/* 快速链接 */}
+        <div className="rounded-xl p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+          <h4 className="font-medium mb-2">快速链接</h4>
+          <ul className="space-y-2">
+            <li><a href="/explore" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">浏览作品</a></li>
+            <li><a href="/create" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">创作中心</a></li>
+            <li><a href="/tools" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">AI工具</a></li>
+            <li><a href="/tianjin" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">天津特色</a></li>
+          </ul>
+        </div>
+        
+        {/* 通知区域 */}
+        <div className="rounded-xl p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+          <h4 className="font-medium mb-2">最新通知</h4>
+          <div className="space-y-3">
+            <div className="text-xs p-2 bg-yellow-50 dark:bg-gray-700 rounded-lg">
+              <p className="font-medium mb-1">系统更新</p>
+              <p className="text-gray-600 dark:text-gray-400">平台已更新至最新版本，体验更多功能</p>
+            </div>
+            <div className="text-xs p-2 bg-green-50 dark:bg-gray-700 rounded-lg">
+              <p className="font-medium mb-1">活动通知</p>
+              <p className="text-gray-600 dark:text-gray-400">新一期创作活动即将开始，敬请期待</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+
   // 布局组件包装器
-  const LayoutWrapper = ({ children }: { children?: React.ReactNode }) => {
+  const LayoutWrapper = () => {
     return isMobile ? (
-      <MobileLayout>{children}</MobileLayout>
+      <MobileLayout><Outlet /></MobileLayout>
     ) : (
-      <SidebarLayout>{children}</SidebarLayout>
+      <SidebarLayout>
+        <Outlet />
+      </SidebarLayout>
     );
   };
 

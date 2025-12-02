@@ -266,15 +266,16 @@ export default function Neo() {
     })
   }
 
-  const buildText = (p: string, t: string[], b: string) => {
-    const base = `${p} ${t.join(' ')} ${b}`.trim()
+  // 构建视频生成文本
+  const buildVideoText = (prompt: string, tags: string[], brand: string) => {
+    const base = `${prompt} ${tags.join(' ')} ${brand}`.trim()
     return `${base || 'Tianjin cultural design'}  --resolution 720p  --duration 5 --camerafixed false`
   }
 
   const genVideoAt = async (idx: number) => {
     const src = images[idx] || ''
     const safeImage = src && src.startsWith('https://') && (src.includes('volces.com') || src.includes('tos-cn-beijing'))
-    const text = buildText(prompt, tags, brand)
+    const text = buildVideoText(prompt, tags, brand)
     setVideoByIndex(prev => prev.map((v, i) => (i === idx ? '生成中...' : v)))
     try {
       const content: DoubaoVideoContent[] = safeImage 
@@ -314,11 +315,12 @@ export default function Neo() {
   }
 
   useEffect(() => {
-    images.forEach((_, i) => {
-      const url = videoByIndex[i]
+    // 优化视频元数据获取，只处理新添加的视频URL
+    videoByIndex.forEach((url, i) => {
       if (url && url.startsWith('http')) {
-        const known = videoMetaByIndex[i]?.sizeBytes
-        if (!known) {
+        const existingMeta = videoMetaByIndex[i]
+        // 只在没有获取过元数据时发送请求
+        if (!existingMeta?.sizeBytes) {
           const metaUrl = `${apiBase ? `${apiBase}` : ''}/api/proxy/video/meta?url=${encodeURIComponent(url)}`
           fetch(metaUrl)
             .then(r => r.json())
@@ -335,7 +337,7 @@ export default function Neo() {
         }
       }
     })
-  }, [videoByIndex])
+  }, [videoByIndex, videoMetaByIndex])
 
   const testDoubaoVQA = async () => {
     setQaLoading(true)
@@ -362,19 +364,19 @@ export default function Neo() {
   }
 
   return (
-    <SidebarLayout>
-      <main className="relative container mx-auto px-6 md:px-8 py-12">
+    <>
+      <main className="relative container mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12">
         <div className="pointer-events-none absolute -top-10 -left-10 w-64 h-64 bg-gradient-to-br from-blue-500/20 via-red-500/20 to-yellow-500/20 blur-3xl rounded-full"></div>
         <div className="pointer-events-none absolute -bottom-10 -right-10 w-72 h-72 bg-gradient-to-tr from-red-500/15 via-yellow-500/15 to-blue-500/15 blur-3xl rounded-full"></div>
         <div className="max-w-7xl mx-auto space-y-8">
-          <div ref={engineCardRef} className={`rounded-2xl shadow-md ${isDark ? 'bg-gray-800' : 'bg白'} p-6 mb-6`}>
+          <div ref={engineCardRef} className={`rounded-2xl shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'} p-6 mb-6`}>
             <h1 className="text-2xl font-bold mb-2">津门 · 灵感引擎</h1>
             <div className="w-20 h-1 rounded-full bg-gradient-to-r from-blue-600 via-red-500 to-yellow-500 mb-4"></div>
             <div className="flex items-center gap-3 mb-4">
               <span className="text-sm">生成引擎</span>
               <div className="flex gap-2">
-                <button onClick={() => setEngine('sdxl')} className={`px-3 py-1.5 rounded-full text-sm ${engine==='sdxl' ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700')}`}>SDXL</button>
-                <button onClick={() => setEngine('doubao')} className={`px-3 py-1.5 rounded-full text-sm ${engine==='doubao' ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700')}`}>Doubao</button>
+                <button onClick={() => setEngine('sdxl')} className={`px-3 py-1.5 rounded-full text-sm transition-colors ${engine==='sdxl' ? 'bg-red-600 hover:bg-red-700 text-white' : (isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700')}`}>SDXL</button>
+                <button onClick={() => setEngine('doubao')} className={`px-3 py-1.5 rounded-full text-sm transition-colors ${engine==='doubao' ? 'bg-red-600 hover:bg-red-700 text-white' : (isDark ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700')}`}>Doubao</button>
               </div>
             </div>
 
@@ -434,14 +436,14 @@ export default function Neo() {
                       <button
                         key={t}
                         onClick={() => toggleTag(t)}
-                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                        className={`text-xs px-3 py-1 rounded-full border transition-all duration-200 ${
                           active
                             ? isDark
-                              ? 'border-red-500 text-red-400 bg-red-900 bg-opacity-20'
-                              : 'border-red-500 text-red-600 bg-red-50'
+                              ? 'border-red-500 text-red-400 bg-red-900 bg-opacity-20 hover:bg-opacity-30'
+                              : 'border-red-500 text-red-600 bg-red-50 hover:bg-red-100'
                             : isDark
-                              ? 'border-gray-600 text-gray-300 hover:border-gray-500'
-                              : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                              ? 'border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-700'
+                              : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-100'
                         }`}
                       >
                         {t}
@@ -458,7 +460,7 @@ export default function Neo() {
 
             <textarea
               value={prompt}
-              onChange={(e) => { const v = e.target.value; setPrompt(v); if (optTimerRef.current) clearTimeout(optTimerRef.current); optTimerRef.current = setTimeout(() => { if (v.trim() && !optimizing && v.trim() !== lastOptimizedPrompt.trim()) optimizePrompt() }, 1200) }}
+              onChange={(e) => { const v = e.target.value; setPrompt(v); if (optTimerRef.current) clearTimeout(optTimerRef.current); optTimerRef.current = setTimeout(() => { if (v.trim() && !optimizing && v.trim() !== lastOptimizedPrompt.trim()) optimizePrompt() }, 2000) }}
               onBlur={() => { if (prompt.trim() && !optimizing) optimizePrompt() }}
               placeholder="[AI引导]：掌柜的，您想怎么改？(输入语音或文字)"
               className={`w-full h-28 px-3 py-2 rounded-lg border mb-4 ${isDark ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} focus:outline-none`}
@@ -478,7 +480,7 @@ export default function Neo() {
 
             <button
               onClick={startGeneration}
-              className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-colors min-h-[44px]"
+              className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 min-h-[44px] active:scale-98"
             >
               注入灵感
             </button>
@@ -486,7 +488,7 @@ export default function Neo() {
               <button
                 onClick={optimizePrompt}
                 disabled={optimizing || isGenerating}
-                className={`w-full ${isDark ? 'bg-green-700 hover:bg-green-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'} px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`w-full ${isDark ? 'bg-green-700 hover:bg-green-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'} px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-98`}
               >
                 {optimizing ? 'DeepSeek优化中…' : '优化提示词（DeepSeek）'}
               </button>
@@ -494,7 +496,7 @@ export default function Neo() {
                 <div className="mt-2 flex gap-2">
                   <button
                     onClick={() => { setPrompt(lastUserPrompt); setOptStatus('idle'); setOptPreview(''); toast.success('已撤销优化') }}
-                    className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`}
+                    className={`text-xs px-3 py-1 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}
                   >撤销优化</button>
                 </div>
               )}
@@ -503,7 +505,7 @@ export default function Neo() {
               <div className="mt-4">
                 <button
                   onClick={testDoubaoVQA}
-                  className={`w-full ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} px-4 py-2 rounded-lg transition-colors`}
+                  className={`w-full ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-98`}
                   disabled={qaLoading}
                 >
                   {qaLoading ? '豆包图文问答测试中…' : '豆包图文问答测试'}
@@ -534,15 +536,15 @@ export default function Neo() {
                         )}
                       </div>
                       <div className="p-3">
-                        <button onClick={() => genVideoAt(i)} disabled={processing} className={`text-sm px-3 py-1 rounded-md ${isDark ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'} disabled:opacity-60 disabled:cursor-not-allowed`}>{processing ? '生成中…' : '生成视频'}</button>
+                        <button onClick={() => genVideoAt(i)} disabled={processing} className={`text-sm px-3 py-1 rounded-md transition-all duration-200 ${isDark ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-60 disabled:cursor-not-allowed active:scale-98`}>{processing ? '生成中…' : '生成视频'}</button>
                         {val && (
                           hasUrl ? (
                             <div className="mt-2">
-                              <div className="text-xs break-all text-blue-600 flex items-center gap-2">
-                                <a href={val} target="_blank" rel="noreferrer" className="underline" title={val}>{shortenUrl(val)}</a>
-                                <button className={`px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} onClick={() => { try { navigator.clipboard.writeText(val); toast.success('已复制链接') } catch { } }}>复制链接</button>
-                                <button className={`px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} onClick={() => { try { window.open(val, '_blank') } catch {} }}>打开播放</button>
-                                <a className={`px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} href={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(val)}`} download>下载</a>
+                              <div className="text-xs break-all text-blue-600 flex flex-wrap items-center gap-2">
+                                <a href={val} target="_blank" rel="noreferrer" className="underline hover:text-blue-800 transition-colors" title={val}>{shortenUrl(val)}</a>
+                                <button className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => { try { navigator.clipboard.writeText(val); toast.success('已复制链接') } catch { } }}>复制链接</button>
+                                <button className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => { try { window.open(val, '_blank') } catch {} }}>打开播放</button>
+                                <a className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} href={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(val)}`} download>下载</a>
                               </div>
                               <video
                                 controls
@@ -614,40 +616,42 @@ export default function Neo() {
             {isGenerating && (<div className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>生成中…</div>)}
           </div>
           {videoHistory.length > 0 && (
-            <div className={`rounded-2xl shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'} p-6`}>
+            <div className={`rounded-2xl shadow-md ${isDark ? 'bg-gray-800' : 'bg-white'} p-4 md:p-6`}>
               <div className="font-bold mb-3">视频历史</div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {videoHistory.slice(0, 10).map((h, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded overflow-hidden bg-gray-100">
-                      <img src={h.thumb || h.image} alt="thumb" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs break-all text-blue-600">
-                        <a href={h.url} target="_blank" rel="noreferrer" className="underline" title={h.url}>{shortenUrl(h.url)}</a>
+                  <div key={idx} className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-12 h-12 md:w-16 md:h-16 rounded overflow-hidden bg-gray-100 flex-shrink-0">
+                        <img src={h.thumb || h.image} alt="thumb" className="w-full h-full object-cover" />
                       </div>
-                      <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {formatResolution(h.width, h.height) && <span>分辨率：{formatResolution(h.width, h.height)}；</span>}
-                        {formatDuration(h.duration) && <span>时长：{formatDuration(h.duration)}；</span>}
-                        {formatTime(h.createdAt) && <span>生成时间：{formatTime(h.createdAt)}</span>}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs break-all text-blue-600">
+                          <a href={h.url} target="_blank" rel="noreferrer" className="underline" title={h.url}>{shortenUrl(h.url)}</a>
+                        </div>
+                        <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} flex flex-wrap gap-x-2 gap-y-1`}>
+                          {formatResolution(h.width, h.height) && <span>分辨率：{formatResolution(h.width, h.height)}</span>}
+                          {formatDuration(h.duration) && <span>时长：{formatDuration(h.duration)}</span>}
+                          {formatTime(h.createdAt) && <span>生成时间：{formatTime(h.createdAt)}</span>}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className={`px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} onClick={() => { try { navigator.clipboard.writeText(h.url); toast.success('已复制链接') } catch {} }}>复制</button>
-                      <button className={`px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} onClick={() => { try { window.open(h.url, '_blank') } catch {} }}>打开</button>
-                      <a className={`px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} href={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(h.url)}`} download>下载</a>
-                      <button className={`px-2 py-0.5 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} onClick={() => setHistoryPreviewOpen(prev => ({ ...prev, [h.url]: !prev[h.url] }))}>{historyPreviewOpen[h.url] ? '收起预览' : '预览'}</button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => { try { navigator.clipboard.writeText(h.url); toast.success('已复制链接') } catch {} }}>复制</button>
+                        <button className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => { try { window.open(h.url, '_blank') } catch {} }}>打开</button>
+                        <a className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} href={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(h.url)}`} download>下载</a>
+                        <button className={`px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => setHistoryPreviewOpen(prev => ({ ...prev, [h.url]: !prev[h.url] }))}>{historyPreviewOpen[h.url] ? '收起预览' : '预览'}</button>
+                      </div>
                     </div>
                     {historyPreviewOpen[h.url] && (
                       <div className="mt-2 w-full">
-                        <video controls src={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(h.url)}`} className="w-64 rounded" />
+                        <video controls src={`${apiBase ? `${apiBase}` : ''}/api/proxy/video?url=${encodeURIComponent(h.url)}`} className="w-full max-w-sm rounded" />
                       </div>
                     )}
                   </div>
                 ))}
               </div>
               <div className="mt-3">
-                <button className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'}`} onClick={() => { setVideoHistory([]); try { localStorage.removeItem('NEO_VIDEO_HISTORY') } catch {} }}>清空历史</button>
+                <button className={`text-xs px-3 py-1 rounded transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`} onClick={() => { setVideoHistory([]); try { localStorage.removeItem('NEO_VIDEO_HISTORY') } catch {} }}>清空历史</button>
               </div>
             </div>
           )}
@@ -663,6 +667,6 @@ export default function Neo() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
+    </>
   )
 }

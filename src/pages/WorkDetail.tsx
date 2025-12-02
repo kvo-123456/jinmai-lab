@@ -63,7 +63,7 @@ export default function WorkDetail() {
 
   if (!work) {
     return (
-      <SidebarLayout>
+  
         <main className="container mx-auto px-4 py-8">
           <div className="text-center py-20">
             <div className="text-5xl text-gray-400 mb-4"><i className="far fa-image" /></div>
@@ -72,12 +72,10 @@ export default function WorkDetail() {
             <button className="mt-6 px-4 py-2 rounded-lg bg-red-600 text-white" onClick={() => navigate('/explore')}>返回探索</button>
           </div>
         </main>
-      </SidebarLayout>
     )
   }
 
   return (
-    <SidebarLayout>
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6 flex items-center text-sm">
           <a href="/explore" className="hover:text-red-600 transition-colors">探索作品</a>
@@ -178,6 +176,5 @@ export default function WorkDetail() {
           />
         )}
       </main>
-    </SidebarLayout>
   )
 }

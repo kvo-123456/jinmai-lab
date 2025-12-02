@@ -73,16 +73,20 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   const prefetchRoute = (path: string, ttlMs = 60000) => {
     const key = path.replace(/^\//, '') || 'home'
     if (isPrefetched(key)) return
-    switch (path) {
-      case '/': import('@/pages/Home'); markPrefetched('home', ttlMs); break
-      case '/explore': import('@/pages/Explore'); markPrefetched('explore', ttlMs); break
-      case '/tools': import('@/pages/Tools'); markPrefetched('tools', ttlMs); break
-      case '/neo': import('@/pages/Neo'); markPrefetched('neo', ttlMs); break
-      case '/wizard': import('@/pages/Wizard'); markPrefetched('wizard', ttlMs); break
-      case '/square': import('@/pages/Square'); markPrefetched('square', ttlMs); break
-      case '/community': import('@/pages/Community'); markPrefetched('community', ttlMs); break
-      case '/dashboard': import('@/pages/Dashboard'); markPrefetched('dashboard', ttlMs); break
-      default: break
+    try {
+      switch (path) {
+        case '/': import('@/pages/Home').then(() => markPrefetched('home', ttlMs)); break
+        case '/explore': import('@/pages/Explore').then(() => markPrefetched('explore', ttlMs)); break
+        case '/tools': import('@/pages/Tools').then(() => markPrefetched('tools', ttlMs)); break
+        case '/neo': import('@/pages/Neo').then(() => markPrefetched('neo', ttlMs)); break
+        case '/wizard': import('@/pages/Wizard').then(() => markPrefetched('wizard', ttlMs)); break
+        case '/square': import('@/pages/Square').then(() => markPrefetched('square', ttlMs)); break
+        case '/community': import('@/pages/Community').then(() => markPrefetched('community', ttlMs)); break
+        case '/dashboard': import('@/pages/Dashboard').then(() => markPrefetched('dashboard', ttlMs)); break
+        default: break
+      }
+    } catch (error) {
+      console.error(`Failed to prefetch ${path}:`, error)
     }
   }
   

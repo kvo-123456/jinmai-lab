@@ -144,7 +144,7 @@ const TaskCenter: React.FC = () => {
               className={`rounded-lg overflow-hidden shadow-lg ${isDark ? 'bg-gray-800' : 'bg-white'}`}
             >
               {/* 任务头部 */}
-              <div className="p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}">
+              <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold mb-1">{task.title}</h3>
@@ -168,7 +168,7 @@ const TaskCenter: React.FC = () => {
                     <span>进度</span>
                     <span>{task.progress}/{task.target}</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}">
+                  <div className={`w-full bg-gray-200 rounded-full h-2.5 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <div
                       className="bg-red-600 h-2.5 rounded-full transition-all duration-300"
                       style={{ width: `${(task.progress / task.target) * 100}%` }}
@@ -229,7 +229,7 @@ const TaskCenter: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}"
+                    className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
                   >
                     <h4 className="font-medium mb-2">任务详情</h4>
                     <p className="text-sm opacity-70 mb-3">

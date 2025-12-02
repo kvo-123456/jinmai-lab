@@ -10,7 +10,6 @@ export default function Help() {
     { q: '遇到问题如何反馈？', a: '可在页面右上角的反馈入口提交问题，或通过邮件联系平台支持。' },
   ]
   return (
-    <SidebarLayout>
       <main className="container mx-auto px-4 py-8">
         {/* 中文注释：帮助中心首页结构 */}
         <h1 className="text-2xl font-bold mb-3">帮助中心</h1>
@@ -43,6 +42,5 @@ export default function Help() {
           </div>
         </section>
       </main>
-    </SidebarLayout>
   )
 }

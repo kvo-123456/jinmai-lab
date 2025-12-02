@@ -4,7 +4,6 @@ import { useTheme } from '@/hooks/useTheme'
 export default function Terms() {
   const { isDark } = useTheme()
   return (
-    <SidebarLayout>
       <main className="container mx-auto px-4 py-8">
         {/* 中文注释：页面标题与说明 */}
         <h1 className="text-2xl font-bold mb-3">服务条款</h1>
@@ -51,6 +50,5 @@ export default function Terms() {
           </div>
         </section>
       </main>
-    </SidebarLayout>
   )
 }

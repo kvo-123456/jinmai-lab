@@ -2474,6 +2474,5 @@ export default function Create() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
   );
 }

@@ -2663,7 +2663,7 @@ export default function Explore() {
   }, [filteredWorks.length, pageSize, isLoading]);
   
   return (
-    <SidebarLayout>
+    <>
       <main className="relative container mx-auto px-4 py-8">
         <div className={`pointer-events-none absolute -top-10 -left-10 w-64 h-64 bg-gradient-to-br ${fusionMode ? 'from-indigo-500/20 via-fuchsia-500/20 to-amber-400/20' : 'from-blue-500/20 via-red-500/20 to-yellow-500/20'} blur-3xl rounded-full`}></div>
         <div className={`pointer-events-none absolute -bottom-10 -right-10 w-72 h-72 bg-gradient-to-tr ${fusionMode ? 'from-cyan-500/15 via-indigo-500/15 to-fuchsia-500/15' : 'from-red-500/15 via-yellow-500/15 to-blue-500/15'} blur-3xl rounded-full`}></div>
@@ -2695,14 +2695,14 @@ export default function Explore() {
           )}
         {!isLoading && (
           <div>
-        {/* 中文注释：新增统一的渐变英雄区，让探索页更高级 */}
+        {/* 中文注释：统一的渐变英雄区，作为页面视觉引导 */}
         <GradientHero
           title="探索作品"
           subtitle="发现国潮与非遗的高质内容，筛选你喜欢的风格与标签"
           badgeText="Beta"
           theme={isHeritage ? 'heritage' : (fusionMode ? 'indigo' : 'red')}
           variant={fusionMode ? 'split' : 'center'}
-          size={fusionMode ? 'lg' : 'md'}
+          size="sm"
           pattern={fusionMode}
           stats={[
             { label: '频道', value: selectedCategory || '全部' },
@@ -2710,15 +2710,16 @@ export default function Explore() {
             { label: '特色', value: '策展' },
             { label: '更新', value: '实时' },
           ]}
+          className="mb-6"
         />
         <div className="mb-4 flex items-center gap-2">
           <motion.button type="button" whileHover={{ scale: 1.03 }} onClick={() => setFusionMode(v => !v)} className={`px-3 py-1.5 rounded-lg ${fusionMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : (isDark ? 'bg-gray-800 text-white hover:bg-gray-700 ring-1 ring-gray-700' : 'bg-white text-gray-900 hover:bg-gray-50 ring-1 ring-gray-200')} focus:outline-none focus:ring-2 ${fusionMode ? 'focus:ring-indigo-500' : (isDark ? 'focus:ring-gray-600' : 'focus:ring-gray-300')} focus:ring-offset-2`}>{fusionMode ? '融合模式：开' : '融合模式：关'}</motion.button>
         </div>
         
         {/* 中文注释：社区介绍区已迁移至创作者社区页面 */}
-        {/* 搜索框 */}
+        {/* 搜索框 - 优化样式和位置 */}
         <motion.div 
-          className={`mb-8 p-4 rounded-2xl ${isDark ? 'bg-gray-800/80 ring-1 ring-gray-700 backdrop-blur' : 'bg-white/80 ring-1 ring-gray-200 backdrop-blur'} shadow-sm`}
+          className={`mb-6 p-4 rounded-2xl ${isDark ? 'bg-gray-800/80 ring-1 ring-gray-700 backdrop-blur-md' : 'bg-white/80 ring-1 ring-gray-200 backdrop-blur-md'} shadow-md`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -2729,17 +2730,17 @@ export default function Explore() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="搜索作品、创作者或标签..."
-              className={`w-full pl-12 pr-4 py-3 rounded-full focus:outline-none focus:ring-2 ${
+              className={`w-full pl-12 pr-4 py-3.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 ${
                 isDark 
-                  ? (isHeritage ? 'bg-gray-700/70 ring-1 ring-gray-600 text-white placeholder-gray-400 focus:ring-amber-500' : 'bg-gray-700/70 ring-1 ring-gray-600 text-white placeholder-gray-400 focus:ring-purple-500') 
-                  : (isHeritage ? 'bg-white/80 ring-1 ring-gray-300 text-gray-900 placeholder-gray-400 focus:ring-amber-300' : 'bg-white/80 ring-1 ring-gray-300 text-gray-900 placeholder-gray-400 focus:ring-pink-300')
+                  ? (isHeritage ? 'bg-gray-700/90 ring-1 ring-gray-600 text-white placeholder-gray-400 focus:ring-amber-500' : 'bg-gray-700/90 ring-1 ring-gray-600 text-white placeholder-gray-400 focus:ring-purple-500') 
+                  : (isHeritage ? 'bg-white/95 ring-1 ring-gray-300 text-gray-900 placeholder-gray-400 focus:ring-amber-300' : 'bg-white/95 ring-1 ring-gray-300 text-gray-900 placeholder-gray-400 focus:ring-pink-300')
               }`}
               autoCapitalize="none"
               autoCorrect="off"
               enterKeyHint="search"
               inputMode="text"
             />
-            <i className={`fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}></i>
+            <i className={`fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-gray-400' : 'text-gray-500'} transition-colors duration-300`}></i>
           </div>
           {/* 中文注释：联想建议提示（基于输入内容动态生成），提升检索成功率 */}
           {(suggestedKeywords.length > 0 || suggestedTags.length > 0) && (
@@ -2748,14 +2749,14 @@ export default function Explore() {
                 <button
                   key={`sug-k-inline-${k}`}
                   onClick={() => { setSearchTerm(k); setSelectedCategory('全部'); }}
-                  className={`px-3 py-1 rounded-full text-xs ring-1 ${isDark ? 'bg-gray-800 text-gray-200 ring-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50'}`}
+                  className={`px-3 py-1 rounded-full text-xs ring-1 transition-all duration-300 ${isDark ? 'bg-gray-800 text-gray-200 ring-gray-700 hover:bg-gray-700 hover:ring-gray-600' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50 hover:ring-gray-300'}`}
                 >{`尝试：${k}`}</button>
               ))}
               {suggestedTags.slice(0, 8).map((t) => (
                 <button
                   key={`sug-t-inline-${t}`}
                   onClick={() => setSelectedTags((prev) => (prev.includes(t) ? prev : [...prev, t]))}
-                  className={`px-3 py-1 rounded-full text-xs ring-1 ${isDark ? 'bg-gray-800 text-gray-200 ring-gray-700 hover:bg-gray-700' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50'}`}
+                  className={`px-3 py-1 rounded-full text-xs ring-1 transition-all duration-300 ${isDark ? 'bg-gray-800 text-gray-200 ring-gray-700 hover:bg-gray-700 hover:ring-gray-600' : 'bg-white text-gray-700 ring-gray-200 hover:bg-gray-50 hover:ring-gray-300'}`}
                 >{`添加标签：${t}`}</button>
               ))}
             </div>
@@ -2794,22 +2795,22 @@ export default function Explore() {
 
         {savedPlans.length > 0 && (
           <motion.div
-            className={`${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} rounded-2xl p-4 shadow-sm mb-8`}
+            className={`${isDark ? 'bg-gray-800/80 ring-1 ring-gray-700 backdrop-blur-sm' : 'bg-white/80 ring-1 ring-gray-200 backdrop-blur-sm'} rounded-2xl p-4 shadow-md mb-6`}
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="flex items-center justify-between mb-2">
-              <div className="font-bold">我的方案</div>
-              <button onClick={() => { setSavedPlans([]); try { localStorage.removeItem('TOOLS_SAVED_PLANS'); } catch {} }} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'} px-2 py-1 rounded text-xs`}>清空</button>
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-bold text-lg">我的方案</div>
+              <button onClick={() => { setSavedPlans([]); try { localStorage.removeItem('TOOLS_SAVED_PLANS'); } catch {} }} className={`${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} px-2 py-1 rounded text-xs transition-all duration-300`}>清空</button>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {savedPlans.map(p => (
-                <li key={p.id} className={`${isDark ? 'bg-gray-900' : 'bg-gray-50'} border ${isDark ? 'border-gray-700' : 'border-gray-200'} rounded p-2`}>
-                  <div className="text-sm font-medium mb-1">{p.title}</div>
-                  <div className="flex gap-2">
-                    <button onClick={() => navigate(`/create?from=explore&prompt=${encodeURIComponent(p.aiText || p.query)}`)} className="px-2 py-1 rounded text-xs bg-blue-600 text-white">应用到创作中心</button>
-                    <button onClick={async () => { try { await navigator.clipboard.writeText(p.aiText || p.query); } catch {} }} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'} px-2 py-1 rounded text-xs`}>复制</button>
+                <li key={p.id} className={`${isDark ? 'bg-gray-900/80' : 'bg-gray-50/80'} border ${isDark ? 'border-gray-700' : 'border-gray-200'} rounded-lg p-3 transition-all duration-300 hover:shadow-sm`}>
+                  <div className="text-sm font-medium mb-2">{p.title}</div>
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => navigate(`/create?from=explore&prompt=${encodeURIComponent(p.aiText || p.query)}`)} className="px-2.5 py-1.5 rounded text-xs bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300">应用到创作中心</button>
+                    <button onClick={async () => { try { await navigator.clipboard.writeText(p.aiText || p.query); } catch {} }} className={`${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} px-2.5 py-1.5 rounded text-xs transition-all duration-300`}>复制</button>
                     {/* 中文注释：导出方案为 Markdown 文件 */}
                     <button onClick={() => exportPlanAsMarkdown(p)} className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-900'} px-2 py-1 rounded text-xs`}>导出MD</button>
                     {/* 中文注释：导出方案为 JSON 文件 */}
@@ -3491,6 +3492,6 @@ export default function Explore() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
+    </>
   );
 }

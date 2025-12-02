@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
-import SidebarLayout from '@/components/SidebarLayout';
+
 import { isPrefetched } from '@/services/prefetch';
 import { toast } from 'sonner';
 import { TianjinImage, TianjinButton } from './TianjinStyleComponents';
@@ -1314,13 +1314,12 @@ export default function TianjinCreativeActivities() {
   }
   
   return (
-    <SidebarLayout>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className={`p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-md flex-1`}
-      >
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className={`p-6 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-md flex-1`}
+    >
       <div className="mb-6 flex items-center justify-between">
         <h3 className="text-xl font-bold flex items-center">
           <i className="fas fa-calendar-alt text-red-600 mr-2"></i>
@@ -1917,6 +1916,5 @@ export default function TianjinCreativeActivities() {
         )}
 
       </motion.div>
-    </SidebarLayout>
   );
 }
