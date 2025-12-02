@@ -2,6 +2,7 @@
   "name": "project_template_react",
   "private": true,
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev:client": "vite --host --port 3000",
     "dev": "pnpm dev:client",
