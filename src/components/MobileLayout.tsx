@@ -458,10 +458,10 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
             >
               {({ isActive }) => (
                 <>
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-1 transition-all duration-300 ease-in-out shadow-lg transform transition-transform duration-300 ease-in-out ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                    <i className="fas fa-plus text-2xl" style={{ color: isDark ? '#9ca3af' : '#6b7280' }}></i>
+                  <div className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${isActive ? (isDark ? 'bg-red-400/20' : 'bg-red-100') : 'bg-transparent'}`}>
+                    <i className="fas fa-plus text-lg" style={{ color: isActive ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#9ca3af' : '#6b7280') }}></i>
                   </div>
-                  <span className="font-medium">创作</span>
+                  <span className="mt-0.5 font-medium">创作</span>
                 </>
               )}
             </NavLink>
