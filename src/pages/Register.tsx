@@ -229,7 +229,7 @@ export default function Register() {
             {errors.password && (
               <p className="mt-1 text-sm text-red-500">{errors.password}</p>
             )}
-            <p className="mt-1 text-xs opacity-60">密码至少6个字符，包含至少一个大写字母和一个数字</p>
+            <p className="mt-1 text-xs opacity-60">密码至少8个字符，包含至少一个字母和一个数字</p>
           </div>
           
           <motion.button
