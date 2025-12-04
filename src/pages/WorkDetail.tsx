@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect, lazy, Suspense } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 import { motion } from 'framer-motion'
-import SidebarLayout from '@/components/SidebarLayout'
 import { useNavigate, useParams } from 'react-router-dom'
 import { mockWorks } from '@/pages/Explore'
 // 使用React.lazy实现ARPreview组件的延迟加载

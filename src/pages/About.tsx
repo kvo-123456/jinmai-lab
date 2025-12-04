@@ -2,7 +2,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { TianjinDivider, TianjinImage } from '@/components/TianjinStyleComponents'
-import SidebarLayout from '@/components/SidebarLayout'
+
 
 export default function About() {
   const { isDark } = useTheme()

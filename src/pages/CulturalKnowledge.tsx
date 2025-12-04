@@ -8,7 +8,7 @@ import TianjinCreativeActivities from '@/components/TianjinCreativeActivities';
 import CulturalNews from '@/components/CulturalNews';
 import TianjinCulturalAssets from '@/components/TianjinCulturalAssets';
  
-import SidebarLayout from '@/components/SidebarLayout'
+
 import GradientHero from '@/components/GradientHero'
 import { isPrefetched } from '@/services/prefetch'
 

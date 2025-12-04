@@ -4,7 +4,7 @@ import { TianjinImage } from '@/components/TianjinStyleComponents'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import postsApi, { Post } from '@/services/postService'
-import SidebarLayout from '@/components/SidebarLayout'
+
 import GradientHero from '@/components/GradientHero'
 import { mockWorks } from '@/pages/Explore'
 import apiClient from '@/lib/apiClient'

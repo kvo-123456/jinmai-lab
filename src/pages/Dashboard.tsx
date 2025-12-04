@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import CreatorProfile from '../components/CreatorProfile';
 import achievementService from '../services/achievementService';
 
-import SidebarLayout from '@/components/SidebarLayout'
+
 import OnboardingGuide from '@/components/OnboardingGuide'
 
 // 模拟数据

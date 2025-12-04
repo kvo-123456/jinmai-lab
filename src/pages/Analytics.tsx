@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
-import SidebarLayout from '@/components/SidebarLayout';
 import GradientHero from '@/components/GradientHero';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 
@@ -9,7 +8,6 @@ export default function Analytics() {
   const { isDark } = useTheme();
 
   return (
-    <SidebarLayout>
       {/* 渐变英雄区 */}
       <GradientHero 
         title="数据分析与洞察" 
@@ -42,6 +40,5 @@ export default function Analytics() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
   );
 }

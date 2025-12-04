@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
-import SidebarLayout from '@/components/SidebarLayout';
 import GradientHero from '@/components/GradientHero';
 import EventCalendar from '@/components/EventCalendar';
 import eventCalendarService, { CulturalEvent } from '@/services/eventCalendarService';
@@ -33,7 +32,6 @@ export default function CulturalEvents() {
   };
 
   return (
-    <SidebarLayout>
       {/* 渐变英雄区 */}
       <GradientHero 
         title="文化主题活动日历"
@@ -226,6 +224,5 @@ export default function CulturalEvents() {
           </div>
         </div>
       </footer>
-    </SidebarLayout>
   );
 }

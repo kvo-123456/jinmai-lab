@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import SidebarLayout from '@/components/SidebarLayout'
+
 import { useTheme } from '@/hooks/useTheme'
 import { toast } from 'sonner'
 

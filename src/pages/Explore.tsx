@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import SidebarLayout from '@/components/SidebarLayout'
+
 import GradientHero from '@/components/GradientHero'
 import { isPrefetched } from '@/services/prefetch'
 import { TianjinImage, TianjinButton } from '@/components/TianjinStyleComponents'

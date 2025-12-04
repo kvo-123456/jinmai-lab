@@ -3,7 +3,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { motion } from 'framer-motion'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
-import SidebarLayout from '@/components/SidebarLayout'
+
 import GradientHero from '../components/GradientHero'
 import Footer from '@/components/Footer'
 import { TianjinTag, TianjinDivider, TianjinButton } from '@/components/TianjinStyleComponents'

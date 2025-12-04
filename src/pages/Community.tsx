@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState, useContext, lazy, Suspense } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { TianjinImage } from '@/components/TianjinStyleComponents'
-import SidebarLayout from '@/components/SidebarLayout'
 import GradientHero from '@/components/GradientHero'
 // 使用React.lazy实现子组件的延迟加载
 const CommunityChat = lazy(() => import('@/components/CommunityChat'))
@@ -1723,7 +1722,7 @@ export default function Community() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className={`rounded-2xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl max-w-2xl w-full mx-4 overflow-hidden`}
+              className={`rounded-2xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl max-w-lg w-full mx-4 overflow-hidden`}
             >
               <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
                 <h3 className="text-lg font-bold">社群详情</h3>
@@ -1731,39 +1730,38 @@ export default function Community() {
                   <i className="fas fa-times"></i>
                 </button>
               </div>
-              <div className="p-6 max-h-[70vh] overflow-y-auto">
-                <TianjinImage src={activeCommunity.cover} alt={activeCommunity.name} className="w-full object-cover rounded-xl" ratio="landscape" />
-                <div className="mt-4 flex items-start justify-between">
-                  <div>
+              <div className="p-6 max-h-[80vh] overflow-y-auto">
+                <TianjinImage src={activeCommunity.cover} alt={activeCommunity.name} className="w-full object-cover rounded-lg" ratio="landscape" />
+                <div className="mt-4">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="font-medium text-lg">{activeCommunity.name}</div>
-                    <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{activeCommunity.description}</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {activeCommunity.tags.map((t, i) => (
-                        <button key={i} onClick={() => setSelectedStyle(t)} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>#{t}</button>
-                      ))}
+                    <div className="flex flex-col items-end">
+                      <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>成员数</div>
+                      <div className="text-lg font-semibold">{activeCommunity.members + (joinedCommunities.includes(activeCommunity.id) ? 1 : 0)}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>成员数</div>
-                    <div className="text-lg font-semibold">{activeCommunity.members + (joinedCommunities.includes(activeCommunity.id) ? 1 : 0)}</div>
-                    <button onClick={() => toggleJoinCommunity(activeCommunity.id)} className={`mt-2 text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(activeCommunity.id) ? 'bg-blue-600 text-white' : (isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700')}`}>{joinedCommunities.includes(activeCommunity.id) ? '已加入' : '加入'}</button>
+                  <div className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>{activeCommunity.description}</div>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {activeCommunity.tags.map((t, i) => (
+                      <span key={i} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>#{t}</span>
+                    ))}
                   </div>
+                  <button onClick={() => toggleJoinCommunity(activeCommunity.id)} className={`w-full py-2 rounded-full ${joinedCommunities.includes(activeCommunity.id) ? 'bg-blue-600 text-white' : 'bg-gradient-to-r from-red-600 to-pink-600 text-white'} transition-colors hover:opacity-90`}>{joinedCommunities.includes(activeCommunity.id) ? '已加入' : '加入'}</button>
                 </div>
                 <div className="mt-4">
                   <div className="text-sm opacity-70 mb-2">近期讨论预览</div>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                  <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
                     {[...(communityMessages[activeCommunity.id] || [])]
                       .sort((a,b) => (Number(b.pinned) - Number(a.pinned)) || ((b.createdAt ?? 0) - (a.createdAt ?? 0)))
                       .slice(0, 3)
                       .map((m, idx) => (
-                        <div key={idx} className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-3 rounded-xl`}>
+                        <div key={idx} className={`${isDark ? 'bg-gray-700' : 'bg-white'} p-4 rounded-lg ring-1 ${isDark ? 'ring-gray-600' : 'ring-gray-200'}`}>
                           <div className="flex items-start">
-                            <TianjinImage src={m.avatar} alt={m.user} className="w-8 h-8 rounded-full mr-3" ratio="square" />
+                            <img src={m.avatar} alt={m.user} className="w-10 h-10 rounded-full mr-3 object-cover" loading="lazy" decoding="async" />
                             <div className="flex-1">
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
                                   <div className="text-sm font-medium">{m.user}</div>
-                                  {m.pinned && <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-red-700 text-white' : 'bg-red-100 text-red-700'}`}>置顶</span>}
                                 </div>
                                 <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{/* 中文注释：相对时间展示 */}{(() => { const diff = Math.max(0, Date.now() - (m.createdAt || Date.now())); const min = Math.floor(diff/60000); if (min < 1) return '刚刚'; if (min < 60) return `${min} 分钟前`; const h = Math.floor(min/60); if (h < 24) return `${h} 小时前`; const d = Math.floor(h/24); return `${d} 天前`; })()}</div>
                               </div>
@@ -1773,7 +1771,7 @@ export default function Community() {
                         </div>
                       ))}
                     {((communityMessages[activeCommunity.id] || []).length === 0) && (
-                      <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-3 rounded-xl text-sm opacity-70`}>暂无交流</div>
+                      <div className={`${isDark ? 'bg-gray-700' : 'bg-white'} p-4 rounded-lg ring-1 ${isDark ? 'ring-gray-600' : 'ring-gray-200'} text-sm opacity-70`}>暂无交流</div>
                     )}
                   </div>
                   <div className="mt-6">
@@ -1807,16 +1805,15 @@ function CommunityDiscussionSection({ isDark, messages, onSend, canSend = true, 
   const [text, setText] = useState('');
   return (
     <div>
-      <div className="space-y-3 mb-4 max-h-72 overflow-y-auto pr-1">
+      <div className="space-y-3 mb-4 max-h-64 overflow-y-auto pr-1">
         {[...messages].sort((a,b) => (Number(b.pinned) - Number(a.pinned)) || ((b.createdAt ?? 0) - (a.createdAt ?? 0))).map((m, idx) => (
-          <motion.div key={m.id || idx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className={`p-3 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+          <motion.div key={m.id || idx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className={`${isDark ? 'bg-gray-700' : 'bg-white'} p-4 rounded-lg ring-1 ${isDark ? 'ring-gray-600' : 'ring-gray-200'}`}>
             <div className="flex items-start">
-              <img src={m.avatar} alt={m.user} className="w-8 h-8 rounded-full mr-3" loading="lazy" decoding="async" />
+              <img src={m.avatar} alt={m.user} className="w-10 h-10 rounded-full mr-3 object-cover" loading="lazy" decoding="async" />
               <div className="flex-1">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <div className="text-sm font-medium">{m.user}</div>
-                    {m.pinned && <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-red-700 text-white' : 'bg-red-100 text-red-700'}`}>置顶</span>}
                   </div>
                   <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{(() => { const diff = Math.max(0, Date.now() - (m.createdAt || Date.now())); const min = Math.floor(diff/60000); if (min < 1) return '刚刚'; if (min < 60) return `${min} 分钟前`; const h = Math.floor(min/60); if (h < 24) return `${h} 小时前`; const d = Math.floor(h/24); return `${d} 天前`; })()}</div>
                 </div>
@@ -1839,12 +1836,12 @@ function CommunityDiscussionSection({ isDark, messages, onSend, canSend = true, 
           placeholder="发表你的看法..."
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const t = text.trim(); if (!t || !canSend) return; onSend(t); setText(''); } }}
           disabled={!canSend}
-          className={`flex-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 ${isDark ? 'bg-gray-700 text-white ring-1 ring-gray-600 focus:ring-purple-500' : 'bg-white text-gray-900 ring-1 ring-gray-300 focus:ring-pink-300'} ${!canSend ? 'opacity-60 cursor-not-allowed' : ''}`}
+          className={`flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 ${isDark ? 'bg-gray-700 text-white ring-1 ring-gray-600 focus:ring-purple-500' : 'bg-white text-gray-900 ring-1 ring-gray-300 focus:ring-pink-300'} ${!canSend ? 'opacity-60 cursor-not-allowed' : ''}`}
         />
         <button
           onClick={() => { const t = text.trim(); if (!t || !canSend) return; onSend(t); setText(''); }}
           disabled={!canSend}
-          className="px-3 py-2 rounded-lg bg-gradient-to-r from-red-600 to-pink-600 text-white"
+          className="px-4 py-3 rounded-lg bg-red-600 text-white transition-colors hover:bg-red-700"
         >发送</button>
       </div>
     </div>

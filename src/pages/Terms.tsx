@@ -1,4 +1,4 @@
-import SidebarLayout from '@/components/SidebarLayout'
+
 import { useTheme } from '@/hooks/useTheme'
 
 export default function Terms() {

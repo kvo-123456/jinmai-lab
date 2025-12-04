@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '@/hooks/useTheme'
-import SidebarLayout from '@/components/SidebarLayout'
+
 import ModelSelector from '@/components/ModelSelector'
 
 export default function Settings() {

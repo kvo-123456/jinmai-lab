@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import SidebarLayout from '@/components/SidebarLayout'
+
 import { useTheme } from '@/hooks/useTheme'
 
 export default function Lab() {
