@@ -32,6 +32,7 @@ export default function CulturalEvents() {
   };
 
   return (
+    <>
       {/* 渐变英雄区 */}
       <GradientHero 
         title="文化主题活动日历"
@@ -224,5 +225,6 @@ export default function CulturalEvents() {
           </div>
         </div>
       </footer>
+    </>
   );
 }
