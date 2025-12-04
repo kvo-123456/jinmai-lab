@@ -12,8 +12,22 @@ import postsHandler from './posts/index'
 import tagsIdHandler from './tags/[id]'
 import tagsHandler from './tags/index'
 
+// 定义路由处理函数类型
+type RouteHandler = (req: VercelRequest, res: VercelResponse) => Promise<any>
+
+// 定义路由方法映射类型
+type RouteMethods = {
+  GET?: RouteHandler
+  POST?: RouteHandler
+  PUT?: RouteHandler
+  DELETE?: RouteHandler
+}
+
+// 定义路由映射类型
+type RouteMap = Record<string, RouteMethods>
+
 // 创建路由映射
-const routes = {
+const routes: RouteMap = {
   '/api/auth/login': {
     POST: loginHandler
   },
@@ -67,18 +81,22 @@ const routes = {
 }
 
 // 路径匹配函数
-function matchRoute(path: string, method: string): { handler: Function, params: Record<string, string> } | null {
+function matchRoute(path: string, method: string): { handler: RouteHandler, params: Record<string, string> } | null {
   // 精确匹配
-  if (routes[path] && routes[path][method as keyof typeof routes[typeof path]]) {
-    return {
-      handler: routes[path][method as keyof typeof routes[typeof path]],
-      params: {}
+  if (routes[path] && routes[path][method as keyof RouteMethods]) {
+    const handler = routes[path][method as keyof RouteMethods]
+    if (handler) {
+      return {
+        handler,
+        params: {}
+      }
     }
   }
 
   // 模式匹配（处理带参数的路径）
   for (const routePattern in routes) {
-    if (routes[routePattern][method as keyof typeof routes[typeof routePattern]]) {
+    const handler = routes[routePattern][method as keyof RouteMethods]
+    if (handler) {
       // 将路由模式转换为正则表达式
       const regexPattern = routePattern
         .replace(/\/:([^/]+)/g, '/([^/]+)')
@@ -97,7 +115,7 @@ function matchRoute(path: string, method: string): { handler: Function, params: 
         })
         
         return {
-          handler: routes[routePattern][method as keyof typeof routes[typeof routePattern]],
+          handler,
           params
         }
       }
