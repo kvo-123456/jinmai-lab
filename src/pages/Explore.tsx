@@ -31,7 +31,7 @@ type Work = {
 
 // 中文注释：本页专注作品探索，社区相关内容已迁移到创作者社区页面
 
-export const mockWorks: Work[] = [
+const mockWorks: Work[] = [
   {
     id: 1,
     title: '国潮新风尚',
@@ -3027,6 +3027,9 @@ export default function Explore() {
   }, [searchTerm, selectedTags]);
   
   // 模拟加载数据
+  // 精选作品
+  const featuredWorks = mockWorks.filter(work => work.featured);
+
   useEffect(() => {
     if (isPrefetched('explore')) {
       setIsLoading(false);
@@ -3041,15 +3044,18 @@ export default function Explore() {
       imageService.preloadImages(featuredImageUrls);
       
       // 预加载前20个作品图片
-      const initialWorksImageUrls = pagedWorks.slice(0, 20).map(work => work.thumbnail);
+      const initialWorks = filteredWorks.slice(0, Math.min(20, page * pageSize));
+      const initialWorksImageUrls = initialWorks.map(work => work.thumbnail);
       imageService.preloadImages(initialWorksImageUrls);
       
       // 预加载创作者头像
-      const avatarUrls = [...new Set([...featuredWorks, ...pagedWorks].map(work => work.creatorAvatar))];
+      const avatarUrls = [...new Set([...featuredWorks, ...initialWorks].map(work => work.creatorAvatar))];
       imageService.preloadImages(avatarUrls);
     }, 800);
     return () => clearTimeout(t);
-  }, [featuredWorks, pagedWorks]);
+  }, [featuredWorks, filteredWorks, page, pageSize]);
+
+  
 
   useEffect(() => {
     const updateFeaturedScrollState = () => {
@@ -3191,9 +3197,6 @@ export default function Explore() {
   
   
   // 骨架屏加载状态在 JSX 内条件渲染，避免改变 Hook 调用顺序
-  
-  // 精选作品
-  const featuredWorks = mockWorks.filter(work => work.featured);
   const sourceWorks = useMemo(() => (
     selectedCategory !== '全部'
       ? mockWorks.filter(w => w.category === selectedCategory)
