@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, PerspectiveCamera, useProgress, Environment, CameraControls } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 
 // AR预览配置类型
@@ -19,81 +19,6 @@ export interface ARPreviewConfig {
 
 // 环境预设类型
 type EnvironmentPreset = 'studio' | 'forest' | 'city' | 'night' | 'custom';
-
-// 动画状态类型
-type AnimationState = 'playing' | 'paused' | 'stopped';
-
-// 加载进度组件
-const LoadingProgress: React.FC = () => {
-  const { progress } = useProgress();
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-10">
-      <div className="text-center text-white">
-        <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-red-600 mb-4"></div>
-        <p className="text-lg mb-2">正在加载AR资源...</p>
-        <div className="w-64 h-2 bg-gray-600 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-red-600 transition-all duration-300" 
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        <p className="text-sm mt-2">{Math.round(progress)}%</p>
-      </div>
-    </div>
-  );
-};
-
-// 3D模型组件
-const ModelPreview: React.FC<{
-  url: string;
-  scale: number;
-  rotation: { x: number; y: number; z: number };
-  position: { x: number; y: number; z: number };
-  onLoaded?: () => void;
-  animationState?: AnimationState;
-}> = ({ url, scale, rotation, position, onLoaded, animationState }) => {
-  const { scene, animations } = useGLTF(url);
-  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
-  
-  // 初始化动画混合器
-  useEffect(() => {
-    if (scene && animations && animations.length > 0) {
-      mixerRef.current = new THREE.AnimationMixer(scene);
-      
-      // 播放所有动画
-      animations.forEach((clip) => {
-        mixerRef.current?.clipAction(clip).play();
-      });
-    }
-    
-    if (onLoaded) {
-      onLoaded();
-    }
-    
-    return () => {
-      // 移除动画混合器的引用，让垃圾回收处理
-      mixerRef.current = null;
-    };
-  }, [scene, animations, onLoaded]);
-  
-  // 更新动画
-  useFrame((state, delta) => {
-    if (mixerRef.current) {
-      if (animationState === 'playing') {
-        mixerRef.current.update(delta);
-      }
-    }
-  });
-  
-  return (
-    <primitive
-      object={scene}
-      scale={scale}
-      rotation={[rotation.x, rotation.y, rotation.z]}
-      position={[position.x, position.y, position.z]}
-    />
-  );
-};
 
 // 2D图片组件
 const ImagePreview: React.FC<{
@@ -129,37 +54,26 @@ const ImagePreview: React.FC<{
   );
 };
 
-type ViewMode = 'perspective' | 'top' | 'front' | 'side';
-
 const ARPreview: React.FC<{
   config: ARPreviewConfig;
   onClose: () => void;
 }> = ({ config, onClose }) => {
   const { isDark } = useTheme();
-  const [isARMode, setIsARMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [scale, setScale] = useState(config.scale || 1.0);
   const [rotation, setRotation] = useState(config.rotation || { x: 0, y: 0, z: 0 });
   const [position, setPosition] = useState(config.position || { x: 0, y: 0, z: 0 });
-  const [modelPlaced, setModelPlaced] = useState(false);
-  const [hitPosition, setHitPosition] = useState<{ x: number; y: number; z: number } | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('perspective');
-  const [cameraRef, setCameraRef] = useState<THREE.PerspectiveCamera | null>(null);
   const [environmentPreset, setEnvironmentPreset] = useState<EnvironmentPreset>('studio');
-  const [animationState, setAnimationState] = useState<AnimationState>('playing');
-  const [autoRotate, setAutoRotate] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const arContainerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<any>(null);
-  const modelRef = useRef<THREE.Object3D | null>(null);
-
+  const [isARMode, setIsARMode] = useState(false);
+  const [showARGuide, setShowARGuide] = useState(false);
+  
   // 加载资源
   useEffect(() => {
     const loadResources = async () => {
       try {
         setIsLoading(true);
         // 模拟资源加载
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
         setIsLoading(false);
       } catch (error) {
         toast.error('AR资源加载失败，请重试');
@@ -169,36 +83,6 @@ const ARPreview: React.FC<{
 
     loadResources();
   }, [config]);
-  
-  // 自动旋转模型
-  useFrame((state, delta) => {
-    if (autoRotate && modelRef.current) {
-      modelRef.current.rotation.y += delta * 0.5;
-    }
-  });
-  
-  // 切换动画状态
-  const toggleAnimation = () => {
-    if (animationState === 'playing') {
-      setAnimationState('paused');
-      toast.info('动画已暂停');
-    } else {
-      setAnimationState('playing');
-      toast.info('动画已播放');
-    }
-  };
-  
-  // 切换自动旋转
-  const toggleAutoRotate = () => {
-    setAutoRotate(!autoRotate);
-    toast.info(autoRotate ? '自动旋转已关闭' : '自动旋转已开启');
-  };
-  
-  // 切换统计信息显示
-  const toggleStats = () => {
-    setShowStats(!showStats);
-    toast.info(showStats ? '统计信息已关闭' : '统计信息已开启');
-  };
   
   // 切换环境预设
   const changeEnvironment = (preset: EnvironmentPreset) => {
@@ -211,42 +95,8 @@ const ARPreview: React.FC<{
     setIsARMode(!isARMode);
     if (!isARMode) {
       toast.info('已进入AR模式，将设备对准平面查看效果');
-      setModelPlaced(false);
-      setHitPosition(null);
+      setShowARGuide(true);
     }
-  };
-
-  // 点击放置模型
-  const handlePlaceModel = () => {
-    if (hitPosition) {
-      setPosition(hitPosition);
-      setModelPlaced(true);
-      toast.success('模型已放置');
-    } else {
-      // 随机生成一个位置
-      const randomPosition = {
-        x: (Math.random() - 0.5) * 2,
-        y: 0,
-        z: (Math.random() - 0.5) * 2
-      };
-      setPosition(randomPosition);
-      setModelPlaced(true);
-      toast.success('模型已放置');
-    }
-  };
-
-  // 模拟平面检测和点击检测
-  const handleCanvasClick = () => {
-    if (isARMode && !modelPlaced) {
-      handlePlaceModel();
-    }
-  };
-
-  // 切换视图模式
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-    // 这里可以添加相机位置的更新逻辑
-    toast.info(`已切换到${mode}视图`);
   };
 
   // 重置模型位置
@@ -293,16 +143,6 @@ const ARPreview: React.FC<{
     }
   };
 
-  const [showARGuide, setShowARGuide] = useState(false);
-
-  // 切换AR模式时显示引导
-  useEffect(() => {
-    if (isARMode && !localStorage.getItem('arGuideShown')) {
-      setShowARGuide(true);
-      localStorage.setItem('arGuideShown', 'true');
-    }
-  }, [isARMode]);
-
   return (
     <div className={`fixed inset-0 z-50 flex flex-col ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
       {/* 顶部导航栏 */}
@@ -318,224 +158,70 @@ const ARPreview: React.FC<{
       </div>
 
       {/* AR预览区域 */}
-      <div ref={arContainerRef} className="flex-1 relative overflow-hidden">
-        {/* 加载进度组件 - 放在Canvas外部 */}
-        {isLoading && <LoadingProgress />}
-        
-        {/* AR模式提示按钮 - 放在Canvas外部 */}
-        {isARMode && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg cursor-pointer z-10">
-            进入AR模式
+      <div className="flex-1 relative overflow-hidden">
+        {/* 加载状态 */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-10">
+            <div className="text-center text-white">
+              <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-red-600 mb-4"></div>
+              <p className="text-lg mb-2">正在加载AR资源...</p>
+            </div>
           </div>
         )}
         
-        <div className="w-full h-full" onClick={handleCanvasClick}>
-          <Canvas 
-            shadows 
-            ref={(canvas) => {
-              if (canvas) {
-                canvasRef.current = canvas;
-              }
-            }}
-          >
-            {!isARMode ? (
-              <>
-                <PerspectiveCamera makeDefault position={[0, 0, 3]} />
-                <ambientLight intensity={0.5} />
-                <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
-                
-                {/* 网格辅助线 */}
-                <gridHelper args={[10, 10, '#888888', '#444444']} />
-                
-                {/* 坐标系辅助线 */}
-                <axesHelper args={[2]} />
-                
-                {/* 环境预设 */}
-                <Environment
-                  preset={environmentPreset === 'studio' ? 'studio' : 
-                         environmentPreset === 'forest' ? 'forest' :
-                         environmentPreset === 'city' ? 'city' :
-                         environmentPreset === 'night' ? 'night' : 'studio'}
-                  background
-                />
-                
-                {config.type === '3d' && config.modelUrl ? (
-                  <>
-                    <ModelPreview
-                      url={config.modelUrl}
-                      scale={scale}
-                      rotation={rotation}
-                      position={position}
-                      onLoaded={() => setIsLoading(false)}
-                      animationState={animationState}
-                    />
-                    {/* 模型中心点指示器 */}
-                    <mesh position={[position.x, position.y, position.z]}>
-                      <sphereGeometry args={[0.05, 16, 16]} />
-                      <meshBasicMaterial color="#00ff00" />
-                    </mesh>
-                    {/* 模型选中效果 */}
-                    <mesh position={[position.x, position.y, position.z]} scale={scale * 1.05}>
-                      <planeGeometry args={[1, 1]} />
-                      <meshBasicMaterial color="#ff6b6b" wireframe transparent opacity={0.5} side={THREE.DoubleSide} />
-                    </mesh>
-                  </>
-                ) : config.type === '2d' && config.imageUrl ? (
-                  <>
-                    <ImagePreview
-                      url={config.imageUrl}
-                      scale={scale}
-                      rotation={rotation}
-                      position={position}
-                    />
-                    {/* 模型中心点指示器 */}
-                    <mesh position={[position.x, position.y, position.z]}>
-                      <sphereGeometry args={[0.05, 16, 16]} />
-                      <meshBasicMaterial color="#00ff00" />
-                    </mesh>
-                  </>
-                ) : (
-                  <>
-                    <mesh position={[0, 0, 0]}>
-                      <boxGeometry args={[1, 1, 1]} />
-                      <meshStandardMaterial color="#ff6b6b" />
-                    </mesh>
-                    {/* 模型中心点指示器 */}
-                    <mesh position={[0, 0, 0]}>
-                      <sphereGeometry args={[0.05, 16, 16]} />
-                      <meshBasicMaterial color="#00ff00" />
-                    </mesh>
-                    {/* 模型选中效果 */}
-                    <mesh position={[0, 0, 0]} scale={1.05}>
-                      <boxGeometry args={[1, 1, 1]} />
-                      <meshBasicMaterial color="#ff6b6b" wireframe transparent opacity={0.5} />
-                    </mesh>
-                  </>
-                )}
-                
-                <OrbitControls 
-                  enableZoom 
-                  enablePan 
-                  enableRotate 
-                  dampingFactor={0.05} 
-                  enableDamping={true} 
-                  rotateSpeed={0.5} 
-                  zoomSpeed={0.5} 
-                  panSpeed={0.5} 
-                  minDistance={0.5} 
-                  maxDistance={10} 
-                  minPolarAngle={0} 
-                  maxPolarAngle={Math.PI} 
-                />
-              </>
-            ) : (
-              <>
-                <ambientLight intensity={0.5} />
-                <directionalLight position={[5, 5, 5]} intensity={1} />
-                
-                {/* 环境预设 */}
-                <Environment
-                  preset={environmentPreset === 'studio' ? 'studio' : 
-                         environmentPreset === 'forest' ? 'forest' :
-                         environmentPreset === 'city' ? 'city' :
-                         environmentPreset === 'night' ? 'night' : 'studio'}
-                  background
-                />
-                
-                {/* 模型放置指示器 */}
-                {isARMode && !modelPlaced && (
-                  <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
-                    <ringGeometry args={[0.3, 0.4, 32]} />
-                    <meshBasicMaterial color="#ff6b6b" transparent opacity={0.7} side={THREE.DoubleSide} />
-                    <mesh position={[0, 0.01, 0]}>
-                      <boxGeometry args={[0.05, 0.05, 0.05]} />
-                      <meshBasicMaterial color="#ff6b6b" />
-                    </mesh>
-                  </mesh>
-                )}
-                
-                {config.type === '3d' && config.modelUrl ? (
-                  <>
-                    <ModelPreview
-                      url={config.modelUrl}
-                      scale={modelPlaced ? scale : 0}
-                      rotation={rotation}
-                      position={position}
-                      onLoaded={() => setIsLoading(false)}
-                      animationState={animationState}
-                    />
-                    {/* 模型中心点指示器 */}
-                    <mesh position={[position.x, position.y, position.z]}>
-                      <sphereGeometry args={[0.05, 16, 16]} />
-                      <meshBasicMaterial color="#00ff00" />
-                    </mesh>
-                    {/* 模型选中效果 */}
-                    {modelPlaced && (
-                      <mesh position={[position.x, position.y, position.z]} scale={scale * 1.05}>
-                        <boxGeometry args={[1, 1, 1]} />
-                        <meshBasicMaterial color="#ff6b6b" wireframe transparent opacity={0.5} />
-                      </mesh>
-                    )}
-                  </>
-                ) : config.type === '2d' && config.imageUrl ? (
-                  <>
-                    <ImagePreview
-                      url={config.imageUrl}
-                      scale={modelPlaced ? scale : 0}
-                      rotation={rotation}
-                      position={position}
-                    />
-                    {/* 模型中心点指示器 */}
-                    <mesh position={[position.x, position.y, position.z]}>
-                      <sphereGeometry args={[0.05, 16, 16]} />
-                      <meshBasicMaterial color="#00ff00" />
-                    </mesh>
-                    {/* 模型选中效果 */}
-                    {modelPlaced && (
-                      <mesh position={[position.x, position.y, position.z]} scale={scale * 1.05}>
-                        <planeGeometry args={[1, 1]} />
-                        <meshBasicMaterial color="#ff6b6b" wireframe transparent opacity={0.5} side={THREE.DoubleSide} />
-                      </mesh>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <mesh position={[0, 0, 0]} scale={modelPlaced ? 1 : 0}>
-                      <boxGeometry args={[0.5, 0.5, 0.5]} />
-                      <meshStandardMaterial color="#ff6b6b" />
-                    </mesh>
-                    {/* 模型中心点指示器 */}
-                    <mesh position={[0, 0, 0]}>
-                      <sphereGeometry args={[0.05, 16, 16]} />
-                      <meshBasicMaterial color="#00ff00" />
-                    </mesh>
-                    {/* 模型选中效果 */}
-                    {modelPlaced && (
-                      <mesh position={[0, 0, 0]} scale={modelPlaced ? 1.05 : 0}>
-                        <boxGeometry args={[0.5, 0.5, 0.5]} />
-                        <meshBasicMaterial color="#ff6b6b" wireframe transparent opacity={0.5} />
-                      </mesh>
-                    )}
-                  </>
-                )}
-                
-                {/* AR模式下的OrbitControls */}
-                <OrbitControls 
-                  enableZoom 
-                  enablePan 
-                  enableRotate 
-                  dampingFactor={0.05} 
-                  enableDamping={true} 
-                  rotateSpeed={0.5} 
-                  zoomSpeed={0.5} 
-                  panSpeed={0.5} 
-                  minDistance={0.5} 
-                  maxDistance={10} 
-                  minPolarAngle={0} 
-                  maxPolarAngle={Math.PI} 
-                />
-              </>
+        <div className="w-full h-full">
+          <Canvas shadows>
+            {/* 基础相机和灯光 */}
+            <PerspectiveCamera makeDefault position={[0, 0, 3]} />
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
+            
+            {/* 环境预设 */}
+            <Environment
+              preset={environmentPreset === 'studio' ? 'studio' : 
+                     environmentPreset === 'forest' ? 'forest' :
+                     environmentPreset === 'city' ? 'city' :
+                     environmentPreset === 'night' ? 'night' : 'studio'}
+              background
+            />
+            
+            {/* 2D图片预览 */}
+            {config.type === '2d' && config.imageUrl && (
+              <ImagePreview
+                url={config.imageUrl}
+                scale={scale}
+                rotation={rotation}
+                position={position}
+              />
             )}
+            
+            {/* 3D模型预览 - 简单实现，实际项目中需要使用GLTF加载器 */}
+            {config.type === '3d' && (
+              <mesh position={[position.x, position.y, position.z]} rotation={[rotation.x, rotation.y, rotation.z]} scale={scale}>
+                <boxGeometry args={[1, 1, 1]} />
+                <meshStandardMaterial color="#ff6b6b" />
+              </mesh>
+            )}
+            
+            {/* 网格辅助线 - 仅在非AR模式显示 */}
+            {!isARMode && <gridHelper args={[10, 10, '#888888', '#444444']} />}
+            
+            {/* 坐标系辅助线 - 仅在非AR模式显示 */}
+            {!isARMode && <axesHelper args={[2]} />}
+            
+            {/* 交互控件 */}
+            <OrbitControls 
+              enableZoom 
+              enablePan 
+              enableRotate 
+              dampingFactor={0.05} 
+              enableDamping={true} 
+              rotateSpeed={0.5} 
+              zoomSpeed={0.5} 
+              panSpeed={0.5} 
+              minDistance={0.5} 
+              maxDistance={10} 
+            />
           </Canvas>
         </div>
       </div>
@@ -607,45 +293,6 @@ const ARPreview: React.FC<{
           </button>
         </div>
         
-        {/* 动画和旋转控制 */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          <button
-            onClick={toggleAnimation}
-            className={`py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${animationState === 'playing' 
-              ? 'bg-red-600 text-white' 
-              : isDark 
-                ? 'bg-gray-700 hover:bg-gray-600' 
-                : 'bg-gray-100 hover:bg-gray-200'}`}
-          >
-            <i className={`fas fa-${animationState === 'playing' ? 'pause' : 'play'}`}></i>
-            {animationState === 'playing' ? '暂停' : '播放'}
-          </button>
-          
-          <button
-            onClick={toggleAutoRotate}
-            className={`py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${autoRotate 
-              ? 'bg-red-600 text-white' 
-              : isDark 
-                ? 'bg-gray-700 hover:bg-gray-600' 
-                : 'bg-gray-100 hover:bg-gray-200'}`}
-          >
-            <i className="fas fa-sync-alt"></i>
-            自动旋转
-          </button>
-          
-          <button
-            onClick={toggleStats}
-            className={`py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 text-sm ${showStats 
-              ? 'bg-red-600 text-white' 
-              : isDark 
-                ? 'bg-gray-700 hover:bg-gray-600' 
-                : 'bg-gray-100 hover:bg-gray-200'}`}
-          >
-            <i className="fas fa-chart-bar"></i>
-            统计信息
-          </button>
-        </div>
-        
         {/* 环境预设选择 */}
         <div className="mb-4">
           <div className="text-sm font-medium mb-2">环境预设</div>
@@ -665,55 +312,6 @@ const ARPreview: React.FC<{
             ))}
           </div>
         </div>
-        
-        {/* 视图模式切换（仅在非AR模式下显示） */}
-        {!isARMode && (
-          <div className="mb-4">
-            <div className="text-sm font-medium mb-2">视图模式</div>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => handleViewModeChange('perspective')}
-                className={`px-4 py-2 rounded-lg text-sm transition-all ${viewMode === 'perspective' 
-                  ? 'bg-red-600 text-white' 
-                  : isDark 
-                    ? 'bg-gray-700 hover:bg-gray-600' 
-                    : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                透视图
-              </button>
-              <button
-                onClick={() => handleViewModeChange('top')}
-                className={`px-4 py-2 rounded-lg text-sm transition-all ${viewMode === 'top' 
-                  ? 'bg-red-600 text-white' 
-                  : isDark 
-                    ? 'bg-gray-700 hover:bg-gray-600' 
-                    : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                顶视图
-              </button>
-              <button
-                onClick={() => handleViewModeChange('front')}
-                className={`px-4 py-2 rounded-lg text-sm transition-all ${viewMode === 'front' 
-                  ? 'bg-red-600 text-white' 
-                  : isDark 
-                    ? 'bg-gray-700 hover:bg-gray-600' 
-                    : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                前视图
-              </button>
-              <button
-                onClick={() => handleViewModeChange('side')}
-                className={`px-4 py-2 rounded-lg text-sm transition-all ${viewMode === 'side' 
-                  ? 'bg-red-600 text-white' 
-                  : isDark 
-                    ? 'bg-gray-700 hover:bg-gray-600' 
-                    : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                侧视图
-              </button>
-            </div>
-          </div>
-        )}
         
         {/* 缩放控制 */}
         <div className="mb-4">
@@ -737,16 +335,14 @@ const ARPreview: React.FC<{
           <div className="flex items-start gap-2">
             <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
             <div>
-              <p className="font-medium mb-1">{isARMode ? 'AR模式提示' : '预览模式提示'}</p>
+              <p className="font-medium mb-1">{isARMode ? 'AR模式' : '预览模式'}</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
                 {isARMode ? (
                   <>
                     <li>确保设备支持WebXR AR功能</li>
                     <li>在明亮环境中使用效果更佳</li>
                     <li>将设备对准平面（如桌面、地面）</li>
-                    <li>点击屏幕放置模型</li>
-                    <li>双指缩放调整大小</li>
-                    <li>单指拖动调整位置</li>
+                    <li>使用屏幕按钮或设备陀螺仪控制视角</li>
                   </>
                 ) : (
                   <>
@@ -754,8 +350,6 @@ const ARPreview: React.FC<{
                     <li>滚轮缩放模型</li>
                     <li>右键拖拽平移视图</li>
                     <li>切换不同视图模式查看模型</li>
-                    <li>点击拍照按钮保存模型截图</li>
-                    <li>使用环境预设改变模型显示效果</li>
                   </>
                 )}
               </ul>
