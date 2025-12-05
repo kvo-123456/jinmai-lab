@@ -8,35 +8,16 @@
         "distDir": "dist/static",
         "buildCommand": "npm run build"
       }
-    },
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "handle": "filesystem"
+      "source": "/(.*)",
+      "destination": "/$1"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.ts",
-      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      "headers": {
-        "Cache-Control": "no-cache",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html",
-      "status": 200
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "DB_TYPE": "postgresql"
-  }
+  ]
 }
