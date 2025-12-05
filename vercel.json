@@ -28,60 +28,64 @@
     },
     {
       "src": "/assets/(.*)",
-      "dest": "/assets/$1",
+      "dest": "/static/assets/$1",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
       "src": "/entries/(.*)",
-      "dest": "/entries/$1",
+      "dest": "/static/entries/$1",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
       "src": "/chunks/(.*)",
-      "dest": "/chunks/$1",
+      "dest": "/static/chunks/$1",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
       "src": "/registerSW.js",
-      "dest": "/registerSW.js",
+      "dest": "/static/registerSW.js",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
       "src": "/manifest.webmanifest",
-      "dest": "/manifest.webmanifest",
+      "dest": "/static/manifest.webmanifest",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
       "src": "/sw.js",
-      "dest": "/sw.js",
+      "dest": "/static/sw.js",
       "headers": {
         "Cache-Control": "no-cache"
       }
     },
     {
       "src": "/workbox-(.*)\\.js",
-      "dest": "/workbox-$1.js",
+      "dest": "/static/workbox-$1.js",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
       "src": "/index.html",
-      "dest": "/index.html"
+      "dest": "/static/index.html"
+    },
+    {
+      "src": "/",
+      "dest": "/static/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html",
+      "dest": "/static/index.html",
       "status": 200
     }
   ],
