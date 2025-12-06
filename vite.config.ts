@@ -235,8 +235,7 @@ export default defineConfig({
       'react', 'react-dom', 'react-router-dom', 
       'clsx', 'tailwind-merge', 
       'framer-motion',
-      '@react-three/fiber', '@react-three/drei',
-      '@/hooks/useTheme'
+      '@react-three/fiber', '@react-three/drei'
     ],
     // 禁用预构建的数据库依赖，它们仅用于服务器端
     exclude: [

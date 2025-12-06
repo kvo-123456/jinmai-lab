@@ -298,8 +298,6 @@ export default function App() {
             element={<PrivateRoute component={CulturalKnowledge} />} 
           />
           
-          
-          
           {/* 创新功能路由 */}
           <Route 
             path="/daily-checkin" 

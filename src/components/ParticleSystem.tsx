@@ -25,56 +25,7 @@ interface ParticleConfig {
   behavior: ParticleBehavior; // 粒子行为模式
 }
 
-// 单个粒子组件
-const Particle: React.FC<{
-  position: [number, number, number];
-  color: string;
-  size: number;
-  model: string;
-}> = ({ position, color, size, model }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [rotation, setRotation] = useState(new THREE.Euler(
-    Math.random() * Math.PI * 2,
-    Math.random() * Math.PI * 2,
-    Math.random() * Math.PI * 2
-  ));
-  const positionVector = new THREE.Vector3(position[0], position[1], position[2]);
 
-  // 粒子动画
-  useFrame((state) => {
-    if (meshRef.current) {
-      // 持续旋转
-      meshRef.current.rotation.x += 0.01;
-      meshRef.current.rotation.y += 0.01;
-      meshRef.current.rotation.z += 0.01;
-    }
-  });
-
-  // 根据模型类型渲染不同形状
-  const getGeometry = () => {
-    switch (model) {
-      case 'heart':
-        return <sphereGeometry args={[size, 16, 16]} />;
-      case 'flower':
-        return <icosahedronGeometry args={[size, 2]} />;
-      case 'saturn':
-        return <torusGeometry args={[size * 1.5, size * 0.3, 16, 100]} />;
-      case 'buddha':
-        return <octahedronGeometry args={[size, 1]} />;
-      case 'firework':
-        return <tetrahedronGeometry args={[size, 1]} />;
-      default:
-        return <sphereGeometry args={[size, 16, 16]} />;
-    }
-  };
-
-  return (
-    <mesh ref={meshRef} position={position} rotation={rotation}>
-      {getGeometry()}
-      <meshBasicMaterial color={color} transparent opacity={0.8} />
-    </mesh>
-  );
-};
 
 // 缓存项类型，包含使用频率和创建时间
 interface CacheItem<T> {
