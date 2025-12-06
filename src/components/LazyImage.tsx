@@ -51,6 +51,13 @@ export default function LazyImage({
       return false;
     })();
     
+    // 处理占位符图片，直接返回原始URL，不进行额外处理
+    if (src.includes('placeholder.com')) {
+      setPlaceholderSrc(src);
+      setCurrentSrc(src);
+      return;
+    }
+    
     // 生成低质量占位符URL
     const lowQualityUrl = imageService.getLowQualityUrl(src);
     setPlaceholderSrc(lowQualityUrl);
@@ -82,39 +89,7 @@ export default function LazyImage({
     // 立即加载高优先级图片
     if (priority || loading === 'eager') {
       loadStartTimeRef.current = Date.now();
-      
-      // 优化：检查缓存中是否已有图片
-      const cachedImage = sessionStorage.getItem(`image_cache_${btoa(currentSrc)}`);
-      if (cachedImage) {
-        img.src = cachedImage;
-        return;
-      }
-      
       img.src = currentSrc;
-      // 优化：添加preload链接，提前获取图片资源
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = currentSrc;
-      document.head.appendChild(link);
-      
-      // 优化：图片加载完成后缓存到sessionStorage
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          ctx.drawImage(img, 0, 0);
-          try {
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.8); // 压缩为JPEG格式
-            sessionStorage.setItem(`image_cache_${btoa(currentSrc)}`, dataUrl);
-          } catch (e) {
-            // 缓存失败不影响正常显示
-          }
-        }
-      };
-      
       return;
     }
 
@@ -172,7 +147,7 @@ export default function LazyImage({
   };
 
   const handleError = () => {
-    // console.error(`Failed to load image: ${src}`);
+    console.error(`Failed to load image: ${src}`);
     setIsError(true);
     onError?.();
     

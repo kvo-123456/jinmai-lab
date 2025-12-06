@@ -438,17 +438,16 @@ class ImageService {
         urlObj.searchParams.set('quality', adjustedQuality.toString());
         urlObj.searchParams.set('width', adjustedWidth.toString());
         
-        // 优化：根据浏览器支持情况选择最优图片格式
-        const supportedFormats = this.detectSupportedFormats();
-        
-        // 启用AVIF格式（如果支持），否则使用WebP，最后使用默认格式
-        if (!urlObj.searchParams.has('format')) {
-          if (this.config.enableAVIF && supportedFormats.avif) {
-            urlObj.searchParams.set('format', 'avif');
-          } else if (this.config.enableWebP && supportedFormats.webp) {
-            urlObj.searchParams.set('format', 'webp');
-          }
-        }
+        // 暂时移除WebP和AVIF格式转换，避免API不支持导致图片加载失败
+        // 等待API支持后再启用这些优化
+        // const supportedFormats = this.detectSupportedFormats();
+        // if (!urlObj.searchParams.has('format')) {
+        //   if (this.config.enableAVIF && supportedFormats.avif) {
+        //     urlObj.searchParams.set('format', 'avif');
+        //   } else if (this.config.enableWebP && supportedFormats.webp) {
+        //     urlObj.searchParams.set('format', 'webp');
+        //   }
+        // }
         
         return urlObj.toString();
       } catch {
@@ -479,15 +478,16 @@ class ImageService {
         urlObj.searchParams.set('quality', placeholderQuality.toString());
         urlObj.searchParams.set('width', placeholderWidth.toString());
         
-        // 启用更高效的图片格式（优先使用AVIF如果支持）
-        const supportedFormats = this.detectSupportedFormats();
-        if (!urlObj.searchParams.has('format')) {
-          if (this.config.enableAVIF && supportedFormats.avif) {
-            urlObj.searchParams.set('format', 'avif');
-          } else if (this.config.enableWebP && supportedFormats.webp) {
-            urlObj.searchParams.set('format', 'webp');
-          }
-        }
+        // 暂时移除WebP和AVIF格式转换，避免API不支持导致图片加载失败
+        // 等待API支持后再启用这些优化
+        // const supportedFormats = this.detectSupportedFormats();
+        // if (!urlObj.searchParams.has('format')) {
+        //   if (this.config.enableAVIF && supportedFormats.avif) {
+        //     urlObj.searchParams.set('format', 'avif');
+        //   } else if (this.config.enableWebP && supportedFormats.webp) {
+        //     urlObj.searchParams.set('format', 'webp');
+        //   }
+        // }
         
         return urlObj.toString();
       } catch {
@@ -503,10 +503,10 @@ class ImageService {
     // 使用本地代理替换直接调用，解决CORS问题
     let url = `/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=${prompt}&image_size=1024x1024`;
     
-    // 启用WebP格式
-    if (this.config.enableWebP) {
-      url += '&format=webp';
-    }
+    // 暂时移除WebP格式转换，避免API不支持导致图片加载失败
+    // if (this.config.enableWebP) {
+    //   url += '&format=webp';
+    // }
     
     return url;
   }

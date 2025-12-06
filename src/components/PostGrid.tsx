@@ -1,5 +1,5 @@
 import React from 'react'
-import { Post } from '../types'
+import { Post } from '../services/postService'
 import LazyImage from './LazyImage'
 
 interface PostGridProps {
@@ -30,7 +30,6 @@ const PostGrid: React.FC<PostGridProps> = ({
               src={post.thumbnail} 
               alt={post.title}
               className="w-full h-full object-cover"
-              fallbackSrc="https://via.placeholder.com/300x300?text=加载中..."
               priority={index < 3} // 前3张图片优先加载
               quality={index < 6 ? 'high' : 'medium'} // 前6张图片使用高质量
             />
@@ -42,8 +41,8 @@ const PostGrid: React.FC<PostGridProps> = ({
           <div className="p-3">
             <h3 className="font-semibold text-sm mb-1 line-clamp-2">{post.title}</h3>
             <div className="flex justify-between items-center text-xs text-gray-500">
-              <span>{post.date}</span>
               <span>{post.category}</span>
+              <span>{post.likes} ❤️</span>
             </div>
           </div>
         </div>

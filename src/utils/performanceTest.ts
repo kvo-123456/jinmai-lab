@@ -61,8 +61,10 @@ class PerformanceTest {
               this.metrics.largestContentfulPaint = entry.startTime;
               break;
             case 'layout-shift':
-              if (!entry.hadRecentInput) {
-                this.metrics.cumulativeLayoutShift += entry.value;
+              // 使用类型断言为any，避免TypeScript编译错误
+              const layoutShiftEntry = entry as any;
+              if (!layoutShiftEntry.hadRecentInput) {
+                this.metrics.cumulativeLayoutShift += layoutShiftEntry.value;
               }
               break;
           }

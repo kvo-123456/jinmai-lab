@@ -252,10 +252,7 @@ export default function App() {
             <Route path="/square/:id" element={<PrivateRoute component={Square} />} />
             <Route path="/community" element={<PrivateRoute component={Community} />} />
             <Route path="/incentives" element={<PrivateRoute component={Incentives} />} />
-          </Route>
-          
-          {/* 需要登录的路由 */}
-          <Route element={<LayoutWrapper />}>
+
             <Route 
               path="/dashboard" 
               element={<PrivateRoute component={Dashboard} />} 

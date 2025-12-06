@@ -322,9 +322,9 @@ export default defineConfig({
     // 添加开发服务器代理配置
     proxy: {
       '/api/proxy/trae-api': {
-        target: 'http://localhost:3007',
+        target: 'https://trae-api-sg.mchost.guru',
         changeOrigin: true,
-        // 不需要rewrite，因为本地API服务器已经处理了路径
+        rewrite: (path) => path.replace(/^\/api\/proxy\/trae-api/, ''),
         configure: (proxy, options) => {
           // 允许所有响应头通过
           options.onProxyRes = (proxyRes, req, res) => {

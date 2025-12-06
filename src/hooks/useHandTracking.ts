@@ -71,8 +71,16 @@ const useHandTracking = (config: HandTrackingConfig = {}) => {
       const originalConsoleLog = console.log;
       console.log = function(...args) {
         // 过滤掉看起来像内存地址的日志：[0x...] [0x...] [0x...] ...
-        const isMemoryAddressLog = args.length > 0 && typeof args[0] === 'string' && args[0].match(/\[0x[0-9a-f]+(\s+0x[0-9a-f]+)+\]/i);
-        if (!isMemoryAddressLog) {
+        // 检查是否是包含多个0x地址的数组日志
+        const isMemoryAddressLog = args.length > 0 && 
+          Array.isArray(args[0]) && 
+          args[0].every(item => typeof item === 'string' && item.match(/^0x[0-9a-f]+$/i));
+        // 也检查单个字符串形式的内存地址数组
+        const isStringMemoryLog = args.length > 0 && 
+          typeof args[0] === 'string' && 
+          args[0].match(/\[0x[0-9a-f]+(\s+0x[0-9a-f]+)+\]/i);
+        
+        if (!isMemoryAddressLog && !isStringMemoryLog) {
           originalConsoleLog.apply(console, args);
         }
       };

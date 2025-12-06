@@ -566,6 +566,7 @@ export const TianjinImage: React.FC<{
   };
   
   const handleError = () => {
+    console.error('图片加载失败:', src);
     setError(true);
   };
   
@@ -573,6 +574,11 @@ export const TianjinImage: React.FC<{
   const handleManualRetry = () => {
     setError(false);
     setLoaded(false);
+    // 重试时，强制重新加载图片
+    const img = document.querySelector(`img[src="${src}"]`) as HTMLImageElement;
+    if (img) {
+      img.src = src;
+    }
   };
   
   return (
