@@ -250,100 +250,100 @@ export default function App() {
             <Route path="/incentives" element={<PrivateRoute component={Incentives} />} />
           
           {/* 需要登录的路由 */}
-            <Route 
-              path="/dashboard" 
-              element={<PrivateRoute component={Dashboard} />} 
-            />
+          <Route 
+            path="/dashboard" 
+            element={<PrivateRoute component={Dashboard} />} 
+          />
 
           <Route 
-              path="/create" 
-              element={<PrivateRoute component={Create} />} 
-            />
+            path="/create" 
+            element={<PrivateRoute component={Create} />} 
+          />
 
           <Route 
-              path="/drafts" 
-              element={<PrivateRoute component={Drafts} />} 
-            />
+            path="/drafts" 
+            element={<PrivateRoute component={Drafts} />} 
+          />
 
           <Route 
-              path="/settings" 
-              element={<PrivateRoute component={Settings} />} 
-            />
+            path="/settings" 
+            element={<PrivateRoute component={Settings} />} 
+          />
           
           <Route 
-              path="/analytics" 
-              element={<PrivateRoute component={Analytics} />} 
-            />
+            path="/analytics" 
+            element={<PrivateRoute component={Analytics} />} 
+          />
           
           <Route 
-              path="/collection" 
-              element={<PrivateRoute component={UserCollection} />} 
-            />
+            path="/collection" 
+            element={<PrivateRoute component={UserCollection} />} 
+          />
           
           <Route 
-              path="/knowledge" 
-              element={<PrivateRoute component={CulturalKnowledge} />} 
-            />
+            path="/knowledge" 
+            element={<PrivateRoute component={CulturalKnowledge} />} 
+          />
           <Route 
-              path="/tianjin" 
-              element={<Tianjin />} 
-            />
+            path="/tianjin" 
+            element={<Tianjin />} 
+          />
           <Route 
-              path="/events" 
-              element={<CulturalEvents />} 
-            />
+            path="/events" 
+            element={<CulturalEvents />} 
+          />
           
           <Route 
-              path="/knowledge/:type/:id" 
-              element={<PrivateRoute component={CulturalKnowledge} />} 
-            />
+            path="/knowledge/:type/:id" 
+            element={<PrivateRoute component={CulturalKnowledge} />} 
+          />
           
           
           
           {/* 创新功能路由 */}
-            <Route 
-              path="/daily-checkin" 
-              element={<PrivateRoute component={DailyCheckin} />} 
-            />
+          <Route 
+            path="/daily-checkin" 
+            element={<PrivateRoute component={DailyCheckin} />} 
+          />
           
           <Route 
-              path="/creative-matchmaking" 
-              element={<PrivateRoute component={CreativeMatchmaking} />} 
-            />
+            path="/creative-matchmaking" 
+            element={<PrivateRoute component={CreativeMatchmaking} />} 
+          />
           
           <Route 
-              path="/ip-incubation" 
-              element={<PrivateRoute component={IPIncubationCenter} />} 
-            />
+            path="/ip-incubation" 
+            element={<PrivateRoute component={IPIncubationCenter} />} 
+          />
           
           <Route 
-              path="/cross-device-sync" 
-              element={<PrivateRoute component={CrossDeviceSync} />} 
-            />
+            path="/cross-device-sync" 
+            element={<PrivateRoute component={CrossDeviceSync} />} 
+          />
           
           <Route 
-              path="/achievement-museum" 
-              element={<PrivateRoute component={AchievementMuseum} />} 
-            />
+            path="/achievement-museum" 
+            element={<PrivateRoute component={AchievementMuseum} />} 
+          />
           
           <Route 
-              path="/blind-box" 
-              element={<PrivateRoute component={BlindBoxShop} />} 
-            />
+            path="/blind-box" 
+            element={<PrivateRoute component={BlindBoxShop} />} 
+          />
           
           {/* 管理员路由 */}
-            <Route 
-              path="/admin" 
-              element={<AdminRoute component={Admin} />} 
-            />
           <Route 
-              path="/errors" 
-              element={<AdminRoute component={ErrorMonitoringDashboard} />} 
-            />
+            path="/admin" 
+            element={<AdminRoute component={Admin} />} 
+          />
           <Route 
-              path="/admin-analytics" 
-              element={<AdminRoute component={AdminAnalytics} />} 
-            />
+            path="/errors" 
+            element={<AdminRoute component={ErrorMonitoringDashboard} />} 
+          />
+          <Route 
+            path="/admin-analytics" 
+            element={<AdminRoute component={AdminAnalytics} />} 
+          />
         </Route>
       </Routes>
     </Suspense>
