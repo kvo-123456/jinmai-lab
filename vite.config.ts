@@ -10,7 +10,7 @@ function getPlugins() {
     tsconfigPaths(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: [], // 移除不存在的资源引用
       manifest: {
         name: '津脉智坊 - 津门老字号共创平台',
         short_name: '津脉智坊',
@@ -19,20 +19,7 @@ function getPlugins() {
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
+        icons: [] // 移除不存在的图标引用
       },
       workbox: {
         runtimeCaching: [
@@ -43,28 +30,6 @@ function getPlugins() {
               cacheName: 'font-awesome-cache',
               expiration: {
                 maxEntries: 1,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              }
-            }
-          },
-          {
-            urlPattern: /^https?:\/\/.+\.(png|jpg|jpeg|svg|gif)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
-              }
-            }
-          },
-          {
-            urlPattern: /^https?:\/\/.+\.(woff|woff2|ttf|eot)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'fonts-cache',
-              expiration: {
-                maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               }
             }
