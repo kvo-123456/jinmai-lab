@@ -2,10 +2,6 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/**/*.ts",
-      "use": "@vercel/node"
-    },
-    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
@@ -14,44 +10,6 @@
       }
     }
   ],
-  "functions": {
-    "api/auth/login.ts": {
-      "maxDuration": 10
-    },
-    "api/auth/me.ts": {
-      "maxDuration": 10
-    },
-    "api/auth/register.ts": {
-      "maxDuration": 10
-    },
-    "api/categories/[id].ts": {
-      "maxDuration": 10
-    },
-    "api/categories/index.ts": {
-      "maxDuration": 10
-    },
-    "api/comments/[id].ts": {
-      "maxDuration": 10
-    },
-    "api/comments/index.ts": {
-      "maxDuration": 10
-    },
-    "api/likes/index.ts": {
-      "maxDuration": 10
-    },
-    "api/posts/[id].ts": {
-      "maxDuration": 10
-    },
-    "api/posts/index.ts": {
-      "maxDuration": 10
-    },
-    "api/tags/[id].ts": {
-      "maxDuration": 10
-    },
-    "api/tags/index.ts": {
-      "maxDuration": 10
-    }
-  },
   "rewrites": [
     {
       "source": "/assets/(.*)",
