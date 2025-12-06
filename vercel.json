@@ -41,6 +41,10 @@
       "destination": "/registerSW.js"
     },
     {
+      "source": "/api/proxy/trae-api/(.*)",
+      "destination": "https://trae-api-sg.mchost.guru/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
