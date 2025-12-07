@@ -404,6 +404,7 @@ class ImageService {
   
   // 生成响应式图片URL - 智能优化版
   public getResponsiveUrl(url: string, size: keyof typeof RESPONSIVE_SIZES = 'md', quality?: number): string {
+    // 处理包含 trae-api-sg.mchost.guru 的URL
     if (url.includes('trae-api-sg.mchost.guru')) {
       try {
         // 使用本地代理替换直接调用，解决CORS问题
@@ -438,18 +439,45 @@ class ImageService {
         urlObj.searchParams.set('quality', adjustedQuality.toString());
         urlObj.searchParams.set('width', adjustedWidth.toString());
         
-        // 暂时移除WebP和AVIF格式转换，避免API不支持导致图片加载失败
-        // 等待API支持后再启用这些优化
-        // const supportedFormats = this.detectSupportedFormats();
-        // if (!urlObj.searchParams.has('format')) {
-        //   if (this.config.enableAVIF && supportedFormats.avif) {
-        //     urlObj.searchParams.set('format', 'avif');
-        //   } else if (this.config.enableWebP && supportedFormats.webp) {
-        //     urlObj.searchParams.set('format', 'webp');
-        //   }
-        // }
-        
         return urlObj.toString();
+      } catch {
+        return url;
+      }
+    }
+    // 处理直接以 /api/proxy/trae-api/ 开头的URL
+    else if (url.startsWith('/api/proxy/trae-api/')) {
+      try {
+        const urlObj = new URL(url, window.location.origin);
+        let responsiveConfig = RESPONSIVE_SIZES[size];
+        
+        // 智能调整：根据设备性能和网络条件调整图片质量和尺寸
+        let adjustedQuality = quality || responsiveConfig.quality;
+        let adjustedWidth = responsiveConfig.width;
+        
+        // 基于网络条件调整质量和尺寸
+        if (this.networkCondition === 'slow') {
+          adjustedQuality = Math.max(50, adjustedQuality - 20);
+          adjustedWidth = Math.floor(adjustedWidth * 0.7);
+        } else if (this.networkCondition === 'medium') {
+          adjustedQuality = Math.max(60, adjustedQuality - 10);
+          adjustedWidth = Math.floor(adjustedWidth * 0.9);
+        }
+        
+        // 基于设备性能调整尺寸
+        if (this.devicePerformance === 'low') {
+          adjustedWidth = Math.floor(adjustedWidth * 0.8);
+        }
+        
+        // 基于设备像素比调整尺寸
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        if (devicePixelRatio > 1.5) {
+          adjustedWidth = Math.floor(adjustedWidth * devicePixelRatio * 0.8);
+        }
+        
+        urlObj.searchParams.set('quality', adjustedQuality.toString());
+        urlObj.searchParams.set('width', adjustedWidth.toString());
+        
+        return urlObj.pathname + urlObj.search;
       } catch {
         return url;
       }
@@ -459,6 +487,7 @@ class ImageService {
 
   // 生成低质量占位图URL - 优化版
   public getLowQualityUrl(url: string): string {
+    // 处理包含 trae-api-sg.mchost.guru 的URL
     if (url.includes('trae-api-sg.mchost.guru')) {
       try {
         // 使用本地代理替换直接调用，解决CORS问题
@@ -490,6 +519,40 @@ class ImageService {
         // }
         
         return urlObj.toString();
+      } catch {
+        return url;
+      }
+    }
+    // 处理直接以 /api/proxy/trae-api/ 开头的URL
+    else if (url.startsWith('/api/proxy/trae-api/')) {
+      try {
+        const urlObj = new URL(url, window.location.origin);
+        
+        // 智能调整：根据设备性能和网络条件调整占位图质量和尺寸
+        let placeholderQuality = 20;
+        let placeholderWidth = 200;
+        
+        // 慢网络下使用更小的占位图
+        if (this.networkCondition === 'slow') {
+          placeholderQuality = 10;
+          placeholderWidth = 100;
+        }
+        
+        urlObj.searchParams.set('quality', placeholderQuality.toString());
+        urlObj.searchParams.set('width', placeholderWidth.toString());
+        
+        // 暂时移除WebP和AVIF格式转换，避免API不支持导致图片加载失败
+        // 等待API支持后再启用这些优化
+        // const supportedFormats = this.detectSupportedFormats();
+        // if (!urlObj.searchParams.has('format')) {
+        //   if (this.config.enableAVIF && supportedFormats.avif) {
+        //     urlObj.searchParams.set('format', 'avif');
+        //   } else if (this.config.enableWebP && supportedFormats.webp) {
+        //     urlObj.searchParams.set('format', 'webp');
+        //   }
+        // }
+        
+        return urlObj.pathname + urlObj.search;
       } catch {
         return url;
       }
