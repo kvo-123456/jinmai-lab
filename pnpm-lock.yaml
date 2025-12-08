@@ -98,6 +98,9 @@ importers:
       zod:
         specifier: ^3.24.2
         version: 3.24.4
+      zustand:
+        specifier: ^5.0.9
+        version: 5.0.9(@types/react@18.3.21)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.4.2
