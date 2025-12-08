@@ -7,71 +7,72 @@ import { visualizer } from 'rollup-plugin-visualizer';
 function getPlugins() {
   const plugins = [
     react(), 
-    tsconfigPaths(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.svg'],
-      manifest: {
-        name: '津脉智坊 - 津门老字号共创平台',
-        short_name: '津脉智坊',
-        description: '津门老字号共创平台，传承与创新的桥梁',
-        theme_color: '#2563eb',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'portrait',
-        icons: [
-          {
-            src: 'icons/icon-192x192.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml'
-          },
-          {
-            src: 'icons/icon-512x512.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml'
-          }
-        ]
-      },
-      workbox: {
-        // 增加最大缓存文件大小限制到6MB，解决vendor-other.js文件超过2MB无法缓存的问题
-        maximumFileSizeToCacheInBytes: 6000000,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/font-awesome\/.*$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'font-awesome-cache',
-              expiration: {
-                maxEntries: 1,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              }
-            }
-          },
-          {
-            urlPattern: /^https?:\/\/.*\.(png|jpg|jpeg|svg|gif)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'image-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-              }
-            }
-          },
-          {
-            urlPattern: /^https?:\/\/.*\.(js|css)$/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'static-resources',
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
-              }
-            }
-          }
-        ]
-      }
-    })
+    tsconfigPaths()
+    // 暂时禁用PWA插件，排查网站空白问题
+    // VitePWA({
+    //   registerType: 'autoUpdate',
+    //   includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.svg'],
+    //   manifest: {
+    //     name: '津脉智坊 - 津门老字号共创平台',
+    //     short_name: '津脉智坊',
+    //     description: '津门老字号共创平台，传承与创新的桥梁',
+    //     theme_color: '#2563eb',
+    //     background_color: '#ffffff',
+    //     display: 'standalone',
+    //     orientation: 'portrait',
+    //     icons: [
+    //       {
+    //         src: 'icons/icon-192x192.svg',
+    //         sizes: '192x192',
+    //         type: 'image/svg+xml'
+    //       },
+    //       {
+    //         src: 'icons/icon-512x512.svg',
+    //         sizes: '512x512',
+    //         type: 'image/svg+xml'
+    //       }
+    //     ]
+    //   },
+    //   workbox: {
+    //     // 增加最大缓存文件大小限制到6MB，解决vendor-other.js文件超过2MB无法缓存的问题
+    //     maximumFileSizeToCacheInBytes: 6000000,
+    //     runtimeCaching: [
+    //       {
+    //         urlPattern: /^https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/font-awesome\/.*$/,
+    //         handler: 'CacheFirst',
+    //         options: {
+    //           cacheName: 'font-awesome-cache',
+    //           expiration: {
+    //             maxEntries: 1,
+    //             maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+    //           }
+    //         }
+    //       },
+    //       {
+    //         urlPattern: /^https?:\/\/.*\.(png|jpg|jpeg|svg|gif)$/,
+    //         handler: 'CacheFirst',
+    //         options: {
+    //           cacheName: 'image-cache',
+    //           expiration: {
+    //             maxEntries: 50,
+    //             maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+    //           }
+    //         }
+    //       },
+    //       {
+    //         urlPattern: /^https?:\/\/.*\.(js|css)$/,
+    //         handler: 'StaleWhileRevalidate',
+    //         options: {
+    //           cacheName: 'static-resources',
+    //           expiration: {
+    //             maxEntries: 30,
+    //             maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+    //           }
+    //         }
+    //       }
+    //     ]
+    //   }
+    // })
   ];
   return plugins;
 }
