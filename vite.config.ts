@@ -325,7 +325,7 @@ export default defineConfig({
   },
   // 优化开发体验
   optimizeDeps: {
-    // 预构建依赖
+    // 预构建依赖 - 添加react和react-dom确保正确处理
     include: [
       'react', 'react-dom', 'react-router-dom', 
       'clsx', 'tailwind-merge', 
