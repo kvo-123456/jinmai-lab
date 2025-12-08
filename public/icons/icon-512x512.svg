@@ -1,21 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192" fill="none">
-  <!-- 深蓝色背景 -->
-  <rect width="192" height="192" rx="32" fill="#1E293B"/>
+  <!-- 蓝色渐变背景 -->
+  <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#2563eb" />
+    <stop offset="100%" stop-color="#1e40af" />
+  </linearGradient>
+  <rect width="192" height="192" rx="32" fill="url(#bgGradient)"/>
   
-  <!-- 居中的JZ图标 -->
-  <g transform="translate(48 48)">
-    <!-- 左侧J字母 - 居中设计 -->
-    <path d="M36 32V88H60V32H36Z" fill="white"/>
-    <path d="M36 88V104H60V88H36Z" fill="white"/>
+  <!-- 简约现代的JZ图标 - 居中布局 -->
+  <g transform="translate(36 36)">
+    <!-- 顶部白色水平线 -->
+    <path d="M24 24L104 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
     
-    <!-- 右侧Z字母 - 居中设计 -->
-    <path d="M68 32L92 32L68 56L92 80H68V56H52V80H36V32H52V56H68V32Z" fill="white"/>
+    <!-- 左侧白色矩形 -->
+    <rect x="32" y="32" width="24" height="72" fill="white"/>
     
-    <!-- 环绕的半圆 - 居中设计 -->
-    <path d="M68 40L92 40L116 48L92 56L68 56V40Z" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M68 56L92 56L116 64L92 72L68 72V56Z" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- 右侧蓝色圆环 -->
+    <circle cx="64" cy="64" r="36" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
     
-    <!-- 底部弧线 - 居中设计 -->
-    <path d="M36 104L60 112L92 112L116 104" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- 右侧白色几何图形 -->
+    <path d="M56 32L88 32L72 56L88 80L56 80V32Z" fill="white"/>
+    
+    <!-- 底部白色水平线 -->
+    <path d="M24 104L104 104" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
   </g>
 </svg>
