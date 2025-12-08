@@ -24,9 +24,9 @@ import { initPerformanceMonitor } from './utils/performanceMonitor';
 // 初始化性能监控
 initPerformanceMonitor();
 
-// 暂时禁用Service Worker注册，因为PWA插件已禁用
-// import { registerServiceWorker } from './utils/serviceWorker';
-// registerServiceWorker();
+// 启用Service Worker注册，PWA插件已重新启用
+import { registerServiceWorker } from './utils/serviceWorker';
+registerServiceWorker();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

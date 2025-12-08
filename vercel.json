@@ -23,8 +23,22 @@
       "source": "/entries/(.*)",
       "destination": "/entries/$1"
     },
-
-
+    {
+      "source": "/manifest.webmanifest",
+      "destination": "/manifest.webmanifest"
+    },
+    {
+      "source": "/sw.js",
+      "destination": "/sw.js"
+    },
+    {
+      "source": "/workbox-(.*)",
+      "destination": "/workbox-$1"
+    },
+    {
+      "source": "/registerSW.js",
+      "destination": "/registerSW.js"
+    },
     {
       "source": "/api/proxy/trae-api/(.*)",
       "destination": "https://trae-api-sg.mchost.guru/$1"
