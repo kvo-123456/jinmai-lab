@@ -33,6 +33,8 @@ function getPlugins() {
         ]
       },
       workbox: {
+        // 增加最大缓存文件大小限制到6MB，解决vendor-other.js文件超过2MB无法缓存的问题
+        maximumFileSizeToCacheInBytes: 6000000,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/font-awesome\/.*$/,
