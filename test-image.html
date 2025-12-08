@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .image-container {
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        .status {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>图片显示测试</h1>
+    
+    <div class="test-section">
+        <h2>1. 直接使用CDN URL</h2>
+        <div class="image-container">
+            <img 
+                src="https://lf-cdn.trae.ai/obj/trae-ai-image-sg/page_image/f54dc67d2b1dd8c9235eefb32ef97625.jpeg" 
+                alt="测试图片1" 
+                onload="this.nextElementSibling.textContent = '加载成功'; this.nextElementSibling.className = 'status success'"
+                onerror="this.nextElementSibling.textContent = '加载失败'; this.nextElementSibling.className = 'status error'"
+            >
+            <div class="status">加载中...</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 使用API URL（会重定向）</h2>
+        <div class="image-container">
+            <img 
+                src="https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Modern%20Chinese%20style%20fashion%20design" 
+                alt="测试图片2" 
+                onload="this.nextElementSibling.textContent = '加载成功'; this.nextElementSibling.className = 'status success'"
+                onerror="this.nextElementSibling.textContent = '加载失败'; this.nextElementSibling.className = 'status error'"
+            >
+            <div class="status">加载中...</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 另一个API URL</h2>
+        <div class="image-container">
+            <img 
+                src="https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=User%20avatar%20xiaoli" 
+                alt="测试图片3" 
+                onload="this.nextElementSibling.textContent = '加载成功'; this.nextElementSibling.className = 'status success'"
+                onerror="this.nextElementSibling.textContent = '加载失败'; this.nextElementSibling.className = 'status error'"
+            >
+            <div class="status">加载中...</div>
+        </div>
+    </div>
+</body>
+</html>

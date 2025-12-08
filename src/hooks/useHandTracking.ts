@@ -70,17 +70,79 @@ const useHandTracking = (config: HandTrackingConfig = {}) => {
       // 临时拦截console.log，过滤WebAssembly内存地址日志
       const originalConsoleLog = console.log;
       console.log = function(...args) {
-        // 过滤掉看起来像内存地址的日志：[0x...] [0x...] [0x...] ...
-        // 检查是否是包含多个0x地址的数组日志
-        const isMemoryAddressLog = args.length > 0 && 
-          Array.isArray(args[0]) && 
-          args[0].every(item => typeof item === 'string' && item.match(/^0x[0-9a-f]+$/i));
-        // 也检查单个字符串形式的内存地址数组
-        const isStringMemoryLog = args.length > 0 && 
-          typeof args[0] === 'string' && 
-          args[0].match(/\[0x[0-9a-f]+(\s+0x[0-9a-f]+)+\]/i);
+        // 过滤掉看起来像内存地址的日志
+        let isMemoryAddressLog = false;
         
-        if (!isMemoryAddressLog && !isStringMemoryLog) {
+        // 将所有参数转换为字符串，便于统一检查
+        const allArgsString = args.map(arg => String(arg)).join(' ');
+        
+        // 1. 检查是否是包含多个内存地址的数组字符串，如：[0xc00b795760 0xc00b795790 ...]
+        const bracketedMemoryAddressPattern = /^\[(\s*0x[0-9a-f]{8,}\s*){5,}\]$/i;
+        
+        // 2. 检查是否是纯内存地址格式，如：0xc00b795760
+        const pureMemoryAddressPattern = /^0x[0-9a-f]{8,}$/i;
+        
+        // 3. 检查是否是多个独立的内存地址参数
+        const multipleMemoryAddresses = args.length >= 5 && args.every(arg => {
+          const argStr = String(arg);
+          return pureMemoryAddressPattern.test(argStr);
+        });
+        
+        // 检查每个参数
+        for (const arg of args) {
+          const argStr = String(arg);
+          
+          // 检查字符串形式的内存地址数组
+          if (bracketedMemoryAddressPattern.test(argStr)) {
+            isMemoryAddressLog = true;
+            break;
+          }
+          
+          // 检查纯内存地址字符串
+          if (pureMemoryAddressPattern.test(argStr)) {
+            isMemoryAddressLog = true;
+            break;
+          }
+          
+          // 检查实际的数组参数，可能包含多个内存地址
+          if (Array.isArray(arg)) {
+            // 如果数组长度大于等于5，且所有元素都是内存地址，过滤
+            if (arg.length >= 5) {
+              const allAreMemoryAddresses = arg.every(item => {
+                const itemStr = String(item);
+                return pureMemoryAddressPattern.test(itemStr) || 
+                       (typeof item === 'number' && item > 0 && item.toString(16).length >= 8);
+              });
+              if (allAreMemoryAddresses) {
+                isMemoryAddressLog = true;
+                break;
+              }
+            }
+          }
+          
+          // 检查对象中是否包含大量内存地址
+          if (typeof arg === 'object' && arg !== null) {
+            const objStr = JSON.stringify(arg);
+            const memoryAddressCount = (objStr.match(/0x[0-9a-f]{8,}/gi) || []).length;
+            if (memoryAddressCount >= 5) {
+              isMemoryAddressLog = true;
+              break;
+            }
+          }
+        }
+        
+        // 检查是否是多个独立的内存地址参数
+        if (multipleMemoryAddresses) {
+          isMemoryAddressLog = true;
+        }
+        
+        // 检查字符串中是否包含5个以上内存地址
+        const memoryAddressCount = (allArgsString.match(/0x[0-9a-f]{8,}/gi) || []).length;
+        if (memoryAddressCount >= 5) {
+          isMemoryAddressLog = true;
+        }
+        
+        if (!isMemoryAddressLog) {
           originalConsoleLog.apply(console, args);
         }
       };

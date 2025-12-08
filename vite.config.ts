@@ -88,12 +88,45 @@ export default defineConfig({
   build: {
     // 优化构建输出
     minify: 'terser',
+    // 启用更高效的压缩算法
+    brotliSize: true,
+    // 优化 CSS 构建
+    cssMinify: true,
+    // 生成 sourcemap（生产环境可关闭）
+    sourcemap: false,
+    // 设置 chunk 大小警告阈值（单位：KB）
+    chunkSizeWarningLimit: 100,
+    // 启用资产预加载
+    preloadAssets: true,
+    // 生成构建报告
+    reportCompressedSize: true,
+    // 启用资产内联限制
+    assetsInlineLimit: 4096, // 4KB以下的资源内联
+    // 启用动态导入 polyfill
+    modulePreload: {
+      polyfill: true
+    },
+    // 启用更严格的 tree-shaking
+    ssr: false,
+    // 优化构建目标
+    target: 'es2020',
+    // 优化 terser 配置
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: process.env.NODE_ENV === 'production',
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.warn', 'console.error'],
-        passes: 2,
+        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.warn', 'console.error', 'console.debug'] : [],
+        passes: 3, // 增加压缩次数
+        // 更激进的压缩选项
+        collapse_vars: true,
+        reduce_vars: true,
+        dead_code: true,
+        conditionals: true,
+        booleans: true,
+        unused: true,
+        if_return: true,
+        join_vars: true,
+        side_effects: true,
       },
       mangle: {
         toplevel: true,
@@ -104,19 +137,28 @@ export default defineConfig({
       format: {
         comments: false,
         beautify: false,
+        // 优化输出格式
+        ecma: 2020,
+        wrap_func_args: false,
       },
     },
     // 分割代码
     rollupOptions: {
       // 外部化 Node.js 原生模块，避免打包到浏览器代码中
       external: ['better-sqlite3', 'mongodb', 'pg', '@neondatabase/serverless'],
+      // 优化输入选项
+      input: {
+        main: 'index.html',
+      },
       output: {
         // 优化资产输出
         assetFileNames: 'assets/[name]-[hash:6][extname]',
         chunkFileNames: 'chunks/[name]-[hash:6].js',
         entryFileNames: 'entries/[name]-[hash:6].js',
         // 启用代码分割
-        experimentalMinChunkSize: 8000, // 最小chunk大小8KB，更精细的分割
+        experimentalMinChunkSize: 5000, // 最小chunk大小5KB，更精细的分割
+        // 启用动态导入支持
+        dynamicImportInCjs: true,
         // 优化代码分割策略
         manualChunks(id) {
           // 优先使用手动 chunk 配置
@@ -130,14 +172,17 @@ export default defineConfig({
             'three': 'three-core',
             '@react-three/fiber': 'three-r3f',
             '@react-three/drei': 'three-drei',
+            '@react-three/xr': 'three-xr',
             'recharts': 'charts',
             'sonner': 'ui',
             'zod': 'helpers',
             'jsonwebtoken': 'helpers',
             'bcryptjs': 'helpers',
             '@mediapipe/hands': 'gesture',
+            '@mediapipe/camera_utils': 'gesture',
             '@tensorflow/tfjs-core': 'gesture',
             '@tensorflow/tfjs-backend-webgl': 'gesture',
+            '@tensorflow/tfjs': 'gesture',
           };
           
           // 精确匹配three.js相关依赖，确保正确分割
@@ -149,6 +194,9 @@ export default defineConfig({
           }
           if (id.includes('@react-three/drei')) {
             return 'three-drei';
+          }
+          if (id.includes('@react-three/xr')) {
+            return 'three-xr';
           }
           
           for (const [lib, chunkName] of Object.entries(manualChunkNames)) {
@@ -166,6 +214,12 @@ export default defineConfig({
             if (id.includes('axios') || id.includes('fetch') || id.includes('http')) {
               return 'network';
             }
+            if (id.includes('@fortawesome')) {
+              return 'icons';
+            }
+            if (id.includes('recharts')) {
+              return 'charts';
+            }
             return 'vendor-other';
           }
           
@@ -179,13 +233,11 @@ export default defineConfig({
           if (id.includes('src/components/') && id.includes('.tsx')) {
             const componentName = id.split('src/components/')[1].split('.')[0];
             // 只分割大型组件
-            if (['ARPreview', 'ThreeDPreview', 'ModelViewer'].includes(componentName)) {
+            if (['ARPreview', 'ThreeDPreview', 'ModelViewer', 'ErrorMonitoringDashboard'].includes(componentName)) {
               return `component-${componentName}`;
             }
           }
         },
-        // 启用动态导入支持
-        dynamicImportInCjs: true,
       },
       // 优化插件配置
       plugins: [
@@ -195,7 +247,7 @@ export default defineConfig({
           open: true,
           gzipSize: true,
           brotliSize: true,
-          template: 'treemap', // 可选: treemap, sunburst, network
+          template: 'sunburst', // 更直观的可视化模板
           sourcemap: false,
         }),
         // 自定义构建分析插件
@@ -266,26 +318,6 @@ export default defineConfig({
         },
       ].filter(Boolean)
     },
-    // 启用 CSS 代码分割
-    cssCodeSplit: true,
-    // 生成 sourcemap（生产环境可关闭）
-    sourcemap: false,
-    // 设置 chunk 大小警告阈值（单位：KB）
-    chunkSizeWarningLimit: 150,
-    // 启用资产预加载
-    preloadAssets: true,
-    // 优化 CSS 构建
-    cssMinify: true,
-    // 优化依赖分析
-    analyze: process.env.ANALYZE === 'true',
-    // 生成构建报告
-    reportCompressedSize: true,
-    // 启用资产内联限制
-    assetsInlineLimit: 4096, // 4KB以下的资源内联
-    // 启用动态导入 polyfill
-    modulePreload: {
-      polyfill: true
-    },
   },
   // 优化开发体验
   optimizeDeps: {
@@ -306,6 +338,13 @@ export default defineConfig({
       target: 'es2020',
       // 优化大型依赖的构建
       treeShaking: true,
+      // 优化 esbuild 配置
+      minify: true,
+      minifySyntax: true,
+      minifyIdentifiers: true,
+      minifyWhitespace: true,
+      // 启用更严格的 tree-shaking
+      pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.warn', 'console.error'] : [],
     },
   },
   // 开发服务器配置

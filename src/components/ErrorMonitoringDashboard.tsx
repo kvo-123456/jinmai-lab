@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import errorService, { ERROR_MESSAGES } from '../services/errorService';
+import errorService, { ERROR_MESSAGES, ErrorInfo } from '../services/errorService';
 
 // 图表颜色
 const CHART_COLORS = ['#f87171', '#60a5fa', '#34d399', '#f59e0b', '#a78bfa'];
@@ -17,6 +17,8 @@ const ErrorMonitoringDashboard: React.FC<ErrorMonitoringDashboardProps> = ({ ref
   const [errorStats, setErrorStats] = useState(errorService.getErrorStats(recentCount));
   const [refreshing, setRefreshing] = useState(false);
   const [selectedErrorType, setSelectedErrorType] = useState<string | null>(null);
+  const [selectedError, setSelectedError] = useState<ErrorInfo | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   
   // 定期刷新错误统计
   useEffect(() => {
@@ -245,7 +247,10 @@ const ErrorMonitoringDashboard: React.FC<ErrorMonitoringDashboardProps> = ({ ref
                 <tr 
                   key={error.errorId} 
                   className={`hover:bg-gray-600/50 cursor-pointer ${selectedErrorType === error.errorType ? 'bg-blue-900/20' : ''}`}
-                  onClick={() => setSelectedErrorType(error.errorType)}
+                  onClick={() => {
+                    setSelectedError(error);
+                    setIsDetailOpen(true);
+                  }}
                 >
                   <td className="px-4 py-3 text-sm">{error.errorId.substring(0, 8)}...</td>
                   <td className="px-4 py-3 text-sm">
@@ -275,6 +280,115 @@ const ErrorMonitoringDashboard: React.FC<ErrorMonitoringDashboardProps> = ({ ref
           </div>
         )}
       </motion.div>
+      
+      {/* 错误详情模态框 */}
+      {isDetailOpen && selectedError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setIsDetailOpen(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className={`w-full max-w-4xl rounded-2xl overflow-y-auto max-h-[90vh] ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-2xl`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 模态框头部 */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-750">
+              <h4 className="text-xl font-bold">错误详情</h4>
+              <button
+                onClick={() => setIsDetailOpen(false)}
+                className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+              >
+                <i className="fas fa-times text-gray-400 hover:text-white"></i>
+              </button>
+            </div>
+            
+            {/* 模态框内容 */}
+            <div className="p-6 space-y-6">
+              {/* 错误基本信息 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">错误ID:</span>
+                    <span className="text-sm font-mono">{selectedError.errorId}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">错误类型:</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      selectedError.errorType.includes('NETWORK') ? 'bg-red-100 text-red-600' :
+                      selectedError.errorType.includes('PERMISSION') ? 'bg-yellow-100 text-yellow-600' :
+                      selectedError.errorType.includes('MODEL') ? 'bg-blue-100 text-blue-600' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {selectedError.errorType}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">发生时间:</span>
+                    <span className="text-sm">{new Date(selectedError.timestamp).toLocaleString()}</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">URL:</span>
+                    <span className="text-sm truncate max-w-xs">{selectedError.url}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">浏览器:</span>
+                    <span className="text-sm">{selectedError.deviceInfo.browser} v{selectedError.deviceInfo.browserVersion}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">操作系统:</span>
+                    <span className="text-sm">{selectedError.deviceInfo.os}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">设备类型:</span>
+                    <span className="text-sm">{selectedError.deviceInfo.device}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 错误消息 */}
+              <div>
+                <h5 className="text-sm font-medium text-gray-500 mb-2">错误消息:</h5>
+                <div className="p-3 rounded-lg bg-gray-700 text-sm">{selectedError.message}</div>
+              </div>
+              
+              {/* 堆栈跟踪 */}
+              {selectedError.stackTrace && (
+                <div>
+                  <h5 className="text-sm font-medium text-gray-500 mb-2">堆栈跟踪:</h5>
+                  <div className="p-3 rounded-lg bg-gray-900 font-mono text-xs text-gray-300 overflow-x-auto max-h-48">
+                    <pre>{selectedError.stackTrace}</pre>
+                  </div>
+                </div>
+              )}
+              
+              {/* 用户代理 */}
+              <div>
+                <h5 className="text-sm font-medium text-gray-500 mb-2">用户代理:</h5>
+                <div className="p-3 rounded-lg bg-gray-700 text-xs overflow-x-auto">{selectedError.userAgent}</div>
+              </div>
+              
+              {/* 上下文信息 */}
+              {selectedError.context && Object.keys(selectedError.context).length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium text-gray-500 mb-2">上下文信息:</h5>
+                  <div className="p-3 rounded-lg bg-gray-700 text-sm font-mono overflow-x-auto">
+                    <pre>{JSON.stringify(selectedError.context, null, 2)}</pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };

@@ -41,21 +41,21 @@ const RESPONSIVE_SIZES = {
 };
 
 // 默认配置 - 增强版
-  const DEFAULT_CONFIG: ImageServiceConfig = {
-    maxCacheSize: 500, // 显著增加缓存大小，提高缓存命中率
-    cacheTTL: 48 * 60 * 60 * 1000, // 延长缓存时间到48小时
-    maxRetries: 2, // 减少重试次数，避免长时间等待
-    retryDelay: (attempt: number) => 300 * Math.pow(2, attempt), // 更短的重试延迟
-    preloadDistance: 400, // 进一步增加预加载距离，提前加载图片
-    enableWebP: true, // 启用WebP格式
-    enableAVIF: true, // 启用AVIF格式，提供更高的压缩率
-    enableResponsiveLoading: true, // 启用响应式加载
-    enablePriorityLoading: true, // 启用优先级加载
-    enablePredictiveLoading: true, // 启用预测性加载
-    enableImageCompression: true, // 启用图片压缩
-    compressionQuality: 85, // 默认压缩质量
-    cacheStrategy: 'LRU', // 缓存替换策略：LRU, LFU, MRU
-  };
+const DEFAULT_CONFIG: ImageServiceConfig = {
+  maxCacheSize: 500, // 显著增加缓存大小，提高缓存命中率
+  cacheTTL: 48 * 60 * 60 * 1000, // 延长缓存时间到48小时
+  maxRetries: 2,
+  retryDelay: (attempt: number) => 300 * Math.pow(2, attempt), // 更短的重试延迟
+  preloadDistance: 400, // 进一步增加预加载距离，提前加载图片
+  enableWebP: true, // 是否启用WebP格式
+  enableAVIF: true, // 是否启用AVIF格式
+  enableResponsiveLoading: true, // 是否启用响应式加载
+  enablePriorityLoading: true, // 是否启用优先级加载
+  enablePredictiveLoading: true, // 是否启用预测性加载
+  enableImageCompression: true, // 是否启用图片压缩
+  compressionQuality: 85, // 默认压缩质量
+  cacheStrategy: 'LRU', // 缓存替换策略：LRU, LFU, MRU
+};
 
 // 图片服务类 - 增强版
 class ImageService {
@@ -284,6 +284,7 @@ class ImageService {
   // 预测下一个可能访问的页面
   private predictNextPage(currentPath: string): string | null {
     // 简单的预测策略：基于页面访问历史中当前页面后面出现最多的页面
+    // 实际项目中可以使用更复杂的机器学习算法
     const nextPages: Record<string, number> = {};
     
     for (let i = 0; i < this.pageTransitionHistory.length - 1; i++) {
@@ -404,81 +405,19 @@ class ImageService {
   
   // 生成响应式图片URL - 智能优化版
   public getResponsiveUrl(url: string, size: keyof typeof RESPONSIVE_SIZES = 'md', quality?: number): string {
-    // 处理包含 trae-api-sg.mchost.guru 的URL
-    if (url.includes('trae-api-sg.mchost.guru')) {
+    // 处理图片生成API的URL，检查代理路径或原始域名
+    if (url.includes('/api/proxy/trae-api') || url.includes('trae-api-sg.mchost.guru')) {
       try {
-        // 使用本地代理替换直接调用，解决CORS问题
-        let proxyUrl = url.replace('https://trae-api-sg.mchost.guru', '/api/proxy/trae-api');
-        const urlObj = new URL(proxyUrl);
-        let responsiveConfig = RESPONSIVE_SIZES[size];
+        console.log('处理图片生成API URL:', url.substring(0, 100) + '...');
+        // 确保URL是完整的
+        const urlObj = url.startsWith('http') ? new URL(url) : new URL(url, window.location.origin);
         
-        // 智能调整：根据设备性能和网络条件调整图片质量和尺寸
-        let adjustedQuality = quality || responsiveConfig.quality;
-        let adjustedWidth = responsiveConfig.width;
-        
-        // 基于网络条件调整质量和尺寸
-        if (this.networkCondition === 'slow') {
-          adjustedQuality = Math.max(50, adjustedQuality - 20);
-          adjustedWidth = Math.floor(adjustedWidth * 0.7);
-        } else if (this.networkCondition === 'medium') {
-          adjustedQuality = Math.max(60, adjustedQuality - 10);
-          adjustedWidth = Math.floor(adjustedWidth * 0.9);
-        }
-        
-        // 基于设备性能调整尺寸
-        if (this.devicePerformance === 'low') {
-          adjustedWidth = Math.floor(adjustedWidth * 0.8);
-        }
-        
-        // 基于设备像素比调整尺寸
-        const devicePixelRatio = window.devicePixelRatio || 1;
-        if (devicePixelRatio > 1.5) {
-          adjustedWidth = Math.floor(adjustedWidth * devicePixelRatio * 0.8);
-        }
-        
-        urlObj.searchParams.set('quality', adjustedQuality.toString());
-        urlObj.searchParams.set('width', adjustedWidth.toString());
-        
+        // 注意：AI生成API返回302重定向，不要添加额外参数，否则可能导致重定向失败
+        // 直接返回原始URL，让浏览器处理重定向
+        console.log('AI生成API URL，直接返回原始URL:', urlObj.toString());
         return urlObj.toString();
-      } catch {
-        return url;
-      }
-    }
-    // 处理直接以 /api/proxy/trae-api/ 开头的URL
-    else if (url.startsWith('/api/proxy/trae-api/')) {
-      try {
-        const urlObj = new URL(url, window.location.origin);
-        let responsiveConfig = RESPONSIVE_SIZES[size];
-        
-        // 智能调整：根据设备性能和网络条件调整图片质量和尺寸
-        let adjustedQuality = quality || responsiveConfig.quality;
-        let adjustedWidth = responsiveConfig.width;
-        
-        // 基于网络条件调整质量和尺寸
-        if (this.networkCondition === 'slow') {
-          adjustedQuality = Math.max(50, adjustedQuality - 20);
-          adjustedWidth = Math.floor(adjustedWidth * 0.7);
-        } else if (this.networkCondition === 'medium') {
-          adjustedQuality = Math.max(60, adjustedQuality - 10);
-          adjustedWidth = Math.floor(adjustedWidth * 0.9);
-        }
-        
-        // 基于设备性能调整尺寸
-        if (this.devicePerformance === 'low') {
-          adjustedWidth = Math.floor(adjustedWidth * 0.8);
-        }
-        
-        // 基于设备像素比调整尺寸
-        const devicePixelRatio = window.devicePixelRatio || 1;
-        if (devicePixelRatio > 1.5) {
-          adjustedWidth = Math.floor(adjustedWidth * devicePixelRatio * 0.8);
-        }
-        
-        urlObj.searchParams.set('quality', adjustedQuality.toString());
-        urlObj.searchParams.set('width', adjustedWidth.toString());
-        
-        return urlObj.pathname + urlObj.search;
-      } catch {
+      } catch (error) {
+        console.error('Error processing image URL:', error);
         return url;
       }
     }
@@ -487,91 +426,41 @@ class ImageService {
 
   // 生成低质量占位图URL - 优化版
   public getLowQualityUrl(url: string): string {
-    // 处理包含 trae-api-sg.mchost.guru 的URL
-    if (url.includes('trae-api-sg.mchost.guru')) {
+    // 处理图片生成API的URL，检查代理路径或原始域名
+    if (url.includes('/api/proxy/trae-api') || url.includes('trae-api-sg.mchost.guru')) {
       try {
-        // 使用本地代理替换直接调用，解决CORS问题
-        let proxyUrl = url.replace('https://trae-api-sg.mchost.guru', '/api/proxy/trae-api');
-        const urlObj = new URL(proxyUrl);
+        console.log('处理低质量占位图URL:', url.substring(0, 100) + '...');
+        // 确保URL是完整的
+        const urlObj = url.startsWith('http') ? new URL(url) : new URL(url, window.location.origin);
         
-        // 智能调整：根据设备性能和网络条件调整占位图质量和尺寸
-        let placeholderQuality = 20;
-        let placeholderWidth = 200;
-        
-        // 慢网络下使用更小的占位图
-        if (this.networkCondition === 'slow') {
-          placeholderQuality = 10;
-          placeholderWidth = 100;
-        }
-        
-        urlObj.searchParams.set('quality', placeholderQuality.toString());
-        urlObj.searchParams.set('width', placeholderWidth.toString());
-        
-        // 暂时移除WebP和AVIF格式转换，避免API不支持导致图片加载失败
-        // 等待API支持后再启用这些优化
-        // const supportedFormats = this.detectSupportedFormats();
-        // if (!urlObj.searchParams.has('format')) {
-        //   if (this.config.enableAVIF && supportedFormats.avif) {
-        //     urlObj.searchParams.set('format', 'avif');
-        //   } else if (this.config.enableWebP && supportedFormats.webp) {
-        //     urlObj.searchParams.set('format', 'webp');
-        //   }
-        // }
-        
+        // 注意：AI生成API返回302重定向，不要添加额外参数，否则可能导致重定向失败
+        // 直接返回原始URL
+        console.log('AI生成API URL，直接返回原始URL作为低质量URL:', urlObj.toString());
         return urlObj.toString();
-      } catch {
-        return url;
-      }
-    }
-    // 处理直接以 /api/proxy/trae-api/ 开头的URL
-    else if (url.startsWith('/api/proxy/trae-api/')) {
-      try {
-        const urlObj = new URL(url, window.location.origin);
-        
-        // 智能调整：根据设备性能和网络条件调整占位图质量和尺寸
-        let placeholderQuality = 20;
-        let placeholderWidth = 200;
-        
-        // 慢网络下使用更小的占位图
-        if (this.networkCondition === 'slow') {
-          placeholderQuality = 10;
-          placeholderWidth = 100;
-        }
-        
-        urlObj.searchParams.set('quality', placeholderQuality.toString());
-        urlObj.searchParams.set('width', placeholderWidth.toString());
-        
-        // 暂时移除WebP和AVIF格式转换，避免API不支持导致图片加载失败
-        // 等待API支持后再启用这些优化
-        // const supportedFormats = this.detectSupportedFormats();
-        // if (!urlObj.searchParams.has('format')) {
-        //   if (this.config.enableAVIF && supportedFormats.avif) {
-        //     urlObj.searchParams.set('format', 'avif');
-        //   } else if (this.config.enableWebP && supportedFormats.webp) {
-        //     urlObj.searchParams.set('format', 'webp');
-        //   }
-        // }
-        
-        return urlObj.pathname + urlObj.search;
-      } catch {
+      } catch (error) {
+        console.error('Error processing low quality image URL:', error);
         return url;
       }
     }
     return url;
   }
 
-  // 生成备用图片URL
+  // 生成备用图片URL - 根据alt文本生成不同的备用图片
   public getFallbackUrl(alt: string): string {
-    const prompt = encodeURIComponent(`Beautiful ${alt} design, colorful, high quality`);
-    // 使用本地代理替换直接调用，解决CORS问题
-    let url = `/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=${prompt}&image_size=1024x1024`;
+    // 为不同的alt文本提供不同的备用图片
+    const fallbackImages = [
+      `https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=600&h=400&fit=crop`,
+      `https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=600&h=400&fit=crop`,
+      `https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&h=400&fit=crop`,
+      `https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=400&fit=crop`,
+      `https://images.unsplash.com/photo-1536375370228-1c5044945458?w=600&h=400&fit=crop`
+    ];
     
-    // 暂时移除WebP格式转换，避免API不支持导致图片加载失败
-    // if (this.config.enableWebP) {
-    //   url += '&format=webp';
-    // }
+    // 根据alt文本的哈希值选择不同的备用图片
+    const hash = alt.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const index = hash % fallbackImages.length;
     
-    return url;
+    return fallbackImages[index];
   }
 
   // 检查URL是否为有效图片URL
@@ -606,14 +495,20 @@ class ImageService {
   }
   
   // 实际加载预加载图片
-  private loadPreloadImage(url: string): void {
+  private loadPreloadImage(url: string, retries: number = 0): void {
     this.currentPreloadCount++;
     
     const img = new Image();
     const startTime = Date.now();
     
-    img.src = url;
+    // 设置图片加载超时
+    const timeoutId = setTimeout(() => {
+      img.src = ''; // 中止图片加载
+      this.handlePreloadError(url, retries);
+    }, 5000);
+    
     img.onload = () => {
+      clearTimeout(timeoutId);
       const loadTime = Date.now() - startTime;
       this.updateImageStatus(url, true, img.naturalWidth * img.naturalHeight);
       this.stats.totalLoadTime += loadTime;
@@ -622,10 +517,26 @@ class ImageService {
       this.processPreloadQueue(); // 继续处理队列中的下一个预加载任务
     };
     img.onerror = () => {
+      clearTimeout(timeoutId);
+      this.handlePreloadError(url, retries);
+    };
+    
+    img.src = url;
+  }
+  
+  // 处理预加载图片加载失败
+  private handlePreloadError(url: string, retries: number): void {
+    if (retries < this.config.maxRetries) {
+      // 重试加载图片
+      setTimeout(() => {
+        this.loadPreloadImage(url, retries + 1);
+      }, this.config.retryDelay(retries));
+    } else {
+      // 达到最大重试次数，标记为失败
       this.updateImageStatus(url, false);
       this.currentPreloadCount--;
       this.processPreloadQueue(); // 继续处理队列中的下一个预加载任务
-    };
+    }
   }
 
   // 批量预加载图片

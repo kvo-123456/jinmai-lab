@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { TianjinAvatar } from './TianjinStyleComponents';
 
 // 类型定义
 export type Thread = {
@@ -98,12 +99,11 @@ export const DiscussionSection: React.FC<DiscussionSectionProps> = ({
               className={`p-3 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
             >
               <div className="flex items-start">
-                <img 
+                <TianjinAvatar 
                   src={msg.avatar} 
                   alt={msg.user} 
-                  className="w-8 h-8 rounded-full mr-3" 
-                  loading="lazy" 
-                  decoding="async"
+                  size="sm" 
+                  className="mr-3" 
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">

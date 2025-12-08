@@ -151,17 +151,17 @@ export class ParticleModelGenerator {
     return geometry;
   }
   
-  // 生成包子形状
+  // 生成包子形状（优化版）
   static generateBaozi(config: ParticleModelConfig): THREE.BufferGeometry {
     const { size } = config;
     const geometry = new THREE.BufferGeometry();
     const vertices: number[] = [];
     
-    const segments = 32;
+    const segments = 48; // 增加段数，使形状更平滑
     const radius = size * 0.5;
-    const height = size * 0.8;
+    const height = size * 0.75; // 调整高度，使包子更圆润
     
-    // 包子底部（圆形）
+    // 包子底部（圆形，更平滑）
     for (let i = 0; i <= segments; i++) {
       const t = (i / segments) * Math.PI * 2;
       const x = Math.cos(t) * radius;
@@ -170,16 +170,19 @@ export class ParticleModelGenerator {
       vertices.push(x, y, z);
     }
     
-    // 包子顶部（曲线）
+    // 包子顶部（更圆润的曲线，模拟包子褶皱）
     for (let i = 0; i <= segments; i++) {
       const t = (i / segments) * Math.PI * 2;
-      const x = Math.cos(t) * radius * 0.8;
-      const y = Math.cos(t * 2) * height / 4 + height / 4;
-      const z = Math.sin(t) * radius * 0.8;
+      // 更自然的包子顶部曲线
+      const topRadius = radius * (0.7 + 0.15 * Math.sin(t * 3)); // 添加细微褶皱
+      const x = Math.cos(t) * topRadius;
+      // 圆润的顶部轮廓
+      const y = Math.pow(Math.sin(t * Math.PI), 3) * height / 3 + height / 4;
+      const z = Math.sin(t) * topRadius;
       vertices.push(x, y, z);
     }
     
-    // 包子侧面轮廓
+    // 包子侧面轮廓（更平滑的过渡）
     for (let i = 0; i <= segments; i++) {
       const t = (i / segments) * Math.PI * 2;
       // 底部边缘
@@ -187,15 +190,32 @@ export class ParticleModelGenerator {
       const y1 = -height / 2;
       const z1 = Math.sin(t) * radius;
       // 顶部边缘
-      const x2 = Math.cos(t) * radius * 0.8;
-      const y2 = Math.cos(t * 2) * height / 4 + height / 4;
-      const z2 = Math.sin(t) * radius * 0.8;
+      const topRadius = radius * (0.7 + 0.15 * Math.sin(t * 3));
+      const x2 = Math.cos(t) * topRadius;
+      const y2 = Math.pow(Math.sin(t * Math.PI), 3) * height / 3 + height / 4;
+      const z2 = Math.sin(t) * topRadius;
       
       vertices.push(x1, y1, z1);
       vertices.push(x2, y2, z2);
     }
     
+    // 包子褶皱细节（增加表面细节）
+    for (let i = 0; i <= segments; i += 2) {
+      const t = (i / segments) * Math.PI * 2;
+      const x = Math.cos(t) * radius * 0.85;
+      const y = Math.cos(t * 2) * height / 8;
+      const z = Math.sin(t) * radius * 0.85;
+      vertices.push(x, y, z);
+      
+      const innerT = ((i + 0.5) / segments) * Math.PI * 2;
+      const innerX = Math.cos(innerT) * radius * 0.8;
+      const innerY = Math.cos(innerT * 2) * height / 8 - height / 16;
+      const innerZ = Math.sin(innerT) * radius * 0.8;
+      vertices.push(innerX, innerY, innerZ);
+    }
+    
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.computeVertexNormals();
     return geometry;
   }
 
@@ -222,19 +242,24 @@ export class ParticleModelGenerator {
     }
   }
 
-  // 获取模型的默认材质
+  // 获取模型的默认材质（优化版）
   static getDefaultMaterial(color: string | THREE.Color): THREE.Material {
     const colorObj = typeof color === 'string' ? new THREE.Color(color) : color;
     
-    return new THREE.MeshBasicMaterial({
+    // 为包子模型使用特殊的材质效果，增强真实感
+    return new THREE.MeshStandardMaterial({
       color: colorObj,
       transparent: true,
-      opacity: 0.8,
-      side: THREE.DoubleSide
+      opacity: 0.9,
+      side: THREE.DoubleSide,
+      roughness: 0.7,
+      metalness: 0.2,
+      emissive: colorObj.multiplyScalar(0.2),
+      emissiveIntensity: 0.5
     });
   }
 
-  // 获取线框材质
+  // 获取线框材质（优化版）
   static getWireframeMaterial(color: string | THREE.Color): THREE.Material {
     const colorObj = typeof color === 'string' ? new THREE.Color(color) : color;
     
@@ -242,7 +267,25 @@ export class ParticleModelGenerator {
       color: colorObj,
       wireframe: true,
       transparent: true,
-      opacity: 0.5
+      opacity: 0.6
+      // linewidth属性已被移除，使用MeshBasicMaterial的wireframeLinewidth替代或直接使用默认值
+    });
+  }
+  
+  // 获取包子模型专用材质，增强真实感
+  static getBaoziMaterial(color: string | THREE.Color): THREE.Material {
+    const colorObj = typeof color === 'string' ? new THREE.Color(color) : color;
+    
+    return new THREE.MeshStandardMaterial({
+      color: colorObj,
+      transparent: true,
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      roughness: 0.6, // 调整粗糙度，控制表面光滑程度
+      metalness: 0.2, // 调整金属度，控制反射强度
+      emissive: colorObj.multiplyScalar(0.3),
+      emissiveIntensity: 0.7
+      // specular和shininess属性已被移除，使用roughness和metalness替代
     });
   }
 }

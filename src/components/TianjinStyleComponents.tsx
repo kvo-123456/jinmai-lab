@@ -1,6 +1,15 @@
-import { useState } from 'react';
+// 核心React hooks
+import { useState, useMemo, useCallback } from 'react';
+
+// 动画库
 import { motion, useReducedMotion } from 'framer-motion';
+
+// 自定义hooks
 import { useTheme } from '@/hooks/useTheme';
+
+// 内部组件
+import LazyImage from './LazyImage';
+import imageService from '../services/imageService';
 
 // 天津特色按钮组件 - 风筝飘带效果
 export const TianjinButton: React.FC<{
@@ -37,39 +46,48 @@ export const TianjinButton: React.FC<{
   const reduceMotion = useReducedMotion();
 
   // 中文注释：风筝飘带动画变体（悬浮轻微上抬）
-  const ribbonVariants = {
+  // 中文注释：添加will-change属性提示浏览器，使用硬件加速属性
+  const ribbonVariants = useMemo(() => ({
     rest: { scale: 1, transition: { duration: 0.25 } },
     hover: { scale: 1.03, y: -2, transition: { duration: 0.25, type: 'spring', stiffness: 380, damping: 14 } },
-  };
+  }), []);
 
   // 中文注释：尺寸映射（统一内边距与字号）
   // 中文注释：统一提升触控目标尺寸，保证手机端最小44px高度
-  const sizeMap: Record<'sm' | 'md' | 'lg', string> = {
-    sm: 'px-3 py-2 text-sm min-h-[44px]',
-    md: 'px-4 py-2.5 text-sm min-h-[44px]',
-    lg: 'px-5 py-3 text-base min-h-[48px]',
-  };
+  // 中文注释：添加响应式样式，在小屏幕上调整内边距
+  const sizeMap = useMemo(() => ({
+    sm: 'px-3 py-2 text-sm min-h-[44px] sm:px-3 sm:py-2 md:px-3 md:py-2',
+    md: 'px-3 py-2.5 text-sm min-h-[44px] sm:px-4 sm:py-2.5 md:px-4 md:py-2.5',
+    lg: 'px-4 py-3 text-base min-h-[48px] sm:px-5 sm:py-3 md:px-5 md:py-3',
+  }), []);
 
   // 中文注释：风格变体（根据主题与暗色模式切换）
-  const v = variant || (primary ? 'primary' : 'secondary');
-  const bgMap: Record<string, string> = {
+  const v = useMemo(() => variant || (primary ? 'primary' : 'secondary'), [variant, primary]);
+  
+  const bgMap = useMemo(() => ({
     primary: isDark ? 'bg-[var(--accent-red)] hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-700',
     secondary: isDark ? 'bg-[var(--bg-tertiary)] hover:bg-[var(--bg-hover)] ring-1 ring-[var(--border-primary)]' : 'bg-white hover:bg-gray-50 ring-1 ' + (isDark ? 'ring-gray-600' : 'ring-gray-200'),
     danger: isDark ? 'bg-[var(--accent-red)] hover:bg-red-700' : 'bg-red-600 hover:bg-red-700',
     ghost: isDark ? 'bg-transparent hover:bg-[var(--bg-hover)] ring-1 ring-[var(--border-secondary)]' : 'bg-transparent hover:bg-gray-50 ring-1 ring-gray-200',
     heritage: 'bg-gradient-to-r from-red-700 to-amber-500 hover:from-red-600 hover:to-amber-600',
-  };
-  const textMap: Record<string, string> = {
+  }), [isDark]);
+  
+  const textMap = useMemo(() => ({
     primary: 'text-white',
     secondary: isDark ? 'text-[var(--text-primary)]' : 'text-gray-900',
     danger: 'text-white',
     ghost: isDark ? 'text-[var(--text-secondary)]' : 'text-gray-800',
     heritage: 'text-white',
-  };
+  }), [isDark]);
 
   // 中文注释：禁用与加载状态样式
-  const disabledCls = (disabled || loading) ? 'opacity-60 cursor-not-allowed' : '';
-  const widthCls = fullWidth ? 'w-full' : '';
+  const disabledCls = useMemo(() => (disabled || loading) ? 'opacity-60 cursor-not-allowed' : '', [disabled, loading]);
+  const widthCls = useMemo(() => fullWidth ? 'w-full' : '', [fullWidth]);
+
+  // 合并className
+  const combinedClassName = useMemo(() => {
+    return `rounded-lg font-medium transition-colors relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${sizeMap[size]} ${bgMap[v]} ${textMap[v]} ${widthCls} ${disabledCls} ${className}`;
+  }, [size, bgMap, v, textMap, widthCls, disabledCls, className, sizeMap]);
 
   return (
     <motion.button
@@ -82,7 +100,7 @@ export const TianjinButton: React.FC<{
       aria-label={ariaLabel}
       aria-busy={loading}
       disabled={disabled || loading}
-      className={`rounded-lg font-medium transition-colors relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${sizeMap[size]} ${bgMap[v]} ${textMap[v]} ${widthCls} ${disabledCls} ${className}`}
+      className={combinedClassName}
     >
       {/* 中文注释：点击涟漪（加载或禁用时关闭动画） */}
       {/* 中文注释：在“减少动态效果”偏好下关闭点击涟漪动画 */}
@@ -121,9 +139,17 @@ export const YangliuqingIconContainer: React.FC<{
 };
 
 // 天津特色图标 - 风筝线轴 (设置)
-export const KiteSpoolIcon: React.FC<{ className?: string }> = ({ className = '' }) => {
+export const KiteSpoolIcon: React.FC<{ className?: string; ariaLabel?: string; role?: string }> = ({ 
+  className = '', 
+  ariaLabel = '设置图标',
+  role = 'img'
+}) => {
   return (
-    <div className={`relative inline-flex items-center justify-center ${className}`}>
+    <div 
+      className={`relative inline-flex items-center justify-center ${className}`}
+      aria-label={ariaLabel}
+      role={role}
+    >
       <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
         <div className="w-2 h-2 bg-white rounded-full"></div>
       </div>
@@ -133,9 +159,17 @@ export const KiteSpoolIcon: React.FC<{ className?: string }> = ({ className = ''
 };
 
 // 天津特色图标 - 鼓楼铃铛 (搜索)
-export const DrumTowerBellIcon: React.FC<{ className?: string }> = ({ className = '' }) => {
+export const DrumTowerBellIcon: React.FC<{ className?: string; ariaLabel?: string; role?: string }> = ({ 
+  className = '', 
+  ariaLabel = '搜索图标',
+  role = 'img'
+}) => {
   return (
-    <div className={`relative inline-flex items-center justify-center ${className}`}>
+    <div 
+      className={`relative inline-flex items-center justify-center ${className}`}
+      aria-label={ariaLabel}
+      role={role}
+    >
       <div className="w-5 h-6 bg-red-600 rounded-t-full flex items-center justify-center">
         <div className="w-1 h-1 bg-white rounded-full"></div>
       </div>
@@ -146,9 +180,17 @@ export const DrumTowerBellIcon: React.FC<{ className?: string }> = ({ className 
 };
 
 // 天津特色图标 - 杨柳青娃娃手持灯笼 (通知)
-export const YangliuqingDollIcon: React.FC<{ className?: string }> = ({ className = '' }) => {
+export const YangliuqingDollIcon: React.FC<{ className?: string; ariaLabel?: string; role?: string }> = ({ 
+  className = '', 
+  ariaLabel = '通知图标',
+  role = 'img'
+}) => {
   return (
-    <div className={`relative inline-flex items-center justify-center ${className}`}>
+    <div 
+      className={`relative inline-flex items-center justify-center ${className}`}
+      aria-label={ariaLabel}
+      role={role}
+    >
       <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
         <div className="w-1 h-1 bg-white rounded-full"></div>
       </div>
@@ -158,15 +200,24 @@ export const YangliuqingDollIcon: React.FC<{ className?: string }> = ({ classNam
 };
 
 // 天津快板加载动画
-export const TianjinAllegroLoader: React.FC<{ size?: 'small' | 'medium' | 'large' }> = ({ size = 'medium' }) => {
-  const sizeMap = {
+export const TianjinAllegroLoader: React.FC<{ size?: 'small' | 'medium' | 'large'; ariaLabel?: string; role?: string }> = ({ 
+  size = 'medium',
+  ariaLabel = '加载中...',
+  role = 'status'
+}) => {
+  // 缓存sizeMap，避免每次渲染都重新创建
+  const sizeMap = useMemo(() => ({
     small: 'h-8 w-8',
     medium: 'h-12 w-12',
     large: 'h-16 w-16'
-  };
+  }), []);
   
   return (
-    <div className={`${sizeMap[size]} relative`}>
+    <div 
+      className={`${sizeMap[size]} relative`}
+      aria-label={ariaLabel}
+      role={role}
+    >
       <motion.div 
         className="absolute inset-0 bg-blue-600 rounded-md"
         animate={{ 
@@ -197,15 +248,28 @@ export const TianjinAllegroLoader: React.FC<{ size?: 'small' | 'medium' | 'large
 };
 
 // 天津之眼摩天轮加载动画
-export const TianjinEyeLoader: React.FC<{ size?: 'small' | 'medium' | 'large' }> = ({ size = 'medium' }) => {
-  const sizeMap = {
+export const TianjinEyeLoader: React.FC<{ size?: 'small' | 'medium' | 'large'; ariaLabel?: string; role?: string }> = ({ 
+  size = 'medium',
+  ariaLabel = '加载中...',
+  role = 'status'
+}) => {
+  // 缓存sizeMap和座舱位置，避免每次渲染都重新计算
+  const sizeMap = useMemo(() => ({
     small: 'h-10 w-10',
     medium: 'h-16 w-16',
     large: 'h-24 w-24'
-  };
+  }), []);
+  
+  const radius = useMemo(() => {
+    return size === 'small' ? '18' : size === 'medium' ? '30' : '45';
+  }, [size]);
   
   return (
-    <div className={`${sizeMap[size]} relative mx-auto`}>
+    <div 
+      className={`${sizeMap[size]} relative mx-auto`}
+      aria-label={ariaLabel}
+      role={role}
+    >
       {/* 中心轴 */}
       <div className="absolute inset-1 bg-blue-600 rounded-full"></div>
       
@@ -231,7 +295,8 @@ export const TianjinEyeLoader: React.FC<{ size?: 'small' | 'medium' | 'large' }>
             top: '50%',
             left: '50%',
             transformOrigin: 'center',
-            transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(${size === 'small' ? '18' : size === 'medium' ? '30' : '45'}px)`
+            transform: `translate(-50%, -50%) rotate(${angle}deg) translateX(${radius}px)`,
+            willChange: 'transform' // 提示浏览器优化动画性能
           }}
           animate={{ 
             rotate: -360
@@ -284,19 +349,19 @@ export const TianjinEmptyState: React.FC = () => {
   const { isDark = false } = useTheme() || {};
   
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-6 relative">
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center sm:py-16 md:py-20">
+      <div className="mb-6 relative w-full max-w-xs sm:max-w-sm md:max-w-md">
         <img 
           src="https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Tianjin%20ancient%20city%20scenery%20traditional%20Chinese%20painting%20style" 
           alt="天津卫历史场景" 
-          className="w-64 h-48 object-cover rounded-xl shadow-lg border-4 border-double border-blue-600"
+          className="w-full h-auto max-w-full rounded-xl shadow-lg border-4 border-double border-blue-600 sm:w-64 sm:h-48 md:w-80 md:h-60 object-cover"
         />
-        <div className="absolute -bottom-3 -right-3 w-24 h-24 bg-red-600 rounded-full opacity-20 z-0"></div>
+        <div className="absolute -bottom-3 -right-3 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-red-600 rounded-full opacity-20 z-0"></div>
       </div>
-      <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-gray-200' : 'text-gray-800'} font-tianjin`}>
+      <h3 className={`text-lg font-bold mb-2 sm:text-xl md:text-2xl ${isDark ? 'text-gray-200' : 'text-gray-800'} font-tianjin`}>
         暂无内容
       </h3>
-      <p className={`max-w-md ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+      <p className={`max-w-sm sm:max-w-md md:max-w-lg ${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm sm:text-base`}>
         暂时没有找到相关内容，您可以尝试其他搜索条件或创建新内容
       </p>
     </div>
@@ -330,16 +395,22 @@ export const TianjinTag: React.FC<{
   // 为useTheme解构添加默认值，防止返回undefined导致崩溃
   const { isDark = false } = useTheme() || {};
   
-  const colorMap = {
+  // 缓存colorMap，避免每次渲染都重新创建
+  const colorMap = useMemo(() => ({
     blue: isDark ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-100 text-blue-600 border-blue-200',
     red: isDark ? 'bg-red-900/30 text-red-400 border-red-800' : 'bg-red-100 text-red-600 border-red-200',
     green: isDark ? 'bg-green-900/30 text-green-400 border-green-800' : 'bg-green-100 text-green-600 border-green-200',
     yellow: isDark ? 'bg-yellow-900/30 text-yellow-400 border-yellow-800' : 'bg-yellow-100 text-yellow-600 border-yellow-200'
-  };
+  }), [isDark]);
+  
+  // 缓存最终className
+  const combinedClassName = useMemo(() => {
+    return `inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border transform rotate-1 ${colorMap[color]} ${className}`;
+  }, [colorMap, color, className]);
   
   return (
     <motion.span 
-      className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border transform rotate-1 ${colorMap[color]} ${className}`}
+      className={combinedClassName}
       whileHover={{ scale: 1.05, rotate: -1 }}
       whileTap={{ scale: 0.95 }}
     >
@@ -399,6 +470,15 @@ export const WaterDropEffect: React.FC<{
 }> = ({ children, className = '' }) => {
   const [isClicked, setIsClicked] = useState(false);
   
+  // 缓存点击处理函数和动画完成回调
+  const handleClick = useCallback(() => {
+    setIsClicked(true);
+  }, []);
+  
+  const handleAnimationComplete = useCallback(() => {
+    setIsClicked(false);
+  }, []);
+  
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {isClicked && (
@@ -410,11 +490,11 @@ export const WaterDropEffect: React.FC<{
             opacity: 0,
             transition: { duration: 0.6 }
           }}
-          onAnimationComplete={() => setIsClicked(false)}
+          onAnimationComplete={handleAnimationComplete}
         />
       )}
       <div 
-        onClick={() => setIsClicked(true)}
+        onClick={handleClick}
         className="relative z-10"
       >
         {children}
@@ -522,6 +602,8 @@ export const TianjinImage: React.FC<{
   onClick?: () => void;
   loading?: 'eager' | 'lazy';
   imageTag?: string;
+  priority?: boolean;
+  quality?: 'low' | 'medium' | 'high';
 }> = ({
   src,
   alt,
@@ -534,23 +616,14 @@ export const TianjinImage: React.FC<{
   onClick,
   loading = 'lazy',
   imageTag,
+  priority = false,
+  quality = 'medium',
 }) => {
   // 简化主题处理
   const { isDark = false } = useTheme() || {};
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
   
-  // 简化ratio样式计算
-  const ratioStyle =
-    ratio === 'square'
-      ? { paddingTop: '100%' }
-      : ratio === 'landscape'
-      ? { paddingTop: '75%' }
-      : ratio === 'portrait'
-      ? { paddingTop: '133%' }
-      : undefined;
-  
-  const roundedMap: Record<string, string> = {
+  // 缓存roundedMap，避免每次渲染都重新创建
+  const roundedMap = useMemo(() => ({
     none: '',
     sm: 'rounded-sm',
     md: 'rounded-md',
@@ -558,63 +631,28 @@ export const TianjinImage: React.FC<{
     xl: 'rounded-xl',
     '2xl': 'rounded-2xl',
     full: 'rounded-full',
-  };
+  }), []);
   
-  // 简化图片加载处理
-  const handleLoad = () => {
-    setLoaded(true);
-  };
-  
-  const handleError = () => {
-    console.error('图片加载失败:', src);
-    setError(true);
-  };
-  
-  // 简化重试函数
-  const handleManualRetry = () => {
-    setError(false);
-    setLoaded(false);
-    // 重试时，强制重新加载图片
-    const img = document.querySelector(`img[src="${src}"]`) as HTMLImageElement;
-    if (img) {
-      img.src = src;
-    }
-  };
+  // 缓存最终className，添加响应式样式
+  const combinedClassName = useMemo(() => {
+    return `relative overflow-hidden ${roundedMap[rounded]} ${className} ${withBorder ? (isDark ? 'ring-1 ring-gray-700' : 'ring-1 ring-gray-200') : ''} cursor-pointer sm:max-w-full md:max-w-full lg:max-w-full`;
+  }, [roundedMap, rounded, className, withBorder, isDark]);
   
   return (
     <div
-      className={`relative overflow-hidden ${roundedMap[rounded]} ${className} ${withBorder ? (isDark ? 'ring-1 ring-gray-700' : 'ring-1 ring-gray-200') : ''} flex items-center justify-center`}
-      style={ratioStyle}
+      className={combinedClassName}
       onClick={onClick}
     >
-      {/* 简化骨架屏 */}
-      {!loaded && !error && (
-        <div className={`absolute inset-0 ${isDark ? 'bg-gray-800' : 'bg-gray-100'} animate-pulse`}></div>
-      )}
-      
-      {error ? (
-        <div className={`absolute inset-0 flex items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-white'} text-center p-4 cursor-pointer`} onClick={handleManualRetry}>
-          <i className={`fas fa-image ${isDark ? 'text-gray-500' : 'text-gray-400'} text-2xl mb-2`}></i>
-          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-2`}>图片加载失败</div>
-          <div 
-            onClick={handleManualRetry}
-            className={`text-xs px-3 py-1 rounded cursor-pointer ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
-          >
-            点击重试
-          </div>
-        </div>
-      ) : (
-        // 简化图片渲染，使用普通img标签
-        <img
-          src={src}
-          alt={alt}
-          className={`absolute inset-0 w-full h-full object-${fit} transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          loading={loading}
-          decoding="async"
-          onLoad={handleLoad}
-          onError={handleError}
-        />
-      )}
+      <LazyImage
+        src={src}
+        alt={alt}
+        className={`w-full h-full`}
+        ratio={ratio}
+        fit={fit}
+        loading={loading}
+        priority={priority}
+        quality={quality}
+      />
       
       {badge && (
         <span
@@ -631,6 +669,61 @@ export const TianjinImage: React.FC<{
         >
           {imageTag.split('_').find(part => ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(part)) || '图片'}
         </span>
+      )}
+    </div>
+  );
+};
+
+// 天津风格头像组件
+export const TianjinAvatar: React.FC<{
+  src: string;
+  alt: string;
+  className?: string;
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  online?: boolean;
+  onClick?: () => void;
+  withBorder?: boolean;
+}> = ({
+  src,
+  alt,
+  className = '',
+  size = 'md',
+  online = false,
+  onClick,
+  withBorder = true,
+}) => {
+  // 简化主题处理
+  const { isDark = false } = useTheme() || {};
+  
+  // 尺寸映射
+  const sizeMap = useMemo(() => ({
+    xs: 'w-6 h-6',
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12',
+    xl: 'w-16 h-16',
+  }), []);
+  
+  // 缓存最终className
+  const combinedClassName = useMemo(() => {
+    return `relative ${sizeMap[size]} ${className} cursor-pointer`;
+  }, [sizeMap, size, className]);
+  
+  return (
+    <div 
+      className={combinedClassName}
+      onClick={onClick}
+    >
+      <LazyImage
+        src={src}
+        alt={alt}
+        className={`w-full h-full rounded-full ${withBorder ? (isDark ? 'ring-1 ring-gray-700' : 'ring-1 ring-gray-300') : ''}`}
+        ratio="square"
+        fit="cover"
+        loading="lazy"
+      />
+      {online && (
+        <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ${isDark ? 'bg-green-500 ring-2 ring-gray-800' : 'bg-green-500 ring-2 ring-white'}`} />
       )}
     </div>
   );

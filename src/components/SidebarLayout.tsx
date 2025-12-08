@@ -191,6 +191,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
         case '/dashboard': import('@/pages/Dashboard').then(() => markPrefetched('dashboard', { ttlMs })); break
         case '/events': import('@/pages/CulturalEvents').then(() => markPrefetched('events', { ttlMs })); break
         case '/games': import('@/pages/Games').then(() => markPrefetched('games', { ttlMs })); break
+        case '/leaderboard': import('@/pages/Leaderboard').then(() => markPrefetched('leaderboard', { ttlMs })); break
         default: break
       }
     } catch (error) {
@@ -250,7 +251,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
           '6': '/square',
           '7': '/knowledge',
           '8': '/tianjin',
-          '9': '/brand',
+          '9': '/leaderboard',
           '0': '/about',
         }
         const dest = map[e.key]
@@ -716,7 +717,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
                   </button>
                   {showUserMenu && (
                     <div className={`absolute right-0 mt-2 w-56 rounded-xl shadow-lg ring-1 ${isDark ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-gray-200'}`} role="menu" aria-label="用户菜单">
-                      <div className="px-4 py-3 border-b border-gray-200">
+                      <div className="px-4 py-3 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}">
                         <p className="text-sm">{user?.username}</p>
                         <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user?.email}</p>
                       </div>

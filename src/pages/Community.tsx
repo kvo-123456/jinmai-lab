@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useContext, lazy, Suspense } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { TianjinImage } from '@/components/TianjinStyleComponents'
+import { TianjinImage, TianjinAvatar } from '@/components/TianjinStyleComponents'
 import GradientHero from '@/components/GradientHero'
 // 使用React.lazy实现子组件的延迟加载，优化初始加载速度
 const CommunityChat = lazy(() => import('@/components/CommunityChat'))
@@ -1586,10 +1586,7 @@ export default function Community() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {mockCreators.map((c) => (
               <div key={c.name} className="flex items-center p-2 rounded-xl">
-                <div className="relative mr-3">
-                  <TianjinImage src={c.avatar} alt={c.name} className="w-10 h-10 rounded-full ring-1 ring-gray-300 cursor-pointer" ratio="square" onClick={() => openProfile(c)} />
-                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ${c.online ? 'bg-green-500' : 'bg-gray-400'} ring-2 ring-white`}></span>
-                </div>
+                <TianjinAvatar src={c.avatar} alt={c.name} size="md" online={c.online} onClick={() => openProfile(c)} />
                 <div className="flex-1">
                   <div className="text-sm font-medium">{c.name}</div>
                   <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.role}</div>

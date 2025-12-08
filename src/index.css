@@ -332,6 +332,83 @@ button, input, select, textarea, a, .card, .modal, .notification, .nav-item, .bt
   }
 }
 
+/* 快速旋转动画 */
+@keyframes spin-fast {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 反向旋转动画 */
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+/* 向下淡入动画 */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 向上淡入动画 */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 慢速脉冲动画 */
+@keyframes ping-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.1);
+  }
+}
+
+/* 动画类 */
+.animate-spin-fast {
+  animation: spin-fast 0.8s linear infinite;
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 1.5s linear infinite;
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-ping-slow {
+  animation: ping-slow 2s ease-in-out infinite;
+}
+
 /* 悬停放大动画 */
 .hover-scale {
   transition: transform 0.3s ease;
@@ -2115,7 +2192,14 @@ button, input, select, textarea, a, .card, .modal, .notification, .nav-item, .bt
 
 .light input[type="checkbox"]:hover, .light input[type="radio"]:hover {
   scale: 1.15;
-  box-shadow: 0 0 0 2px var(--bg-primary), var(--glow-secondary);
+}
+
+/* 垂直文字布局 */
+.writing-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.2em;
+  line-height: 2;
 }
 
 .light input[type="checkbox"]:focus, .light input[type="radio"]:focus {

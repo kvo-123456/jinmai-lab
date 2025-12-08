@@ -172,6 +172,83 @@ const mockUsers: User[] = [
     total_views: 18765,
     created_at: Date.now() - 907200000,
     updated_at: Date.now() - 432000000
+  },
+  {
+    id: 6,
+    username: 'UI设计师小刘',
+    email: 'xiaoliu@example.com',
+    avatar_url: 'https://via.placeholder.com/64?text=UI设计师小刘',
+    posts_count: 14,
+    total_likes: 1987,
+    total_views: 13456,
+    created_at: Date.now() - 777600000,
+    updated_at: Date.now() - 518400000
+  },
+  {
+    id: 7,
+    username: '平面设计师小陈',
+    email: 'xiaochen@example.com',
+    avatar_url: 'https://via.placeholder.com/64?text=平面设计师小陈',
+    posts_count: 11,
+    total_likes: 1765,
+    total_views: 11234,
+    created_at: Date.now() - 691200000,
+    updated_at: Date.now() - 604800000
+  },
+  {
+    id: 8,
+    username: '3D设计师小周',
+    email: 'xiaozhou@example.com',
+    avatar_url: 'https://via.placeholder.com/64?text=3D设计师小周',
+    posts_count: 9,
+    total_likes: 2012,
+    total_views: 16789,
+    created_at: Date.now() - 604800000,
+    updated_at: Date.now() - 691200000
+  },
+  {
+    id: 9,
+    username: '视频编辑小吴',
+    email: 'xiaowu@example.com',
+    avatar_url: 'https://via.placeholder.com/64?text=视频编辑小吴',
+    posts_count: 7,
+    total_likes: 1654,
+    total_views: 10987,
+    created_at: Date.now() - 518400000,
+    updated_at: Date.now() - 777600000
+  },
+  {
+    id: 10,
+    username: '动效设计师小郑',
+    email: 'xiaozheng@example.com',
+    avatar_url: 'https://via.placeholder.com/64?text=动效设计师小郑',
+    posts_count: 13,
+    total_likes: 2234,
+    total_views: 14567,
+    created_at: Date.now() - 432000000,
+    updated_at: Date.now() - 864000000
+  },
+  {
+    id: 11,
+    username: '游戏设计师小冯',
+    email: 'xiaofeng@example.com',
+    avatar_url: 'https://via.placeholder.com/64?text=游戏设计师小冯',
+    posts_count: 10,
+    total_likes: 1987,
+    total_views: 13456,
+    created_at: Date.now() - 345600000,
+    updated_at: Date.now() - 950400000
+  },
+  {
+    id: 12,
+    username: '交互设计师小沈',
+    email: 'xishenshen@example.com',
+    avatar_url: 'https://via.placeholder.com/64?text=交互设计师小沈',
+    posts_count: 16,
+    total_likes: 2456,
+    total_views: 17890,
+    created_at: Date.now() - 259200000,
+    updated_at: Date.now() - 1036800000
   }
 ];
 
@@ -335,8 +412,8 @@ const Leaderboard: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6 md:py-8">
       <GradientHero 
-        title="人气榜"
-        subtitle="发现平台上最受欢迎的内容和创作者"
+        title="设计师排行榜"
+        subtitle="发现平台上最受欢迎的设计师和作品"
         theme="blue"
         stats={[
           { label: '类型', value: leaderboardType === 'posts' ? '热门帖子' : '热门创作者' },
@@ -452,122 +529,218 @@ const Leaderboard: React.FC = () => {
             posts.map((post, index) => (
               <motion.div 
                 key={post.id} 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                whileHover={{ y: -3 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer transform hover:-translate-y-1"
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ 
+                  duration: 0.5, 
+                  ease: "easeOut",
+                  delay: index * 0.05
+                }}
+                whileHover={{ 
+                  y: -10, 
+                  scale: 1.04, 
+                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.4)",
+                  transition: { duration: 0.3 }
+                }}
+                className="bg-gradient-to-br from-gray-800 via-gray-850 to-gray-900 rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer transform hover:-translate-y-3"
                 onClick={() => handlePostClick(post.id)}
               >
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center">
-                      <div className="mr-3">
+                {/* 顶部渐变装饰条 */}
+                <div className="h-1 bg-gradient-to-r from-amber-500 via-pink-500 to-blue-500"></div>
+                
+                <div className="p-6">
+                  <div className="flex items-start gap-5 mb-4">
+                    <div className="relative flex-shrink-0">
+                      <div className="relative z-10">
                         {getRankBadge(index)}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400">
-                          {post.title}
-                        </h3>
-                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                          {post.username && (
-                            <img 
-                              src={post.avatar_url || 'https://via.placeholder.com/32'} 
-                              alt={post.username} 
-                              className="w-6 h-6 rounded-full mr-2"
-                            />
-                          )}
-                          <span>{post.username || '未知用户'}</span>
+                      <div className={`absolute -inset-1 rounded-full opacity-30 blur-sm animate-pulse ${index === 0 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : index === 1 ? 'bg-gradient-to-r from-gray-500 to-gray-400' : index === 2 ? 'bg-gradient-to-r from-amber-700 to-amber-600' : 'bg-gradient-to-r from-blue-500 to-purple-500'}`}></div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="font-bold text-2xl text-white mb-3 line-clamp-2 hover:text-blue-400 transition-colors group-hover:text-blue-300">
+                        {post.title}
+                      </h3>
+                      
+                      <div className="flex items-center gap-3 mb-4">
+                        {post.username && (
+                          <img
+                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(post.username)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&size=32`}
+                            alt={post.username}
+                            className="w-8 h-8 rounded-full border-2 border-blue-500/30 object-cover hover:border-blue-500/60 transition-all duration-300"
+                            width={32}
+                            height={32}
+                            loading="lazy"
+                          />
+                        )}
+                        <span className="text-sm text-gray-400">{post.username || '未知用户'}</span>
+                        <span className="text-gray-600">•</span>
+                        <span className="text-sm text-gray-500">{new Date(post.created_at).toLocaleDateString()}</span>
+                      </div>
+                      
+                      <p className="text-gray-400 text-sm mb-6 line-clamp-3 leading-relaxed">
+                        {post.content}
+                      </p>
+                      
+                      <div className="flex justify-between items-center text-sm pt-4 border-t border-gray-700/50">
+                        <div className="flex space-x-6">
+                          <motion.span 
+                            whileHover={{ scale: 1.1 }} 
+                            className="flex items-center text-blue-400 hover:text-blue-300 cursor-pointer transition-colors"
+                          >
+                            <svg className="w-5 h-5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"></path>
+                            </svg>
+                            {post.views}
+                          </motion.span>
+                          
+                          <motion.span 
+                            whileHover={{ scale: 1.1 }} 
+                            className="flex items-center text-purple-400 hover:text-purple-300 cursor-pointer transition-colors"
+                          >
+                            <svg className="w-5 h-5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path>
+                            </svg>
+                            {post.likes_count}
+                          </motion.span>
+                          
+                          <motion.span 
+                            whileHover={{ scale: 1.1 }} 
+                            className="flex items-center text-pink-400 hover:text-pink-300 cursor-pointer transition-colors"
+                          >
+                            <svg className="w-5 h-5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"></path>
+                            </svg>
+                            {post.comments_count}
+                          </motion.span>
                         </div>
+                        
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 p-2 rounded-full cursor-pointer transition-all duration-300"
+                        >
+                          <i className="fas fa-arrow-right text-sm"></i>
+                        </motion.div>
                       </div>
                     </div>
                   </div>
-                  
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
-                    {post.content}
-                  </p>
-                  
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex space-x-4">
-                      <span className="flex items-center text-gray-500 dark:text-gray-400">
-                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"></path>
-                        </svg>
-                        {post.views}
-                      </span>
-                      <span className="flex items-center text-gray-500 dark:text-gray-400">
-                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path>
-                        </svg>
-                        {post.likes_count}
-                      </span>
-                      <span className="flex items-center text-gray-500 dark:text-gray-400">
-                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"></path>
-                        </svg>
-                        {post.comments_count}
-                      </span>
-                    </div>
-                    <span className="text-gray-500 dark:text-gray-400">
-                      {new Date(post.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
                 </div>
+                
+                {/* 底部装饰 */}
+                <div className="h-1 bg-gradient-to-r from-transparent via-gray-600/50 to-transparent"></div>
               </motion.div>
             ))
           ) : (
             users.map((user, index) => (
               <motion.div 
                 key={user.id} 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                whileHover={{ y: -3 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200 transform hover:-translate-y-1"
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ 
+                  duration: 0.5, 
+                  ease: "easeOut",
+                  delay: index * 0.05
+                }}
+                whileHover={{ 
+                  y: -10, 
+                  scale: 1.04, 
+                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.4)",
+                  transition: { duration: 0.3 }
+                }}
+                className="bg-gradient-to-br from-gray-800 via-gray-850 to-gray-900 rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden transition-all duration-500 transform hover:-translate-y-3"
               >
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center">
-                      <div className="mr-3">
+                {/* 顶部渐变装饰条 */}
+                <div className="h-1 bg-gradient-to-r from-amber-500 via-pink-500 to-blue-500"></div>
+                
+                <div className="p-6">
+                  <div className="flex items-center gap-5">
+                    <div className="relative">
+                      <div className="relative z-10">
                         {getRankBadge(index)}
                       </div>
-                      <LazyImage 
-                        src={user.avatar_url || 'https://via.placeholder.com/64'} 
-                        alt={user.username} 
-                        className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200"
-                        width={48}
-                        height={48}
-                        loading="lazy"
-                      />
-                      <div className="ml-3">
-                        <h3 className="font-semibold text-lg">{user.username}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
-                      </div>
+                      <div className={`absolute -inset-1 rounded-full opacity-30 blur-sm animate-pulse ${index === 0 ? 'bg-gradient-to-r from-amber-500 to-amber-400' : index === 1 ? 'bg-gradient-to-r from-gray-500 to-gray-400' : index === 2 ? 'bg-gradient-to-r from-amber-700 to-amber-600' : 'bg-gradient-to-r from-blue-500 to-purple-500'}`}></div>
+                    </div>
+                    
+                    {/* 使用DiceBear生成美观的头像 */}
+                    <div className="relative">
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <img
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.username)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
+                          alt={user.username}
+                          className="w-20 h-20 rounded-full border-4 border-blue-500/30 shadow-xl object-cover"
+                          width={80}
+                          height={80}
+                          loading="lazy"
+                        />
+                      </motion.div>
+                      {/* 头像边框动画效果 */}
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-spin-slow opacity-70 blur-md"></div>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-2xl text-white drop-shadow-sm truncate">{user.username}</h3>
+                      <p className="text-sm text-gray-400 mt-1 flex items-center gap-1 truncate">
+                        <i className="fas fa-envelope text-xs opacity-70"></i>
+                        {user.email}
+                      </p>
                     </div>
                   </div>
                   
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">作品数量</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{user.posts_count || 0}</p>
+                  <div className="mt-8 grid grid-cols-2 gap-4">
+                    <div className="bg-gradient-to-br from-blue-50/15 to-blue-100/20 rounded-xl p-5 border border-blue-500/30 backdrop-blur-md hover:bg-blue-50/20 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/50 hover:shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-blue-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
+                          <i className="fas fa-image text-xs opacity-80"></i>
+                          作品数量
+                        </p>
+                        <span className="text-xs text-blue-300 opacity-70">✦</span>
+                      </div>
+                      <p className="text-2xl font-bold text-blue-300 drop-shadow-sm">{user.posts_count || 0}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">总点赞数</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{user.total_likes || 0}</p>
+                    
+                    <div className="bg-gradient-to-br from-purple-50/15 to-purple-100/20 rounded-xl p-5 border border-purple-500/30 backdrop-blur-md hover:bg-purple-50/20 transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/50 hover:shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-purple-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
+                          <i className="fas fa-heart text-xs opacity-80"></i>
+                          总点赞数
+                        </p>
+                        <span className="text-xs text-purple-300 opacity-70">✦</span>
+                      </div>
+                      <p className="text-2xl font-bold text-purple-300 drop-shadow-sm">{user.total_likes || 0}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">总浏览量</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-white">{user.total_views || 0}</p>
+                    
+                    <div className="bg-gradient-to-br from-pink-50/15 to-pink-100/20 rounded-xl p-5 border border-pink-500/30 backdrop-blur-md hover:bg-pink-50/20 transition-all duration-300 hover:-translate-y-1 hover:border-pink-500/50 hover:shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-pink-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
+                          <i className="fas fa-eye text-xs opacity-80"></i>
+                          总浏览量
+                        </p>
+                        <span className="text-xs text-pink-300 opacity-70">✦</span>
+                      </div>
+                      <p className="text-2xl font-bold text-pink-300 drop-shadow-sm">{user.total_views || 0}</p>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">加入时间</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    
+                    <div className="bg-gradient-to-br from-green-50/15 to-green-100/20 rounded-xl p-5 border border-green-500/30 backdrop-blur-md hover:bg-green-50/20 transition-all duration-300 hover:-translate-y-1 hover:border-green-500/50 hover:shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-green-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
+                          <i className="fas fa-calendar-alt text-xs opacity-80"></i>
+                          加入时间
+                        </p>
+                        <span className="text-xs text-green-300 opacity-70">✦</span>
+                      </div>
+                      <p className="text-lg font-bold text-green-300 drop-shadow-sm">
                         {new Date(user.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                 </div>
+                
+                {/* 底部装饰 */}
+                <div className="h-1 bg-gradient-to-r from-transparent via-gray-600/50 to-transparent"></div>
               </motion.div>
             ))
           )}

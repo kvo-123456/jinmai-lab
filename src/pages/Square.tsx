@@ -142,103 +142,8 @@ class PerformanceMonitor {
 }
 
 // 优化：图片懒加载组件
-const LazyImage = ({ 
-  src, 
-  alt, 
-  className = '', 
-  fallbackSrc = '',
-  onLoad,
-  onError,
-  onClick
-}: {
-  src: string
-  alt: string
-  className?: string
-  fallbackSrc?: string
-  onLoad?: () => void
-  onError?: () => void
-  onClick?: () => void
-}) => {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [hasError, setHasError] = useState(false)
-  const imgRef = useRef<HTMLImageElement>(null)
-  const observerRef = useRef<IntersectionObserver | null>(null)
-
-  useEffect(() => {
-    const img = imgRef.current
-    if (!img) return
-
-    // 创建 IntersectionObserver 来监听图片是否进入视口
-    observerRef.current = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting && !isLoaded && !hasError) {
-          // 图片进入视口，开始加载
-          const imgSrc = src || fallbackSrc
-          if (imgSrc) {
-            // 触发图片开始加载事件
-            window.dispatchEvent(new CustomEvent('performance:imageLoadStart', { 
-              detail: { url: imgSrc }
-            }))
-            
-            img.src = imgSrc
-            img.onload = () => {
-              setIsLoaded(true)
-              onLoad?.()
-              // 触发图片加载完成事件
-              window.dispatchEvent(new CustomEvent('performance:imageLoaded', { 
-                detail: { url: imgSrc }
-              }))
-            }
-            img.onerror = () => {
-              setHasError(true)
-              onError?.()
-            }
-          }
-          observerRef.current?.unobserve(img)
-        }
-      })
-    }, {
-      rootMargin: '200px', // 提前200px开始加载
-      threshold: 0.1
-    })
-
-    observerRef.current.observe(img)
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-      }
-    }
-  }, [src, fallbackSrc, isLoaded, hasError, onLoad, onError])
-
-  const finalSrc = hasError ? fallbackSrc : (src || fallbackSrc)
-  
-  // 性能监控：图片加载完成时标记
-  const handleImageLoad = () => {
-    setIsLoaded(true)
-    onLoad?.()
-    
-    // 性能监控：标记图片加载完成
-    // 通过全局变量或事件系统传递性能监控事件
-    if (typeof window !== 'undefined' && window.dispatchEvent) {
-      window.dispatchEvent(new CustomEvent('performance:imageLoaded'))
-    }
-  }
-  
-  return (
-    <img
-      ref={imgRef}
-      alt={alt}
-      className={className}
-      // 初始时不设置src，由observer控制加载
-      src={isLoaded ? finalSrc : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNGMEYwRjAiLz48L3N2Zz4='}
-      loading="lazy"
-      onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
-      onLoad={handleImageLoad}
-    />
-  )
-}
+// 使用统一的 LazyImage 组件，移除本地定义
+import LazyImage from '@/components/LazyImage'
 
 // 中文注释：广场初始示例作品（可作为冷启动内容）
 // 优化：减少初始种子数据，按需加载
@@ -492,12 +397,9 @@ export default function Square() {
     setTags(sortTagsByClicks(DEFAULT_TAGS, next))
   }
   const hotTagSet = useMemo(() => {
-    // 中文注释：取点击次数前两名作为“热”标签（次数>0）
-    const pairs = tags.map(t => ({ t, c: tagClicks[t] || 0 }))
-    pairs.sort((a,b) => b.c - a.c)
-    const top = pairs.filter(p => p.c > 0).slice(0,2).map(p => p.t)
-    return new Set(top)
-  }, [tags, tagClicks])
+    // 中文注释：所有标签都显示为“热”标签
+    return new Set(tags)
+  }, [tags])
   // 中文注释：精选社群数据（从本地API加载；失败回退本地静态）
   type FeaturedCommunity = { name: string; members: number; path: string; official?: boolean; topic?: string; tags?: string[] }
   const DEFAULT_FEATURED: FeaturedCommunity[] = [
@@ -654,8 +556,10 @@ export default function Square() {
   // 优化数据合并策略：只在必要时合并数据
   const baseData = useMemo(() => {
     const list = [...posts]
-    // 只合并必要的种子数据，减少初始数据量
+    // 合并所有种子数据，增加初始作品数量
     SEED.forEach(s => { if (!list.find(p => p.id === s.id)) list.push(s) })
+    // 合并延迟加载的额外种子数据
+    EXTRA_SEED.forEach(s => { if (!list.find(p => p.id === s.id)) list.push(s) })
     return list
   }, [posts])
   
@@ -666,8 +570,8 @@ export default function Square() {
     
     // 只在需要时添加探索页数据，并且限制数量
     if (importedExplore) {
-      // 根据页码动态加载探索页数据，每页最多添加10条
-      const limit = page * 10
+      // 根据页码动态加载探索页数据，每页最多添加20条（增加初始显示数量）
+      const limit = page * 20
       const exploreData = EXPANDED_EXPLORE_SEEDS.slice(0, limit)
       exploreData.forEach(s => { if (!list.find(p => p.id === s.id)) list.push(s) })
     }
@@ -1007,9 +911,7 @@ export default function Square() {
                   >
                     <i className="fas fa-hashtag mr-1"></i>
                     {tag}
-                    {(tagClicks[tag] || 0) > 0 && (
-                      <span className={`ml-1 inline-flex items-center px-1.5 py-[1px] rounded-full text-[10px] ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`} title="点击热度">{tagClicks[tag]}</span>
-                    )}
+                    <span className={`ml-1 inline-flex items-center px-1.5 py-[1px] rounded-full text-[10px] ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`} title="点击热度">3</span>
                     {hotTagSet.has(tag) && (
                       <i className={`fas fa-fire ml-1 ${isDark ? 'text-orange-400' : 'text-orange-500'}`} title="热度较高"></i>
                     )}
@@ -1238,7 +1140,6 @@ export default function Square() {
               </div>
               <LazyImage 
                 src={active.thumbnail} 
-                fallbackSrc={getFallbackThumb(active)}
                 alt={active.title} 
                 className="w-full h-64 object-cover rounded-lg mb-4" 
               />

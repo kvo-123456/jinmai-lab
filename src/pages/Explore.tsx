@@ -25,8 +25,8 @@ mockWorks.push(
     id: 200,
     title: '狗不理品牌·短片包装片头',
     creator: '动效设计师小谷',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Designer%20avatar%20motion%20xiaogu',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Motion%20graphics%20opener%20for%20Goubuli%20brand%2C%20red%20and%20gold%2C%20clean%20layout&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&h=338&fit=crop',
     likes: 356,
     comments: 41,
     views: 1986,
@@ -40,8 +40,8 @@ mockWorks.push(
     id: 201,
     title: '桂发祥·联名宣传短视频',
     creator: '视频导演阿宁',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Director%20avatar%20Aning',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Promo%20video%20cover%20for%20Guifaxiang%20collab%2C%20warm%20tone%2C%20studio%20lighting&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=338&fit=crop',
     likes: 289,
     comments: 26,
     views: 1438,
@@ -55,8 +55,8 @@ mockWorks.push(
     id: 202,
     title: '同仁堂·草本文化品牌片',
     creator: '视频设计师小药',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Designer%20avatar%20xiaoyao%20video',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Tongrentang%20herbal%20brand%20film%20cover%2C%20red%20and%20gold%2C%20high%20detail&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&h=338&fit=crop',
     likes: 318,
     comments: 28,
     views: 1672,
@@ -70,8 +70,8 @@ mockWorks.push(
     id: 203,
     title: '海河城市·纪念片段剪辑',
     creator: '剪辑师小河',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Editor%20avatar%20Haihe',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Haihe%20city%20commemorative%20film%20cover%2C%20blue%20accent%20waves&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=338&fit=crop',
     likes: 244,
     comments: 21,
     views: 1206,
@@ -85,8 +85,8 @@ mockWorks.push(
     id: 204,
     title: '耳朵眼炸糕·制作工艺记录片',
     creator: '纪录片导演小耳',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Documentary%20Director%20avatar%20Ear',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Traditional%20food%20making%20documentary%20cover%2C%20Erduoyan%20fried%20cake%2C%20warm%20lighting&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=338&fit=crop',
     likes: 267,
     comments: 23,
     views: 1350,
@@ -100,8 +100,8 @@ mockWorks.push(
     id: 205,
     title: '泥人张·IP角色动画短片',
     creator: '动画师小张',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Animator%20avatar%20Nirenzhang',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Nirenzhang%20clay%20figure%20character%20animation%20cover%2C%20cute%20IP%2C%20flat%20style&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=600&h=338&fit=crop',
     likes: 302,
     comments: 32,
     views: 1580,
@@ -115,8 +115,8 @@ mockWorks.push(
     id: 206,
     title: '果仁张·新产品宣传视频',
     creator: '广告导演小果',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Advertising%20director%20avatar%20Guorenzhang',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Guorenzhang%20new%20product%20advertisement%20cover%2C%20premium%20look%2C%20high%20detail&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=600&h=338&fit=crop',
     likes: 258,
     comments: 20,
     views: 1270,
@@ -130,8 +130,8 @@ mockWorks.push(
     id: 207,
     title: '杨柳青年画·数字动画展示',
     creator: '数字艺术家小杨',
-    creatorAvatar: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Digital%20artist%20avatar%20Yangliuqing',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=Yangliuqing%20New%20Year%20Painting%20digital%20animation%20cover%2C%20vibrant%20colors&image_size=landscape_16_9',
+    creatorAvatar: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&h=338&fit=crop',
     likes: 321,
     comments: 35,
     views: 1650,
@@ -377,12 +377,20 @@ export default function Explore() {
     }
   }, [selectedCategory, searchQuery, sortBy, selectedTags]);
 
-  // 获取热门作品（展示在推荐区）
-  const featuredWorks = mockWorks.filter(work => work.featured);
+  // 获取热门作品（展示在推荐区）- 添加唯一参数确保图片API返回不同图片
+  const featuredWorks = mockWorks
+    .filter(work => work.featured)
+    .map(work => ({
+      ...work,
+      thumbnail: `${work.thumbnail}&unique=${work.id}`
+    }));
   
-  // 分页作品
+  // 分页作品 - 添加唯一参数确保图片API返回不同图片
   const pagedWorks = useMemo(() => {
-    return filteredWorks.slice(0, page * pageSize);
+    return filteredWorks.slice(0, page * pageSize).map(work => ({
+      ...work,
+      thumbnail: `${work.thumbnail}&unique=${work.id}`
+    }));
   }, [filteredWorks, page]);
 
   // 处理分类选择
@@ -495,62 +503,107 @@ export default function Explore() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-900 dark:to-neutral-800">
-      {/* 顶部红色框 - 最终美化版 */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 via-pink-600 to-red-700 py-10 px-8 rounded-3xl mx-4 mt-4 shadow-xl">
-        {/* 装饰性背景元素 */}
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -ml-16 -mb-16"></div>
+      {/* 顶部红色框 - 优化版 */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-red-600 via-pink-600 to-red-700 py-12 px-8 rounded-3xl mx-4 mt-4 shadow-2xl">
+        {/* 动态装饰性背景元素 */}
+        <motion.div 
+          className="absolute top-0 right-0 w-48 h-48 bg-white/15 rounded-full blur-3xl -mr-24 -mt-24"
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3],
+            x: [0, 10, 0],
+            y: [0, -10, 0]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        ></motion.div>
+        <motion.div 
+          className="absolute bottom-0 left-0 w-36 h-36 bg-white/15 rounded-full blur-3xl -ml-18 -mb-18"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2],
+            x: [0, -15, 0],
+            y: [0, 15, 0]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        ></motion.div>
+        {/* 新增中心装饰元素 */}
+        <div className="absolute top-1/2 left-1/2 w-[150%] h-[150%] bg-gradient-to-r from-red-500/20 to-pink-500/20 blur-3xl -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
         
         <div className="container mx-auto relative z-10">
-          {/* 标题和副标题 */}
-          <div className="mb-10">
-            <h1 className="text-2xl md:text-4xl font-bold text-white drop-shadow-sm">探索中国传统品牌新创意</h1>
-            <p className="text-white/90 mt-3 text-sm md:text-base max-w-2xl">发现来自全国各地的品牌设计作品，感受传统与现代的完美融合</p>
-          </div>
+          {/* 标题和副标题 - 增强动画效果 */}
+          <motion.div 
+            className="mb-12 text-center md:text-left"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <motion.h1 
+              className="text-3xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-lg leading-tight"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            >
+              探索中国传统品牌新创意
+            </motion.h1>
+            <motion.p 
+              className="text-white/95 mt-4 text-base md:text-lg max-w-2xl mx-auto md:mx-0 leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            >
+              发现来自全国各地的品牌设计作品，感受传统与现代的完美融合
+            </motion.p>
+          </motion.div>
           
-          {/* 标签区 - 最终美化版 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <motion.button
-              whileHover={{ scale: 1.04, y: -3 }}
-              whileTap={{ scale: 0.96 }}
-              className="px-6 py-4 bg-gradient-to-r from-red-700 to-red-800 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-red-900/40 hover:border-red-800/60 transform transition-transform hover:bg-red-600/90"
-              onClick={() => setSelectedCategory('全部')}
-              aria-label="查看全部作品"
-            >
-              <div className="font-semibold">精选</div>
-              <div className="text-xs opacity-95 mt-0.5">优选</div>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.04, y: -3 }}
-              whileTap={{ scale: 0.96 }}
-              className="px-6 py-4 bg-gradient-to-r from-red-700 to-red-800 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-red-900/40 hover:border-red-800/60 transform transition-transform hover:bg-red-600/90"
-              onClick={() => setSelectedCategory('国潮设计')}
-              aria-label="查看国潮设计作品"
-            >
-              <div className="font-semibold">风格</div>
-              <div className="text-xs opacity-95 mt-0.5">融合</div>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.04, y: -3 }}
-              whileTap={{ scale: 0.96 }}
-              className="px-6 py-4 bg-gradient-to-r from-red-700 to-red-800 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-red-900/40 hover:border-red-800/60 transform transition-transform hover:bg-red-600/90"
-              onClick={() => setSelectedCategory('工艺创新')}
-              aria-label="查看工艺创新作品"
-            >
-              <div className="font-semibold">效率</div>
-              <div className="text-xs opacity-95 mt-0.5">提升</div>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.04, y: -3 }}
-              whileTap={{ scale: 0.96 }}
-              className="px-6 py-4 bg-gradient-to-r from-red-700 to-red-800 text-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-red-900/40 hover:border-red-800/60 transform transition-transform hover:bg-red-600/90"
-              onClick={() => setSelectedCategory('IP设计')}
-              aria-label="查看IP设计作品"
-            >
-              <div className="font-semibold">协作</div>
-              <div className="text-xs opacity-95 mt-0.5">共创</div>
-            </motion.button>
-          </div>
+          {/* 标签区 - 优化版 */}
+          <motion.div 
+            className="grid grid-cols-2 md:grid-cols-4 gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+          >
+            {[
+              { title: '精选', subtitle: '优选', category: '全部', icon: '✨' },
+              { title: '风格', subtitle: '融合', category: '国潮设计', icon: '🎨' },
+              { title: '效率', subtitle: '提升', category: '工艺创新', icon: '⚡' },
+              { title: '协作', subtitle: '共创', category: 'IP设计', icon: '🤝' }
+            ].map((item, index) => (
+              <motion.button
+                key={index}
+                whileHover={{ 
+                  scale: 1.06, 
+                  y: -6,
+                  boxShadow: "0 12px 30px -10px rgba(220, 38, 38, 0.5)"
+                }}
+                whileTap={{ scale: 0.98 }}
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ 
+                  duration: 0.5, 
+                  delay: 0.7 + index * 0.1, 
+                  ease: "easeOut",
+                  whileHover: { duration: 0.3 },
+                  whileTap: { duration: 0.1 }
+                }}
+                className="px-6 py-5 bg-gradient-to-r from-red-700/95 to-red-800/95 text-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-400 border border-red-900/30 hover:border-red-800/50 transform hover:bg-red-600/90 backdrop-blur-sm group"
+                onClick={() => setSelectedCategory(item.category)}
+                aria-label={`查看${item.category}作品`}
+              >
+                {/* 新增图标 */}
+                <motion.div 
+                  className="text-xl mb-2"
+                  whileHover={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {item.icon}
+                </motion.div>
+                <div className="font-semibold text-lg">{item.title}</div>
+                <div className="text-xs opacity-90 mt-1">{item.subtitle}</div>
+                {/* 新增底部渐变光效 */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-red-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              </motion.button>
+            ))}
+          </motion.div>
         </div>
       </div>
 

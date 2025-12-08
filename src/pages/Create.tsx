@@ -20,7 +20,7 @@ import { promptTemplates } from '@/data/promptTemplates';
 const aiGeneratedResults = [
   {
     id: 1,
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20design%201',
+    thumbnail: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=600&h=400&fit=crop&AI%20generated%20traditional%20Chinese%20design%201',
     score: 85,
   },
   {
@@ -1832,7 +1832,7 @@ export default function Create() {
                   您可以添加传统元素、指定风格，让AI为您带来无限创意。
                 </p>
                 <img 
-                  src="/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_16_9&prompt=AI%20design%20workflow%20illustration%2C%20creative%20process%20concept" 
+                  src="https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=600&h=338&fit=crop&AI%20design%20workflow%20illustration%2C%20creative%20process%20concept" 
                   alt="AI创作流程" 
                   className="rounded-xl mx-auto max-w-full h-auto"
                   loading="lazy" decoding="async"

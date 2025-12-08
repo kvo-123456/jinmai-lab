@@ -1,0 +1,601 @@
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '@/hooks/useTheme';
+import { AuthContext } from '@/contexts/authContext';
+import { toast } from 'sonner';
+import culturalSpotTheDifferenceGameService, { Level, Difference, GameProgress } from '@/services/culturalSpotTheDifferenceGameService';
+
+interface CulturalSpotTheDifferenceGameProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const CulturalSpotTheDifferenceGame: React.FC<CulturalSpotTheDifferenceGameProps> = ({ isOpen, onClose }) => {
+  const { isDark } = useTheme();
+  const { user } = useContext(AuthContext);
+  
+  // 游戏状态
+  const [gameState, setGameState] = useState<'menu' | 'playing' | 'completed'>('menu');
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
+  const [foundDifferences, setFoundDifferences] = useState<Set<string>>(new Set());
+  const [gameProgress, setGameProgress] = useState<GameProgress | null>(null);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [timeTaken, setTimeTaken] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [showHint, setShowHint] = useState(false);
+  const [hintDifference, setHintDifference] = useState<Difference | null>(null);
+  
+  // 图片容器引用
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
+  // 加载游戏数据 - 简化逻辑，避免不必要的延迟
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoading(true);
+      
+      // 直接获取数据，不添加延迟
+      try {
+        const allLevels = culturalSpotTheDifferenceGameService.getLevels();
+        setLevels(allLevels);
+        
+        if (user) {
+          const progress = culturalSpotTheDifferenceGameService.getGameProgress(user.id);
+          setGameProgress(progress);
+        }
+      } catch (error) {
+        console.error('加载游戏数据失败:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [isOpen, user]);
+
+  // 当选择关卡时，初始化游戏状态
+  useEffect(() => {
+    if (selectedLevel) {
+      setFoundDifferences(new Set());
+      setShowHint(false);
+      setHintDifference(null);
+      setGameState('playing');
+      setStartTime(new Date());
+      setTimeTaken(null);
+      setCurrentTime(0);
+    }
+  }, [selectedLevel]);
+
+  // 计时器
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (startTime && gameState === 'playing') {
+      timer = setInterval(() => {
+        const now = new Date();
+        const diff = Math.round((now.getTime() - startTime.getTime()) / 1000);
+        setCurrentTime(diff);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [startTime, gameState]);
+
+  // 选择关卡
+  const handleSelectLevel = useCallback((level: Level) => {
+    if (!user) {
+      toast.error('请先登录！');
+      return;
+    }
+    
+    const isUnlocked = culturalSpotTheDifferenceGameService.isLevelUnlocked(user.id, level.id);
+    if (isUnlocked) {
+      setSelectedLevel(level);
+    } else {
+      toast.error('该关卡尚未解锁！');
+    }
+  }, [user]);
+
+  // 处理图片点击事件
+  const handleImageClick = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
+    if (!selectedLevel || gameState !== 'playing') return;
+    
+    const imageElement = e.currentTarget;
+    const rect = imageElement.getBoundingClientRect();
+    const containerRect = imageContainerRef.current?.getBoundingClientRect();
+    
+    if (!containerRect) return;
+    
+    // 计算点击位置相对于图片的百分比
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    // 检查是否点击到了差异点
+    for (const difference of selectedLevel.differences) {
+      if (foundDifferences.has(difference.id)) continue;
+      
+      if (culturalSpotTheDifferenceGameService.isDifferenceFound({ x, y }, difference)) {
+        // 找到差异点
+        setFoundDifferences(prev => {
+          const newSet = new Set(prev);
+          newSet.add(difference.id);
+          return newSet;
+        });
+        
+        toast.success(`找到差异点：${difference.description}`);
+        
+        // 检查是否找到所有差异点
+        if (foundDifferences.size + 1 === selectedLevel.differences.length) {
+          handleCompleteLevel();
+        }
+        
+        break;
+      }
+    }
+  }, [selectedLevel, gameState, foundDifferences]);
+
+  // 使用提示
+  const handleUseHint = useCallback(() => {
+    if (!user || !gameProgress || !selectedLevel) return;
+    
+    const success = culturalSpotTheDifferenceGameService.useHint(user.id);
+    if (success) {
+      // 找到第一个未找到的差异点作为提示
+      const remainingDifferences = selectedLevel.differences.filter(diff => !foundDifferences.has(diff.id));
+      if (remainingDifferences.length > 0) {
+        setHintDifference(remainingDifferences[0]);
+        setShowHint(true);
+        
+        // 3秒后自动隐藏提示
+        setTimeout(() => {
+          setShowHint(false);
+          setHintDifference(null);
+        }, 3000);
+      }
+      
+      const updatedProgress = culturalSpotTheDifferenceGameService.getGameProgress(user.id);
+      setGameProgress(updatedProgress);
+      toast.success('已显示提示，请注意观察提示区域');
+    } else {
+      toast.error('提示已用完');
+    }
+  }, [user, gameProgress, selectedLevel, foundDifferences]);
+
+  // 完成关卡
+  const handleCompleteLevel = useCallback(() => {
+    if (!user || !selectedLevel) return;
+    
+    const endTime = new Date();
+    const timeDiff = startTime ? Math.round((endTime.getTime() - startTime.getTime()) / 1000) : 0;
+    setTimeTaken(timeDiff);
+    
+    // 计算得分
+    const finalScore = culturalSpotTheDifferenceGameService.calculateLevelScore(
+      foundDifferences.size,
+      selectedLevel.differences.length,
+      timeDiff,
+      selectedLevel.difficulty
+    );
+    
+    // 更新游戏进度
+    const updatedProgress = culturalSpotTheDifferenceGameService.completeLevel(
+      user.id,
+      selectedLevel.id,
+      finalScore,
+      timeDiff
+    );
+    setGameProgress(updatedProgress);
+    
+    setGameState('completed');
+    
+    toast.success(`关卡完成！得分：${finalScore}`);
+  }, [user, selectedLevel, foundDifferences, startTime]);
+
+  // 返回主菜单
+  const handleBackToMenu = useCallback(() => {
+    setGameState('menu');
+    setSelectedLevel(null);
+    setFoundDifferences(new Set());
+    setStartTime(null);
+    setTimeTaken(null);
+    setCurrentTime(0);
+    setShowHint(false);
+    setHintDifference(null);
+  }, []);
+
+  // 重新开始关卡
+  const handleRestartLevel = useCallback(() => {
+    if (!selectedLevel) return;
+    setFoundDifferences(new Set());
+    setShowHint(false);
+    setHintDifference(null);
+    setGameState('playing');
+    setStartTime(new Date());
+    setTimeTaken(null);
+    setCurrentTime(0);
+  }, [selectedLevel]);
+
+  // 格式化时间
+  const formatTime = useCallback((seconds: number | null) => {
+    if (!seconds) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }, []);
+
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-y-auto"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: 100, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className={`w-full max-w-4xl max-h-[90vh] rounded-xl overflow-hidden shadow-2xl ${isDark ? 'bg-gray-800' : 'bg-white'} text-${isDark ? 'white' : 'gray-900'} flex flex-col`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 游戏头部 - 固定 */}
+        <div className={`sticky top-0 z-10 p-4 border-b ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'} flex justify-between items-center`}>
+          <h3 className="text-xl font-bold">文化图片找茬</h3>
+          <button
+            onClick={onClose}
+            className={`p-3 rounded-full text-xl ${isDark ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all shadow-md hover:shadow-lg`}
+            aria-label="关闭"
+          >
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+
+        {/* 游戏内容 - 可滚动 */}
+        <div className="p-6 overflow-y-auto flex-grow max-h-[calc(90vh-80px)]">
+          {/* 加载状态 */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600 mb-4"></div>
+              <p className="text-lg">加载游戏数据...</p>
+            </div>
+          )}
+
+          {/* 主菜单 */}
+          <AnimatePresence mode="wait">
+            {gameState === 'menu' && !isLoading && (
+              <motion.div
+                key="menu"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold mb-2">欢迎来到文化图片找茬</h2>
+                  <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    找出两张文化图片的不同之处，了解更多天津地方文化和中国传统文化
+                  </p>
+                </div>
+
+                {/* 游戏进度 */}
+                {gameProgress && (
+                  <div className={`mb-6 p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <h3 className="text-lg font-medium mb-2">游戏进度</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>已完成关卡</p>
+                        <p className="text-xl font-bold">{gameProgress.completedLevels.length}</p>
+                      </div>
+                      <div>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>总得分</p>
+                        <p className="text-xl font-bold">{gameProgress.totalScore}</p>
+                      </div>
+                      <div>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>可用提示</p>
+                        <p className="text-xl font-bold">{gameProgress.unlockedHints}</p>
+                      </div>
+                      <div>
+                        <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>关卡总数</p>
+                        <p className="text-xl font-bold">{levels.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 关卡列表 */}
+                <h3 className="text-lg font-medium mb-4">选择关卡</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {levels.map((level) => {
+                    const isCompleted = gameProgress?.completedLevels.includes(level.id) || false;
+                    const isUnlocked = !user || culturalSpotTheDifferenceGameService.isLevelUnlocked(user.id, level.id);
+
+                    return (
+                      <motion.div
+                        key={level.id}
+                        className={`p-4 rounded-lg border cursor-pointer transition-all ${isDark ? 'border-gray-700' : 'border-gray-200'} ${isUnlocked ? 'hover:shadow-md' : 'opacity-50 cursor-not-allowed'}`}
+                        whileHover={isUnlocked ? { y: -4 } : {}}
+                        onClick={() => isUnlocked && handleSelectLevel(level)}
+                      >
+                        {level.imageUrl && (
+                          <div className="relative aspect-video overflow-hidden rounded-lg mb-3">
+                            <img
+                              src={level.imageUrl}
+                              alt={level.name}
+                              className="w-full h-full object-cover transition-transform hover:scale-105"
+                            />
+                            {isCompleted && (
+                              <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                                已完成
+                              </div>
+                            )}
+                            {!isUnlocked && (
+                              <div className="absolute top-2 right-2 bg-gray-600 text-white text-xs px-2 py-1 rounded-full">
+                                未解锁
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <h4 className="font-medium mb-1">{level.name}</h4>
+                        <p className={`text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {level.description}
+                        </p>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                            {level.difficulty.toUpperCase()}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                            {level.differences.length} 处差异
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                            {level.culturalTheme}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          {level.timeLimit && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-yellow-900 bg-opacity-30 text-yellow-200' : 'bg-yellow-100 text-yellow-800'}`}>
+                              限时: {formatTime(level.timeLimit)}
+                            </span>
+                          )}
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-yellow-900 bg-opacity-30 text-yellow-200' : 'bg-yellow-100 text-yellow-800'}`}>
+                            奖励: {level.reward}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 游戏界面 */}
+          <AnimatePresence mode="wait">
+            {gameState === 'playing' && selectedLevel && !isLoading && (
+              <motion.div
+                key="playing"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* 关卡信息 */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-medium">{selectedLevel.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleBackToMenu}
+                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                      >
+                        返回菜单
+                      </button>
+                      <button
+                        onClick={handleUseHint}
+                        disabled={!gameProgress || gameProgress.unlockedHints <= 0}
+                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        <i className="fas fa-lightbulb mr-1"></i>提示 ({gameProgress?.unlockedHints || 0})
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                      <span className="text-xs block mb-1">已找到差异</span>
+                      <span className="font-medium">{foundDifferences.size} / {selectedLevel.differences.length}</span>
+                    </div>
+                    <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                      <span className="text-xs block mb-1">已用时间</span>
+                      <span className="font-medium">{formatTime(currentTime)}</span>
+                    </div>
+                    <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                      <span className="text-xs block mb-1">剩余差异</span>
+                      <span className="font-medium">{selectedLevel.differences.length - foundDifferences.size}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 图片对比区域 */}
+                <div ref={imageContainerRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {/* 原始图片 */}
+                  <div className="relative">
+                    <h4 className="text-center font-medium mb-2">原始图片</h4>
+                    <div className={`relative overflow-hidden rounded-lg border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <img
+                        src={selectedLevel.originalImageUrl}
+                        alt="原始图片"
+                        className="w-full h-auto cursor-pointer transition-transform hover:scale-105"
+                        onClick={handleImageClick}
+                        loading="lazy"
+                      />
+                      {/* 标记已找到的差异点 */}
+                      {selectedLevel.differences.map((difference) => {
+                        if (foundDifferences.has(difference.id)) {
+                          return (
+                            <motion.div
+                              key={difference.id}
+                              initial={{ opacity: 0, scale: 0 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                              className="absolute border-2 border-green-500 bg-green-500 bg-opacity-20 rounded-lg"
+                              style={{
+                                left: `${difference.position.x - difference.position.width / 2}%`,
+                                top: `${difference.position.y - difference.position.height / 2}%`,
+                                width: `${difference.position.width}%`,
+                                height: `${difference.position.height}%`,
+                              }}
+                            >
+                              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                <i className="fas fa-check"></i>
+                              </div>
+                            </motion.div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </div>
+                  
+                  {/* 修改后的图片 */}
+                  <div className="relative">
+                    <h4 className="text-center font-medium mb-2">修改后的图片</h4>
+                    <div className={`relative overflow-hidden rounded-lg border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <img
+                        src={selectedLevel.modifiedImageUrl}
+                        alt="修改后的图片"
+                        className="w-full h-auto cursor-pointer transition-transform hover:scale-105"
+                        onClick={handleImageClick}
+                        loading="lazy"
+                      />
+                      {/* 标记已找到的差异点 */}
+                      {selectedLevel.differences.map((difference) => {
+                        if (foundDifferences.has(difference.id)) {
+                          return (
+                            <motion.div
+                              key={difference.id}
+                              initial={{ opacity: 0, scale: 0 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                              className="absolute border-2 border-green-500 bg-green-500 bg-opacity-20 rounded-lg"
+                              style={{
+                                left: `${difference.position.x - difference.position.width / 2}%`,
+                                top: `${difference.position.y - difference.position.height / 2}%`,
+                                width: `${difference.position.width}%`,
+                                height: `${difference.position.height}%`,
+                              }}
+                            >
+                              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                <i className="fas fa-check"></i>
+                              </div>
+                            </motion.div>
+                          );
+                        } else if (showHint && hintDifference && difference.id === hintDifference.id) {
+                          // 显示提示的差异点
+                          return (
+                            <motion.div
+                              key={difference.id}
+                              initial={{ opacity: 0, scale: 0 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                              className="absolute border-2 border-yellow-500 bg-yellow-500 bg-opacity-20 rounded-lg animate-pulse"
+                              style={{
+                                left: `${difference.position.x - difference.position.width / 2}%`,
+                                top: `${difference.position.y - difference.position.height / 2}%`,
+                                width: `${difference.position.width}%`,
+                                height: `${difference.position.height}%`,
+                              }}
+                            >
+                              <div className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                <i className="fas fa-lightbulb"></i>
+                              </div>
+                            </motion.div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 游戏完成界面 */}
+          <AnimatePresence mode="wait">
+            {gameState === 'completed' && selectedLevel && gameProgress && !isLoading && (
+              <motion.div
+                key="completed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                  className="mb-6"
+                >
+                  <i className="fas fa-trophy text-6xl text-yellow-500"></i>
+                </motion.div>
+                <h2 className="text-2xl font-bold mb-2">恭喜完成关卡！</h2>
+                <p className={`mb-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  你成功完成了「{selectedLevel.name}」关卡
+                </p>
+
+                {/* 得分统计 */}
+                <div className={`p-4 rounded-lg mb-6 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>最终得分</p>
+                      <p className="text-xl font-bold">{gameProgress.levelScores[selectedLevel.id] || 0}</p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>完成时间</p>
+                      <p className="text-xl font-bold">{formatTime(timeTaken || 0)}</p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>正确率</p>
+                      <p className="text-xl font-bold">100%</p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>找到差异</p>
+                      <p className="text-xl font-bold">{selectedLevel.differences.length} / {selectedLevel.differences.length}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 奖励信息 */}
+                <div className={`p-4 rounded-lg mb-6 ${isDark ? 'bg-yellow-900 bg-opacity-30' : 'bg-yellow-100'} border ${isDark ? 'border-yellow-700' : 'border-yellow-200'}`}>
+                  <h3 className="font-medium mb-2">获得奖励</h3>
+                  <p className={isDark ? 'text-yellow-200' : 'text-yellow-800'}>
+                    {selectedLevel.reward}
+                  </p>
+                </div>
+
+                {/* 游戏控制 */}
+                <div className="flex justify-center gap-3">
+                  <button
+                    onClick={handleRestartLevel}
+                    className={`px-4 py-2 rounded-lg transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  >
+                    重新挑战
+                  </button>
+                  <button
+                    onClick={handleBackToMenu}
+                    className={`px-4 py-2 rounded-lg transition-colors ${isDark ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                  >
+                    返回关卡选择
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+export default CulturalSpotTheDifferenceGame;

@@ -333,7 +333,7 @@ const historicalStories = [
   {
     id: 34,
     title: '宜兴紫砂：泥与火的壶学体系',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Yixing%20zisha%20teapots%20studio%20shelves',
+    thumbnail: 'https://picsum.photos/1920/1080?random=1',
     excerpt: '以泥料配比与成型技法构筑茶壶功能与美学的统一。',
     content: `紫砂壶讲究泥性、气孔与壁厚的平衡，成型与烧成决定出汤与保温。
 传播中以“工与用”的叙事连接专业与大众。`,
@@ -342,7 +342,7 @@ const historicalStories = [
   {
     id: 35,
     title: '雕版印刷：文字与木版的知识生产',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Chinese%20woodblock%20printing%20workshop%20typesetting%20ink%20table',
+    thumbnail: 'https://picsum.photos/1920/1080?random=2',
     excerpt: '以手工刻版与印刷传递知识与审美，形成出版史的重要阶段。',
     content: `雕版印刷强调排版与刻工配合，墨色与纸材影响阅读体验。
 现代延展包括艺术版画与手工出版的复兴。`,
@@ -351,7 +351,7 @@ const historicalStories = [
   {
     id: 36,
     title: '苗族银饰：锻敲与纹样的身体叙事',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Miao%20silver%20ornaments%20traditional%20workshop%20detail',
+    thumbnail: 'https://picsum.photos/1920/1080?random=3',
     excerpt: '以锻打、錾刻与焊接形成复杂纹样，承载族群身份与审美。',
     content: `银饰的构件组合体现工艺体系，纹样语言传递文化记忆。
 在时尚与博物馆叙事中具有强烈的视觉辨识度。`,
@@ -364,7 +364,7 @@ const historicalStories = [
     category: '金工',
     description: '以金属胎与掐丝填珐琅呈现绚丽色彩与金属光泽。',
     content: '工序包含制胎、掐丝、点蓝、烧焙与磨光，适合器物与陈设。',
-    image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Cloisonne%20enamel%20Chinese%20Jingtailan%20workshop%20close-up'
+    image: 'https://picsum.photos/1920/1080?random=4'
   },
   {
     id: 14,
@@ -372,7 +372,7 @@ const historicalStories = [
     category: '纸艺',
     description: '以植物纤维与水道漂洗制成适宜书画的纸张。',
     content: '包含制浆、捞纸、压榨与晾晒，具吸水性与柔韧度。',
-    image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Xuan%20paper%20making%20traditional%20workshop%20vats%20and%20frames'
+    image: 'https://picsum.photos/1920/1080?random=5'
   },
   {
     id: 15,
@@ -380,7 +380,7 @@ const historicalStories = [
     category: '编织',
     description: '以竹篾编织形成立体与纹理，结构轻而韧。',
     content: '分细割、篾片处理与编织，常用于器具、灯具与装饰。',
-    image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Chinese%20bamboo%20weaving%20craft%20structure%20macro'
+    image: 'https://picsum.photos/1920/1080?random=6'
   },
   {
     id: 16,
@@ -388,7 +388,7 @@ const historicalStories = [
     category: '版画',
     description: '以木版刻印呈节庆图像，色彩质朴与民俗意味。',
     content: '刻版、分色套印与印制流程，体现传统文化的图像表达。',
-    image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Chinese%20woodblock%20New%20Year%20prints%20studio%20ink%20and%20blocks'
+    image: 'https://picsum.photos/1920/1080?random=7'
   },
   {
     id: 17,
@@ -396,7 +396,7 @@ const historicalStories = [
     category: '染织',
     description: '以蜡防染形成分割与纹理，呈现柔和的色阶效果。',
     content: '画蜡、染色、退蜡的流程，适合纺织与纸艺的图案表现。',
-    image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Batik%20wax%20resist%20dyeing%20Chinese%20Miao%20studio'
+    image: 'https://picsum.photos/1920/1080?random=8'
   },
   {
     id: 18,
@@ -404,7 +404,7 @@ const historicalStories = [
     category: '染织',
     description: '以植物染与泥染叠加获得独特铜褐光泽与手感。',
     content: '榄仁叶染与河泥捣染结合，日晒与抛光形成细腻质感。',
-    image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Xiangyunsha%20silk%20mud%20dyeing%20workshop%20process'
+    image: 'https://picsum.photos/1920/1080?random=9'
   },
   {
     id: 19,

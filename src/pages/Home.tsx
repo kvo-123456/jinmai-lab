@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
@@ -8,6 +8,7 @@ import { TianjinImage } from '@/components/TianjinStyleComponents';
 import llmService from '@/services/llmService'
 import voiceService from '@/services/voiceService'
 import { markPrefetched, isPrefetched } from '@/services/prefetch'
+import { mockWorks } from '@/mock/works'
 
 export default function Home() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -199,15 +200,46 @@ export default function Home() {
     '品牌与老字号共创的最佳实践'
   ];
   
-  // 推荐作品
-  const gallery = [
-    { id: 1, title: '桂发祥麻花包装焕新', category: '老字号品牌', thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=SDXL%2C%20Guifaxiang%20mahua%20modern%20packaging%20design%2C%20cultural%20red%20and%20gold%2C%20studio%20lighting%2C%20high%20detail&image_size=1920x1080', likes: 256 },
-    { id: 2, title: '狗不理联名海报', category: '视觉设计', thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Goubuli%20steamed%20buns%20brand%20poster%20design', likes: 198 },
-    { id: 3, title: '耳朵眼炸糕IP形象', category: 'IP设计', thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=SDXL%2C%20Erduoyan%20fried%20cake%20brand%20mascot%20illustration%2C%20cute%20IP%2C%20flat%20style%2C%20high%20detail&image_size=1920x1080', likes: 312 },
-    { id: 4, title: '果仁张秋季礼盒', category: '包装设计', thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?prompt=SDXL%2C%20Guorenzhang%20candied%20chestnut%20autumn%20gift%20box%2C%20packaging%20design%2C%20warm%20tone%2C%20high%20detail&image_size=1920x1080', likes: 224 },
-    { id: 5, title: '杨柳青年画主题插画', category: '插画', thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Yangliuqing%20New%20Year%20Painting%20theme%20modern%20illustration', likes: 341 },
-    { id: 6, title: '泥人张彩塑联名周边', category: '文创', thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1920x1080&prompt=Nirenzhang%20clay%20sculpture%20collaboration%20merch%20design', likes: 187 }
-  ];
+  // 推荐作品 - 从mockWorks中获取，展示更多作品
+  const gallery = mockWorks.slice(0, 12); // 展示前12个作品
+  
+  // 热门创作者 - 基于作品的likes来推荐创作者（去重并排序）
+  const popularCreators = Array.from(
+    mockWorks
+      .reduce((acc, work) => {
+        const creator = acc.get(work.creator) || { name: work.creator, avatar: work.creatorAvatar, likes: 0, works: [] };
+        creator.likes += work.likes;
+        creator.works.push(work);
+        acc.set(work.creator, creator);
+        return acc;
+      }, new Map<string, { name: string; avatar: string; likes: number; works: typeof mockWorks }>())
+      .values()
+  )
+  .sort((a, b) => b.likes - a.likes)
+  .slice(0, 6);
+  
+  // 最新作品 - 基于id排序，假设id越大越新
+  // 为每个作品添加唯一参数，确保图片API返回不同的图片
+  const latestWorks = [...mockWorks]
+    .sort((a, b) => b.id - a.id)
+    .slice(0, 8)
+    .map(work => ({
+      ...work,
+      thumbnail: `${work.thumbnail}&unique=${work.id}`
+    }));
+  
+  // 热门标签 - 统计标签出现次数并排序
+  const tagCounts = mockWorks
+    .flatMap(work => work.tags)
+    .reduce((acc, tag) => {
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  
+  const popularTags = Object.entries(tagCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 20)
+    .map(([tag]) => tag);
   
 
   
@@ -339,6 +371,11 @@ export default function Home() {
     );
   };
   
+  // 骨架屏组件
+  const Skeleton = ({ className }: { className?: string }) => (
+    <div className={`w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse ${className}`}></div>
+  );
+
   return (
     <section 
         className={`relative w-full pt-12 ${isDark ? 'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-b from-gray-50 via-white to-gray-50'} animate-fade-in`}
@@ -346,17 +383,24 @@ export default function Home() {
 
       
       {/* 首页主标题区域 */}
-      <div className="max-w-7xl mx-auto mb-8">
-        {/* 首页主标题：采用渐变文字与阴影效果，提升视觉吸引力 */}
-        <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-4 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent text-center drop-shadow-md animate-gradient-text">
-          创作者，您好
-        </h1>
-        {/* 首页副标题：提升可读性，限制最大宽度，并根据主题切换不同灰度 */}
-        <p className={`text-sm sm:text-base md:text-lg leading-relaxed opacity-90 max-w-2xl text-center mx-auto ${isDark ? 'text-gray-200' : 'text-gray-600'} mb-8`}>
-          {heroVariant === 'A' 
-            ? '输入你的问题或灵感，我们帮你更快抵达答案与创作' 
-            : '一句话描述创作目标，获得灵感、生成方案与优化建议'}
-        </p>
+      <Suspense fallback={
+        <div className="max-w-7xl mx-auto mb-8">
+          <Skeleton className="h-12 md:h-16 mb-4" />
+          <Skeleton className="h-4 md:h-6 mb-8" />
+          <div className="h-64 rounded-3xl bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+        </div>
+      }>
+        <div className="max-w-7xl mx-auto mb-8">
+          {/* 首页主标题：采用渐变文字与阴影效果，提升视觉吸引力 */}
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-4 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent text-center drop-shadow-md animate-gradient-text">
+            创作者，您好
+          </h1>
+          {/* 首页副标题：提升可读性，限制最大宽度，并根据主题切换不同灰度 */}
+          <p className={`text-sm sm:text-base md:text-lg leading-relaxed opacity-90 max-w-2xl text-center mx-auto ${isDark ? 'text-gray-200' : 'text-gray-600'} mb-8`}>
+            {heroVariant === 'A' 
+              ? '输入你的问题或灵感，我们帮你更快抵达答案与创作' 
+              : '一句话描述创作目标，获得灵感、生成方案与优化建议'}
+          </p>
         
         {/* 搜索与功能按钮区域 */}
         <div className={`rounded-3xl shadow-lg ring-1 ${isDark ? 'bg-gray-800/80 backdrop-blur-sm ring-gray-700 hover:shadow-xl' : 'bg-white/80 backdrop-blur-sm ring-gray-200 hover:shadow-xl'} p-4 md:p-6 transition-all duration-300`}> 
@@ -462,65 +506,87 @@ export default function Home() {
           </div>
         </div>
       </div>
+      </Suspense>
       
       {/* 推荐问题区域 */}
-      <div className="max-w-7xl mx-auto mb-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {recommended.map((r, idx) => (
-            <div key={idx} className={`p-4 rounded-xl ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 hover:bg-gray-750' : 'bg-white ring-1 ring-gray-200 hover:bg-gray-50'} flex items-center justify-between transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-slide-up-${idx + 1}`}>
-              <span className={`${isDark ? 'text-gray-100' : 'text-gray-700'} text-sm md:text-base`}>{r}</span>
-              <button onClick={() => handleRecommendedClick(r)} className="text-primary text-sm md:text-base px-2 py-1 rounded hover:bg-primary/10 transition-all duration-300">查看</button>
-            </div>
-          ))}
+      <Suspense fallback={
+        <div className="max-w-7xl mx-auto mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {Array(5).fill(0).map((_, idx) => (
+              <div key={idx} className={`p-4 rounded-xl ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} flex items-center justify-between`}>
+                <Skeleton className="w-3/4" />
+                <Skeleton className="w-16" />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      }>
+        <div className="max-w-7xl mx-auto mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {recommended.map((r, idx) => (
+              <div key={idx} className={`p-4 rounded-xl ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 hover:bg-gray-750' : 'bg-white ring-1 ring-gray-200 hover:bg-gray-50'} flex items-center justify-between transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-slide-up-${idx + 1}`}>
+                <span className={`${isDark ? 'text-gray-100' : 'text-gray-700'} text-sm md:text-base`}>{r}</span>
+                <button onClick={() => handleRecommendedClick(r)} className="text-primary text-sm md:text-base px-2 py-1 rounded hover:bg-primary/10 transition-all duration-300">查看</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Suspense>
       
       {/* 优化建议区域 */}
-      {(creativeDirections.length > 0 || generatedText || diagnosedIssues.length > 0) && (
-        <div className="max-w-7xl mx-auto mb-10 animate-slide-up">
-          {creativeDirections.length > 0 && (
-            <div ref={creativeRef} className={`p-4 rounded-xl scroll-mt-24 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} mb-3 transition-all duration-300 hover:shadow-md`}>
-              <div className="font-medium mb-2 text-primary">创意方向</div>
-              <div className="flex flex-wrap gap-2">
-                {creativeDirections.map((d, i) => (
-                  <span key={i} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-full transition-all duration-200 hover:bg-primary/10`}>{d}</span>
-                ))}
-              </div>
+      <div className="max-w-7xl mx-auto mb-10 animate-slide-up">
+        {creativeDirections.length > 0 && (
+          <div ref={creativeRef} className={`p-4 rounded-xl scroll-mt-24 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} mb-3 transition-all duration-300 hover:shadow-md`}>
+            <div className="font-medium mb-2 text-primary">创意方向</div>
+            <div className="flex flex-wrap gap-2">
+              {creativeDirections.map((d, i) => (
+                <span key={i} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-full transition-all duration-200 hover:bg-primary/10`}>{d}</span>
+              ))}
             </div>
-          )}
-          {generatedText && (
-            <div ref={generatedRef} className={`p-4 rounded-xl scroll-mt-24 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} mb-3 transition-all duration-300 hover:shadow-md`}>
-              <div className="font-medium mb-2 text-primary">AI生成</div>
-              <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm whitespace-pre-wrap`}>{generatedText}</div>
-              {isGenerating && (<div className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>生成中…</div>)}
-            </div>
-          )}
-          {(diagnosedIssues.length > 0 || optimizationSummary) && (
-            <div ref={optimizedRef} className={`p-4 rounded-xl scroll-mt-24 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} transition-all duration-300 hover:shadow-md`}>
-              <div className="font-medium mb-2 text-primary">优化建议</div>
-              {optimizationSummary && (
-                <div className={`mb-3 p-4 rounded-lg ${isDark ? 'bg-gray-700 ring-1 ring-gray-600' : 'bg-gray-50 ring-1 ring-gray-200'} `}>
-                  <div className="text-sm font-semibold mb-2 text-primary">AI优化说明</div>
-                  <div aria-live="polite" className={`${isDark ? 'text-gray-200' : 'text-gray-800'} text-sm`}>
-                    {renderOptimizationSummary(optimizationSummary)}
-                  </div>
+          </div>
+        )}
+        {generatedText && (
+          <div ref={generatedRef} className={`p-4 rounded-xl scroll-mt-24 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} mb-3 transition-all duration-300 hover:shadow-md`}>
+            <div className="font-medium mb-2 text-primary">AI生成</div>
+            <div className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-sm whitespace-pre-wrap`}>{generatedText}</div>
+            {isGenerating && (<div className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-xs mt-2`}>生成中…</div>)}
+          </div>
+        )}
+        {(diagnosedIssues.length > 0 || optimizationSummary || isOptimizing) && (
+          <div ref={optimizedRef} className={`p-4 rounded-xl scroll-mt-24 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'} transition-all duration-300 hover:shadow-md`}>
+            <div className="font-medium mb-2 text-primary">优化建议</div>
+            {isOptimizing && (
+              <div className={`mb-3 p-4 rounded-lg ${isDark ? 'bg-gray-700 ring-1 ring-gray-600' : 'bg-gray-50 ring-1 ring-gray-200'} `}>
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-2"></div>
+                  <div className="text-sm font-semibold text-primary">正在生成优化建议...</div>
                 </div>
-              )}
+              </div>
+            )}
+            {optimizationSummary && (
+              <div className={`mb-3 p-4 rounded-lg ${isDark ? 'bg-gray-700 ring-1 ring-gray-600' : 'bg-gray-50 ring-1 ring-gray-200'} `}>
+                <div className="text-sm font-semibold mb-2 text-primary">AI优化说明</div>
+                <div aria-live="polite" className={`${isDark ? 'text-gray-200' : 'text-gray-800'} text-sm`}>
+                  {renderOptimizationSummary(optimizationSummary)}
+                </div>
+              </div>
+            )}
+            {diagnosedIssues.length > 0 && (
               <ul className="list-disc pl-5 text-sm">
                 {diagnosedIssues.map((d, i) => (
                   <li key={i} className={`${isDark ? 'text-gray-300' : 'text-gray-700'} transition-all duration-200 hover:text-primary`}>{d}</li>
                 ))}
               </ul>
-              <div className="mt-2 flex items-center gap-2 flex-wrap">
-                <button onClick={speakOptimizations} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-accent hover:bg-accent/90 text-white' : 'bg-accent hover:bg-accent/90 text-white'} transition-all duration-300 hover:shadow-sm`}>朗读建议</button>
-                <button onClick={copyOptimizations} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900 ring-1 ring-gray-300'} transition-all duration-300 hover:shadow-sm`}>复制建议</button>
-                <button onClick={() => { prefetchTools(); navigate(`/tools?from=home&query=${encodeURIComponent(optimizationSummary || search)}`) }} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-primary hover:bg-primary/90 text-white'} transition-all duration-300 hover:shadow-sm`}>应用到创作中心</button>
-              </div>
-              {optimizeAudioUrl && (<audio controls src={optimizeAudioUrl} className="mt-2 w-full rounded-lg ring-1 ring-gray-200" />)}
+            )}
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <button onClick={speakOptimizations} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-accent hover:bg-accent/90 text-white' : 'bg-accent hover:bg-accent/90 text-white'} transition-all duration-300 hover:shadow-sm`}>朗读建议</button>
+              <button onClick={copyOptimizations} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900 ring-1 ring-gray-300'} transition-all duration-300 hover:shadow-sm`}>复制建议</button>
+              <button onClick={() => { prefetchTools(); navigate(`/tools?from=home&query=${encodeURIComponent(optimizationSummary || search)}`) }} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-primary hover:bg-primary/90 text-white'} transition-all duration-300 hover:shadow-sm`}>应用到创作中心</button>
             </div>
-          )}
-        </div>
-      )}
+            {optimizeAudioUrl && (<audio controls src={optimizeAudioUrl} className={`mt-2 w-full rounded-lg ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`} />)}
+          </div>
+        )}
+      </div>
       
       {/* 为你推荐作品区域 */}
       <div className="max-w-7xl mx-auto mb-6">
@@ -669,6 +735,117 @@ export default function Home() {
               </p>
            </div>
          </div>
+        </div>
+      </div>
+      
+      {/* 热门创作者推荐 */}
+      <div className="max-w-7xl mx-auto mb-12 scroll-mt-24">
+        <div className="flex items-center justify-between mb-6 animate-slide-up">
+          <h2 className="text-xl font-bold text-primary">热门创作者</h2>
+          <button onMouseEnter={prefetchExplore} onFocus={prefetchExplore} onClick={handleExplore} className="text-sm text-primary hover:text-primary/80 transition-colors duration-200">查看全部创作者</button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {popularCreators.map((creator, idx) => (
+            <div 
+              key={idx}
+              className={`flex flex-col items-center p-4 rounded-xl ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 hover:ring-primary/50' : 'bg-white ring-1 ring-gray-200 hover:ring-primary/50'} transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer animate-slide-up-${idx + 1}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                prefetchExplore();
+                navigate(`/explore?creator=${encodeURIComponent(creator.name)}`)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  prefetchExplore();
+                  navigate(`/explore?creator=${encodeURIComponent(creator.name)}`)
+                }
+              }}
+            >
+              <div className="relative w-20 h-20 mb-3">
+                <TianjinImage 
+                  src={creator.avatar} 
+                  alt={creator.name} 
+                  rounded="full" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className={`font-medium text-sm text-center ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{creator.name}</h3>
+              <div className="text-xs text-primary mt-1">
+                <i className="far fa-heart mr-1"></i>{creator.likes.toLocaleString()} 获赞
+              </div>
+              <div className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                {creator.works.length} 件作品
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* 最新作品展示 */}
+      <div className="max-w-7xl mx-auto mb-12 scroll-mt-24">
+        <div className="flex items-center justify-between mb-6 animate-slide-up">
+          <h2 className="text-xl font-bold text-primary">最新作品</h2>
+          <button onMouseEnter={prefetchExplore} onFocus={prefetchExplore} onClick={handleExplore} className="text-sm text-primary hover:text-primary/80 transition-colors duration-200">查看全部作品</button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {latestWorks.map((work, idx) => (
+            <div 
+              key={work.id}
+              className={`rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${isDark ? 'bg-gray-800 ring-1 ring-gray-700 hover:ring-primary/50' : 'bg-white ring-1 ring-gray-200 hover:ring-primary/50'} cursor-pointer animate-slide-up-${idx + 1}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                prefetchExplore();
+                navigate(`/explore?q=${encodeURIComponent(work.title)}`)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  prefetchExplore();
+                  navigate(`/explore?q=${encodeURIComponent(work.title)}`)
+                }
+              }}
+            >
+              <div className="relative aspect-video overflow-hidden">
+                <TianjinImage 
+                  src={work.thumbnail} 
+                  alt={work.title} 
+                  ratio="landscape" 
+                  className="transition-transform duration-500 hover:scale-105"
+                />
+                <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full backdrop-blur ${isDark ? 'bg-gray-800/70 ring-1 ring-gray-700 text-gray-200' : 'bg-white/80 ring-1 ring-gray-200 text-gray-700'} transition-all duration-200 hover:shadow-sm`}>
+                  <i className="far fa-heart mr-1"></i>{work.likes}
+                </span>
+              </div>
+              <div className={`p-3 ${isDark ? 'bg-gray-800' : 'bg-white'} transition-all duration-300`}>
+                <h3 className={`font-medium text-xs md:text-sm transition-all duration-200 hover:text-primary ${isDark ? 'text-gray-100' : 'text-gray-800'} line-clamp-1`}>{work.title}</h3>
+                <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${isDark ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-800'}`}>{work.category}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* 热门标签云 */}
+      <div className="max-w-7xl mx-auto mb-12 scroll-mt-24">
+        <div className="flex items-center justify-between mb-6 animate-slide-up">
+          <h2 className="text-xl font-bold text-primary">热门标签</h2>
+          <button onMouseEnter={prefetchExplore} onFocus={prefetchExplore} onClick={handleExplore} className="text-sm text-primary hover:text-primary/80 transition-colors duration-200">查看全部标签</button>
+        </div>
+        <div className="flex flex-wrap gap-2 p-6 rounded-xl ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'}">
+          {popularTags.map((tag, idx) => (
+            <button
+              key={idx}
+              type="button"
+              className={`px-3 py-1.5 rounded-full text-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${isDark ? 'bg-gray-700 text-gray-200 hover:bg-primary hover:text-white' : 'bg-gray-100 text-gray-800 hover:bg-primary hover:text-white'}`}
+              onClick={() => {
+                prefetchExplore();
+                navigate(`/explore?tags=${encodeURIComponent(tag)}`)
+              }}
+            >
+              {tag}
+            </button>
+          ))}
         </div>
       </div>
       

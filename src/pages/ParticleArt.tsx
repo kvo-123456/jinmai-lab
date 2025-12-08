@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { ParticleModelType } from '@/lib/particleModels';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
-import ParticleSystemContainer from '@/components/ParticleSystem';
+import ParticleSystem from '@/components/ParticleSystem';
+import { Canvas } from '@react-three/fiber';
 
-// 津门老字号主题配置
+// 津门老字号主题配置 - 优化颜色方案
 const tianjinThemes = [
   {
     name: '泥人张',
@@ -33,7 +34,7 @@ const tianjinThemes = [
   {
     name: '狗不理包子',
     description: '天津传统美食，皮薄馅大',
-    color: '#f7b733',
+    color: '#f9d79b', // 优化为更符合包子的金黄色
     model: 'baozi' as ParticleModelType,
     icon: '🥟',
     behavior: 'orbit' as const
@@ -56,6 +57,9 @@ interface ParticlePreset {
   controls: ParticleControls;
 }
 
+// 定义粒子行为类型
+type ParticleBehavior = 'spiral' | 'explosion' | 'wave' | 'orbit' | 'chaos' | 'default';
+
 // 粒子效果控制选项
 interface ParticleControls {
   showTrails: boolean;
@@ -64,7 +68,8 @@ interface ParticleControls {
   colorVariation: number;
   particleSize: number;
   rotationSpeed: number;
-  gestureSensitivity: number;
+  gestureSensitivity: number; // 保留此参数用于粒子扩散控制
+  behavior: ParticleBehavior;
 }
 
 // 粒子效果预设
@@ -75,12 +80,13 @@ const particlePresets: ParticlePreset[] = [
     icon: '✨',
     controls: {
       showTrails: true,
-      particleCount: 300, // 增加粒子数量，使形状更清晰
-      animationSpeed: 1.0,
-      colorVariation: 0.3, // 减少颜色变化，保持形状一致性
-      particleSize: 1.0, // 调整粒子大小
-      rotationSpeed: 0.8, // 降低旋转速度，便于观察形状
-      gestureSensitivity: 1.2
+      particleCount: 400, // 增加粒子数量，增强形状表现力
+      animationSpeed: 1.2,
+      colorVariation: 0.4,
+      particleSize: 1.8,
+      rotationSpeed: 1.0,
+      gestureSensitivity: 1.0,
+      behavior: 'default'
     }
   },
   {
@@ -89,12 +95,13 @@ const particlePresets: ParticlePreset[] = [
     icon: '🌊',
     controls: {
       showTrails: true,
-      particleCount: 500, // 增加粒子数量
+      particleCount: 500, // 增加粒子数量，增强形状表现力
       animationSpeed: 0.8,
-      colorVariation: 0.4,
-      particleSize: 0.7,
-      rotationSpeed: 0.6,
-      gestureSensitivity: 1.0
+      colorVariation: 0.3,
+      particleSize: 1.5,
+      rotationSpeed: 0.8,
+      gestureSensitivity: 0.8,
+      behavior: 'wave'
     }
   },
   {
@@ -102,13 +109,14 @@ const particlePresets: ParticlePreset[] = [
     name: '形状效果',
     icon: '🎯',
     controls: {
-      showTrails: true,
-      particleCount: 400, // 充足的粒子数量展示形状
-      animationSpeed: 0.6, // 慢速动画，便于观察形状
-      colorVariation: 0.2, // 低颜色变化，保持形状清晰
-      particleSize: 1.1,
-      rotationSpeed: 0.5, // 低旋转速度
-      gestureSensitivity: 1.0
+      showTrails: false,
+      particleCount: 450, // 增加粒子数量，增强形状表现力
+      animationSpeed: 0.6,
+      colorVariation: 0.2,
+      particleSize: 2.0,
+      rotationSpeed: 0.4,
+      gestureSensitivity: 0.6,
+      behavior: 'orbit'
     }
   },
   {
@@ -117,12 +125,13 @@ const particlePresets: ParticlePreset[] = [
     icon: '⚡',
     controls: {
       showTrails: true,
-      particleCount: 200,
+      particleCount: 300,
       animationSpeed: 2.0,
-      colorVariation: 0.5,
-      particleSize: 1.0,
+      colorVariation: 0.6,
+      particleSize: 1.5,
       rotationSpeed: 1.5,
-      gestureSensitivity: 1.0
+      gestureSensitivity: 1.2,
+      behavior: 'explosion'
     }
   },
   {
@@ -131,12 +140,13 @@ const particlePresets: ParticlePreset[] = [
     icon: '🐌',
     controls: {
       showTrails: true,
-      particleCount: 350,
-      animationSpeed: 0.4,
+      particleCount: 450, // 增加粒子数量，增强形状表现力
+      animationSpeed: 0.5,
       colorVariation: 0.3,
-      particleSize: 1.3,
+      particleSize: 2.0,
       rotationSpeed: 0.4,
-      gestureSensitivity: 1.2
+      gestureSensitivity: 0.8,
+      behavior: 'spiral'
     }
   }
 ];
@@ -147,13 +157,14 @@ export default function ParticleArt() {
   const [model, setModel] = useState<ParticleModelType>(tianjinThemes[0].model);
   const [color, setColor] = useState(tianjinThemes[0].color);
   const [controls, setControls] = useState<ParticleControls>({
-    showTrails: true,
-    particleCount: 200,
-    animationSpeed: 1.0,
-    colorVariation: 0.4,
-    particleSize: 1.2,
-    rotationSpeed: 1.0,
-    gestureSensitivity: 1.2
+    showTrails: false,
+    particleCount: 300,
+    animationSpeed: 1.5,
+    colorVariation: 0.6,
+    particleSize: 1.5,
+    rotationSpeed: 1.2,
+    gestureSensitivity: 1.2,
+    behavior: 'default'
   });
   const [showControls, setShowControls] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -162,6 +173,7 @@ export default function ParticleArt() {
   const [newPresetName, setNewPresetName] = useState('');
   const [newPresetIcon, setNewPresetIcon] = useState('🎨');
   const [particleSystemError, setParticleSystemError] = useState(false);
+  const [showBrandCards, setShowBrandCards] = useState(true);
   
   // 组件挂载后强制触发一次状态更新，确保Framer Motion动画能正常触发
   useEffect(() => {
@@ -176,20 +188,66 @@ export default function ParticleArt() {
     return () => clearTimeout(timer);
   }, []);
   
+  // 自动收回品牌卡片的功能 - 点击任意品牌卡片后延迟1秒自动隐藏卡片
+  // 添加一个状态来跟踪是否是通过点击品牌卡片触发的显示
+  const [themeSelectedRecently, setThemeSelectedRecently] = useState(false);
+  const [autoHideTimer, setAutoHideTimer] = useState<NodeJS.Timeout | null>(null);
+  
   // 错误处理：粒子系统渲染失败时显示友好信息
   const handleParticleSystemError = () => {
     setParticleSystemError(true);
   };
 
-  // 主题切换处理
+  // 主题切换处理 - 优化自动隐藏逻辑
   const handleThemeChange = (index: number) => {
     setSelectedTheme(index);
     setModel(tianjinThemes[index].model);
     setColor(tianjinThemes[index].color);
+    setThemeSelectedRecently(true);
+    
+    // 清除之前的定时器
+    if (autoHideTimer) {
+      clearTimeout(autoHideTimer);
+    }
+    
+    // 1.2秒后自动隐藏品牌卡片，给用户足够的视觉反馈时间
+    const timer = setTimeout(() => {
+      setShowBrandCards(false);
+      setThemeSelectedRecently(false);
+    }, 1200);
+    
+    setAutoHideTimer(timer);
+    
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  };
+  
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (autoHideTimer) {
+        clearTimeout(autoHideTimer);
+      }
+    };
+  }, [autoHideTimer]);
+  
+  // 点击显示卡片时重置自动隐藏状态
+  const handleToggleBrandCards = () => {
+    setShowBrandCards(!showBrandCards);
+    setThemeSelectedRecently(false);
+    
+    // 清除之前的定时器
+    if (autoHideTimer) {
+      clearTimeout(autoHideTimer);
+      setAutoHideTimer(null);
+    }
   };
 
   // 控制选项变化处理
-  const handleControlChange = (key: keyof ParticleControls, value: number | boolean) => {
+  const handleControlChange = (key: keyof ParticleControls, value: number | boolean | ParticleBehavior) => {
     setControls(prev => ({
       ...prev,
       [key]: value
@@ -239,36 +297,37 @@ export default function ParticleArt() {
   const containerClasses = `relative overflow-hidden min-h-screen ${isDark ? 'bg-gradient-to-br from-[#0a0e17] via-[#1a1f2e] to-[#0a0e17]' : theme === 'pink' ? 'bg-gradient-to-br from-pink-50 to-purple-50' : 'bg-gradient-to-br from-blue-50 to-purple-50'}`;
 
   return (
-    <div className={containerClasses}>
-      {/* 粒子系统容器 - 添加错误处理，确保在粒子系统渲染失败时显示友好信息 */}
-        <div className="absolute inset-0 z-0">
-          {particleSystemError ? (
-            // 粒子系统渲染失败时的回退内容
-            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-sm">
-              <div className="text-center p-8 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-lg">
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                    粒子系统加载失败
-                  </span>
-                </h3>
-                <p className="text-gray-300 mb-6">
-                  很抱歉，粒子系统暂时无法加载。这可能是由于浏览器兼容性问题或资源加载失败导致的。
-                </p>
-                <button
-                  onClick={() => setParticleSystemError(false)}
-                  className="px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  重试加载
-                </button>
-              </div>
+    <div className={`${containerClasses} overflow-hidden`}>
+      {/* 粒子系统容器 - 确保全屏显示，z-index最高 */}
+      <div className={`absolute inset-0 z-10 transition-all duration-1000 ease-in-out ${showBrandCards ? 'scale-100' : 'scale-105'}`}>
+        {particleSystemError ? (
+          // 粒子系统渲染失败时的回退内容
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/30 to-pink-900/30 backdrop-blur-sm">
+            <div className="text-center p-8 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-lg">
+              <h3 className="text-2xl font-bold text-white mb-4">
+                <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                  粒子系统加载失败
+                </span>
+              </h3>
+              <p className="text-gray-300 mb-6">
+                很抱歉，粒子系统暂时无法加载。这可能是由于浏览器兼容性问题或资源加载失败导致的。
+              </p>
+              <button
+                onClick={() => setParticleSystemError(false)}
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white font-medium hover:shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                重试加载
+              </button>
             </div>
-          ) : (
-            // 正常渲染粒子系统
-            <div onError={handleParticleSystemError}>
-              <ParticleSystemContainer 
+          </div>
+        ) : (
+          // 正常渲染粒子系统
+          <div onError={handleParticleSystemError} className="w-full h-full">
+            <Canvas>
+              <ParticleSystem 
                 model={model} 
                 color={color} 
-                behavior={tianjinThemes[selectedTheme].behavior}
+                behavior={controls.behavior} // 使用用户选择的行为模式
                 particleCount={controls.particleCount}
                 particleSize={controls.particleSize}
                 animationSpeed={controls.animationSpeed}
@@ -276,71 +335,75 @@ export default function ParticleArt() {
                 colorVariation={controls.colorVariation}
                 showTrails={controls.showTrails}
               />
-            </div>
-          )}
-        </div>
+            </Canvas>
+          </div>
+        )}
+      </div>
       
-      {/* 背景装饰 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* 动态渐变光环 */}
+      {/* 背景装饰 - 放在粒子系统下面 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {/* 动态渐变光环 - 根据品牌卡片状态调整效果 */}
         <motion.div 
-          className="absolute top-1/2 left-1/2 w-[150vw] h-[150vw] rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 blur-[100px] transform -translate-x-1/2 -translate-y-1/2"
+          className={`absolute top-1/2 left-1/2 w-[120vw] h-[120vw] rounded-full bg-gradient-to-r from-pink-500/15 to-purple-500/15 blur-[80px] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 ease-in-out ${showBrandCards ? '' : 'opacity-1.2'}`}
           animate={{ 
-            scale: [1, 1.1, 1], 
-            opacity: [0.5, 0.8, 0.5],
+            scale: showBrandCards ? [1, 1.1, 1] : [1.1, 1.3, 1.1], 
+            opacity: showBrandCards ? [0.3, 0.6, 0.3] : [0.4, 0.8, 0.4],
             rotate: [0, 90, 0]
           }} 
           transition={{ 
-            duration: 15, 
+            duration: showBrandCards ? 15 : 10, 
             ease: "easeInOut", 
             repeat: Infinity, 
             repeatType: "reverse"
           }} 
         />
-        {/* 辅助光环 */}
+        {/* 辅助光环 - 根据品牌卡片状态调整效果 */}
         <motion.div 
-          className="absolute top-1/2 left-1/2 w-[120vw] h-[120vw] rounded-full bg-gradient-to-r from-blue-500/20 to-cyan-500/20 blur-[80px] transform -translate-x-1/2 -translate-y-1/2"
+          className={`absolute top-1/2 left-1/2 w-[100vw] h-[100vw] rounded-full bg-gradient-to-r from-blue-500/15 to-cyan-500/15 blur-[60px] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 ease-in-out ${showBrandCards ? '' : 'opacity-1.2'}`}
           animate={{ 
-            scale: [1, 1.2, 1], 
-            opacity: [0.3, 0.6, 0.3],
+            scale: showBrandCards ? [1, 1.2, 1] : [1.2, 1.4, 1.2], 
+            opacity: showBrandCards ? [0.2, 0.4, 0.2] : [0.3, 0.6, 0.3],
             rotate: [0, -60, 0]
           }} 
           transition={{ 
-            duration: 12, 
+            duration: showBrandCards ? 12 : 8, 
             ease: "easeInOut", 
             repeat: Infinity, 
             repeatType: "reverse"
           }} 
         />
-        {/* 粒子网格背景 */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px] opacity-30"></div>
-        {/* 动态线条装饰 */}
-        {Array.from({ length: 5 }).map((_, i) => (
-          <motion.div 
-            key={i}
-            className="absolute w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
-            style={{ 
-              top: `${20 + i * 15}%`,
-              opacity: 0.3
-            }}
-            animate={{ 
-              x: [0, 50, 0],
-              opacity: [0.2, 0.5, 0.2]
-            }}
-            transition={{ 
-              duration: 8 + i * 2, 
-              ease: "easeInOut", 
-              repeat: Infinity,
-              delay: i * 0.5
-            }}
-          />
-        ))}
+        {/* 新增背景粒子效果 - 只在隐藏品牌卡片时显示 */}
+        {!showBrandCards && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 rounded-full bg-white/20 backdrop-blur-sm"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [0, -100],
+                  opacity: [0, 0.8, 0],
+                  scale: [0, 1.5, 0]
+                }}
+                transition={{
+                  duration: 3 + Math.random() * 2,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 主内容区域 */}
-      <div className="relative z-10 flex flex-col min-h-screen" data-mounted={isMounted}>
+      {/* 主内容区域 - 确保内容在粒子效果之上，可交互 */}
+      <div className={`relative z-20 flex flex-col min-h-screen transition-all duration-800 ease-in-out ${showBrandCards ? 'opacity-100' : 'opacity-0.9'}`} data-mounted={isMounted}>
         {/* 顶部标题区 */}
-        <header className="py-8 px-6 text-center">
+        <header className={`py-8 px-6 text-center transition-all duration-1000 ease-in-out ${showBrandCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[-20px] pointer-events-none'}`}>
           <div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
               津门老字号 · 粒子艺术
@@ -354,166 +417,366 @@ export default function ParticleArt() {
         {/* 主题选择区 */}
         <main className="flex-1 px-6 pb-12">
           <div className="max-w-6xl mx-auto">
-            <div className="mb-12">
-              <h2 className="text-xl font-semibold text-white mb-6 text-center">选择一个津门老字号品牌</h2>
+            {/* 品牌选择卡片区域 - 添加动画过渡 */}
+            <div className="relative mb-12">
+              {/* 切换按钮 - 进一步优化样式和交互 */}
+              <motion.button
+                onClick={handleToggleBrandCards}
+                className={`fixed top-8 left-8 z-30 flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-400 backdrop-blur-lg ${showBrandCards 
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/40' 
+                  : 'bg-white/20 text-white hover:bg-white/30 border border-white/30'}`}
+                whileHover={{ 
+                  scale: 1.1,
+                  boxShadow: showBrandCards ? '0 10px 30px -5px rgba(139, 92, 246, 0.4)' : '0 10px 30px -5px rgba(255, 255, 255, 0.2)' 
+                }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: -50, rotate: -10 }}
+                animate={{ 
+                  opacity: 1, 
+                  x: 0, 
+                  rotate: 0,
+                  boxShadow: showBrandCards ? '0 5px 15px -3px rgba(139, 92, 246, 0.3)' : '0 5px 15px -3px rgba(255, 255, 255, 0.15)' 
+                }}
+                transition={{ 
+                  duration: 0.5, 
+                  ease: 'easeOut',
+                  type: 'spring',
+                  stiffness: 250,
+                  damping: 20
+                }}
+              >
+                <motion.i 
+                  className={`fas ${showBrandCards ? 'fa-eye-slash' : 'fa-eye'}`}
+                  animate={{ 
+                    rotate: showBrandCards ? 180 : 0,
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{ 
+                    duration: 0.4,
+                    ease: 'easeInOut'
+                  }}
+                />
+                <motion.span 
+                  className="font-semibold"
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  {showBrandCards ? '隐藏卡片' : '显示卡片'}
+                </motion.span>
+              </motion.button>
               
-              {/* 主题选择卡片 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
-                {tianjinThemes.map((theme, index) => (
+              <AnimatePresence mode="wait">
+                {showBrandCards && (
                   <motion.div
-                    key={index}
-                    className={`group relative rounded-2xl p-6 cursor-pointer transition-all duration-400 ${selectedTheme === index 
-                      ? 'bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl border-2 border-white shadow-xl shadow-purple-500/30 scale-105' 
-                      : 'bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10'}`}
-                    onClick={() => handleThemeChange(index)}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
+                    className="space-y-8"
+                    initial={{ opacity: 0, height: 0, transform: 'translateY(-30px)' }}
+                    animate={{ opacity: 1, height: 'auto', transform: 'translateY(0)' }}
+                    exit={{ opacity: 0, height: 0, transform: 'translateY(-30px)' }}
+                    transition={{ 
+                      duration: 0.8, 
+                      ease: 'easeInOut',
+                      height: { duration: 0.6 },
+                      opacity: { duration: 0.5 }
+                    }}
                   >
-                    {/* 品牌图标 - 动态旋转效果 */}
-                    <div className="text-4xl mb-4 text-center relative z-10 transition-transform duration-500 group-hover:rotate-12">
-                      {theme.icon}
-                    </div>
-                    
-                    {/* 品牌名称 */}
-                    <h3 className="text-xl font-bold text-white mb-2 text-center relative z-10 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">{theme.name}</h3>
-                    
-                    {/* 品牌描述 */}
-                    <p className="text-sm text-gray-300 mb-4 text-center line-clamp-2 relative z-10 transition-all duration-300 group-hover:text-gray-100">{theme.description}</p>
-                    
-                    {/* 颜色条 */}
-                    <div 
-                      className="h-2 rounded-full overflow-hidden bg-white/20 relative z-10"
+                    {/* 标题 - 添加动画效果 */}
+                    <motion.h2 
+                      className="text-2xl font-bold text-white text-center bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent"
+                      initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                      transition={{ 
+                        duration: 0.6, 
+                        ease: 'easeOut',
+                        delay: 0.2
+                      }}
                     >
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: theme.color }}
-                        initial={{ width: 0 }}
-                        animate={{ width: '100%' }}
-                        transition={{ duration: 1, delay: 0.2 }}
-                      />
-                    </div>
+                      选择一个津门老字号品牌
+                    </motion.h2>
                     
-                    {/* 选中状态指示器 */}
-                    {selectedTheme === index && (
-                      <motion.div 
-                        className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                      >
-                        <i className="fas fa-check"></i>
-                      </motion.div>
-                    )}
-                    
-                    {/* 悬停效果 - 多层次 */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/0 to-pink-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                    <div 
-                      className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-75 blur-sm transition-opacity duration-300"
-                    ></div>
-                    {/* 底部光效 */}
-                    <div 
-                      className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    ></div>
-                    
-                    {/* 粒子装饰效果 */}
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                      {Array.from({ length: 3 }).map((_, i) => (
+                    {/* 主题选择卡片 */}
+                    <motion.div 
+                      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6"
+                      initial={{ opacity: 0, y: 40 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 40, scale: 0.9 }}
+                      transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
+                    >
+                      {tianjinThemes.map((theme, index) => (
                         <motion.div
-                          key={i}
-                          className="absolute w-2 h-2 rounded-full"
-                          style={{ 
-                            backgroundColor: theme.color,
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
+                          key={index}
+                          className={`group relative rounded-2xl p-6 cursor-pointer transition-all duration-600 ${selectedTheme === index 
+                            ? 'bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-xl border-2 border-white shadow-2xl shadow-purple-500/30 scale-108' 
+                            : 'bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15'}`}
+                          onClick={() => handleThemeChange(index)}
+                          initial={{ opacity: 0, y: 50, scale: 0.8, rotateY: -15 }}
+                          animate={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }}
+                          exit={{ opacity: 0, y: 50, scale: 0.8, rotateY: 15 }}
+                          transition={{ 
+                            delay: index * 0.12,
+                            duration: 0.6,
+                            ease: 'easeOut',
+                            type: 'spring',
+                            stiffness: 180,
+                            damping: 20
                           }}
-                          animate={{
-                            opacity: [0, 0.8, 0],
-                            scale: [0, 1.5, 0],
-                            x: [0, (Math.random() - 0.5) * 20],
-                            y: [0, (Math.random() - 0.5) * 20],
+                          whileHover={{ 
+                            scale: 1.1,
+                            rotateY: 8,
+                            boxShadow: '0 25px 50px rgba(0,0,0,0.35), 0 0 40px rgba(139, 92, 246, 0.4)',
+                            borderColor: 'rgba(255, 255, 255, 0.5)'
                           }}
-                          transition={{
-                            duration: 2 + Math.random() * 2,
-                            repeat: Infinity,
-                            delay: Math.random() * 2,
-                          }}
-                        />
+                          whileTap={{ scale: 0.95, rotateY: 0, boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}
+                        >
+                          {/* 卡片背景光效 */}
+                          <div 
+                            className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/0 to-pink-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                            style={{ backgroundImage: `radial-gradient(circle at 50% 50%, ${theme.color}33 0%, transparent 70%)` }}
+                          ></div>
+                          
+                          {/* 品牌图标 - 动态效果 */}
+                          <motion.div 
+                            className="text-4xl mb-4 text-center relative z-10"
+                            whileHover={{
+                              rotate: 12,
+                              scale: 1.2
+                            }}
+                            transition={{ duration: 0.5 }}
+                          >
+                            {theme.icon}
+                          </motion.div>
+                          
+                          {/* 品牌名称 */}
+                          <motion.h3 
+                            className="text-xl font-bold text-white mb-2 text-center relative z-10 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent"
+                            whileHover={{ scale: 1.1 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            {theme.name}
+                          </motion.h3>
+                          
+                          {/* 品牌描述 */}
+                          <motion.p 
+                            className="text-sm text-gray-300 mb-4 text-center line-clamp-2 relative z-10"
+                            whileHover={{ 
+                              color: '#ffffff',
+                              scale: 1.05
+                            }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            {theme.description}
+                          </motion.p>
+                          
+                          {/* 颜色条 */}
+                          <div 
+                            className="h-2 rounded-full overflow-hidden bg-white/20 relative z-10"
+                          >
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: theme.color }}
+                              initial={{ width: 0 }}
+                              animate={{ width: '100%' }}
+                              exit={{ width: 0 }}
+                              transition={{ 
+                                duration: 1.5, 
+                                delay: 0.5,
+                                ease: 'easeOut' 
+                              }}
+                            />
+                          </div>
+                          
+                          {/* 选中状态指示器 - 增强动画 */}
+                          {selectedTheme === index && (
+                            <motion.div 
+                              className="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-2xl"
+                              initial={{ scale: 0, rotate: -180, opacity: 0 }}
+                              animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                              exit={{ scale: 0, rotate: 180, opacity: 0 }}
+                              transition={{ 
+                                type: 'spring', 
+                                stiffness: 500, 
+                                damping: 25,
+                                delay: 0.3
+                              }}
+                            >
+                              <i className="fas fa-check text-xl"></i>
+                            </motion.div>
+                          )}
+                          
+                          {/* 悬停效果 - 多层次 */}
+                          <div 
+                            className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-80 blur-sm transition-opacity duration-700"
+                          ></div>
+                          
+                          {/* 底部光效 */}
+                          <motion.div 
+                            className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100"
+                            initial={{ scaleX: 0 }}
+                            whileHover={{ scaleX: 1 }}
+                            transition={{ duration: 0.5 }}
+                          ></motion.div>
+                          
+                          {/* 粒子装饰效果 - 增强视觉体验 */}
+                          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                              <motion.div
+                                key={i}
+                                className="absolute w-2 h-2 rounded-full"
+                                style={{ 
+                                  backgroundColor: theme.color,
+                                  left: `${Math.random() * 100}%`,
+                                  top: `${Math.random() * 100}%`,
+                                }}
+                                animate={{
+                                  opacity: [0, 1, 0],
+                                  scale: [0, 2.5, 0],
+                                  x: [0, (Math.random() - 0.5) * 40],
+                                  y: [0, (Math.random() - 0.5) * 40],
+                                  rotate: [0, 360]
+                                }}
+                                transition={{
+                                  duration: 3 + Math.random() * 2,
+                                  repeat: Infinity,
+                                  delay: Math.random() * 3,
+                                  ease: 'easeInOut'
+                                }}
+                              />
+                            ))}
+                          </div>
+                          
+                          {/* 卡片边框发光效果 */}
+                          <motion.div 
+                            className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-white/50 transition-all duration-500"
+                            initial={{ opacity: 0 }}
+                            whileHover={{ opacity: 1 }}
+                          ></motion.div>
+                        </motion.div>
                       ))}
-                    </div>
+                    </motion.div>
                   </motion.div>
-                ))}
-              </div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* 控制区域 */}
-            <div className="mb-12">
-              {/* 控制开关 */}
-              <div className="flex items-center justify-center mb-6">
-                <button
+            <div className={`fixed bottom-0 left-0 right-0 z-40 transition-all duration-1000 ease-in-out ${showBrandCards ? 'opacity-100' : 'opacity-0.9'}`}>
+              {/* 控制面板切换按钮 - 固定在底部中央 */}
+              <div className="flex justify-center pb-6">
+                <motion.button
                   onClick={() => setShowControls(!showControls)}
-                  className="flex items-center gap-3 px-8 py-3.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium shadow-lg shadow-purple-500/20 hover:scale-105 transition-all duration-300"
+                  className={`flex items-center gap-3 px-8 py-3.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium shadow-lg shadow-purple-500/20 hover:scale-105 transition-all duration-300 ${!showBrandCards ? 'opacity-0.8' : ''}`}
+                  whileHover={{ 
+                    scale: 1.1,
+                    boxShadow: '0 10px 30px -5px rgba(139, 92, 246, 0.5)' 
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0
+                  }}
+                  transition={{ 
+                    duration: 0.5, 
+                    ease: 'easeOut',
+                    type: 'spring',
+                    stiffness: 250,
+                    damping: 20
+                  }}
                 >
-                  <i className={`fas ${showControls ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                  <span>{showControls ? '隐藏控制面板' : '显示控制面板'}</span>
-                </button>
+                  <motion.i 
+                    className={`fas ${showControls ? 'fa-chevron-up' : 'fa-chevron-down'}`}
+                    animate={{ 
+                      rotate: showControls ? 180 : 0,
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{ 
+                      duration: 0.4,
+                      ease: 'easeInOut'
+                    }}
+                  />
+                  <motion.span 
+                    className="font-semibold"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                  >
+                    {showControls ? '隐藏控制面板' : '显示控制面板'}
+                  </motion.span>
+                </motion.button>
               </div>
               
-              {/* 控制面板 */}
-              {showControls && (
-                <div className="overflow-hidden rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl">
-                  {/* 面板顶部装饰 */}
-                  <div className="h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"></div>
-                  
-                  <div className="p-8">
-                    <h3 className="text-2xl font-bold text-white mb-8 text-center">
-                      <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
-                        粒子效果控制
-                      </span>
-                    </h3>
+              {/* 控制面板 - 从底部滑入，固定在底部 */}
+              <AnimatePresence>
+                {showControls && (
+                  <motion.div
+                    className="overflow-hidden bg-white/5 backdrop-blur-xl border-t border-white/10 shadow-2xl"
+                    initial={{ opacity: 0, y: '100%' }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: '100%' }}
+                    transition={{ 
+                      duration: 0.8, 
+                      ease: 'easeInOut',
+                      type: 'spring',
+                      stiffness: 200,
+                      damping: 20
+                    }}
+                  >
+                    {/* 面板顶部装饰 */}
+                    <div className="h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"></div>
                     
-                    {/* 预设选择 */}
-                    <div className="mb-8">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-semibold text-white">效果预设</h4>
-                        <button
-                          onClick={() => setShowSavePresetModal(true)}
-                          className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white hover:shadow-lg transition-all duration-300 hover:scale-105"
-                        >
-                          <i className="fas fa-save"></i>
-                          <span>保存预设</span>
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap gap-3">
-                        {allPresets.map((preset) => (
+                    <div className="p-8 pb-12">
+                      <h3 className="text-2xl font-bold text-white mb-8 text-center">
+                        <span className="bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent">
+                          粒子效果控制
+                        </span>
+                      </h3>
+                      
+                      {/* 预设选择 */}
+                      <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-lg font-semibold text-white">效果预设</h4>
                           <motion.button
-                            key={preset.id}
-                            onClick={() => setControls(preset.controls)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${JSON.stringify(preset.controls) === JSON.stringify(controls) 
-                              ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-purple-500/30' 
-                              : 'bg-white/10 hover:bg-white/20 text-white hover:shadow-md'}`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowSavePresetModal(true)}
+                            className="flex items-center gap-2 px-3 py-1 text-sm font-medium rounded-full bg-gradient-to-r from-green-500 to-teal-500 text-white hover:shadow-lg transition-all duration-300 hover:scale-105"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
                           >
-                            <span>{preset.icon}</span>
-                            <span>{preset.name}</span>
-                            {preset.id.startsWith('custom-') && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteCustomPreset(preset.id);
-                                }}
-                                className="ml-1 text-red-500 hover:text-red-400 transition-colors"
-                              >
-                                <i className="fas fa-times text-xs"></i>
-                              </button>
-                            )}
+                            <i className="fas fa-save"></i>
+                            <span>保存预设</span>
                           </motion.button>
-                        ))}
+                        </div>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                          {allPresets.map((preset) => (
+                            <motion.button
+                              key={preset.id}
+                              onClick={() => setControls(preset.controls)}
+                              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${JSON.stringify(preset.controls) === JSON.stringify(controls) 
+                                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-purple-500/30' 
+                                : 'bg-white/10 hover:bg-white/20 text-white hover:shadow-md'}`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.98 }}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.3, delay: Math.random() * 0.1 }}
+                            >
+                              <span>{preset.icon}</span>
+                              <span>{preset.name}</span>
+                              {preset.id.startsWith('custom-') && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteCustomPreset(preset.id);
+                                  }}
+                                  className="ml-1 text-red-500 hover:text-red-400 transition-colors"
+                                >
+                                  <i className="fas fa-times text-xs"></i>
+                                </button>
+                              )}
+                            </motion.button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
                     
                     {/* 保存预设模态框 */}
                     <AnimatePresence>
@@ -576,17 +839,37 @@ export default function ParticleArt() {
                       )}
                     </AnimatePresence>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {/* 行为模式 */}
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                        <label className="block text-white font-medium text-sm mb-3">
+                          行为模式
+                        </label>
+                        <select
+                          value={controls.behavior}
+                          onChange={(e) => handleControlChange('behavior', e.target.value as ParticleBehavior)}
+                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                          <option value="default">默认浮动</option>
+                          <option value="spiral">螺旋运动</option>
+                          <option value="explosion">爆炸效果</option>
+                          <option value="wave">波浪运动</option>
+                          <option value="orbit">轨道运动</option>
+                          <option value="chaos">混沌运动</option>
+                        </select>
+                        <p className="text-xs text-gray-400 mt-2">选择粒子的运动方式</p>
+                      </div>
+                      
                       {/* 拖尾效果 */}
-                      <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
                         <label className="flex items-center justify-between mb-3">
-                          <span className="text-white font-medium">拖尾效果</span>
+                          <span className="text-white font-medium text-sm">拖尾效果</span>
                           <button
                             onClick={() => handleControlChange('showTrails', !controls.showTrails)}
-                            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 ${controls.showTrails ? 'bg-green-600' : 'bg-gray-600'}`}
+                            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-all duration-300 ${controls.showTrails ? 'bg-green-600' : 'bg-gray-600'}`}
                           >
                             <span 
-                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-out ${controls.showTrails ? 'translate-x-[28px]' : 'translate-x-[4px]'}`}
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-300 ease-out ${controls.showTrails ? 'translate-x-[18px]' : 'translate-x-[3px]'}`}
                             />
                           </button>
                         </label>
@@ -594,8 +877,8 @@ export default function ParticleArt() {
                       </div>
                        
                       {/* 粒子数量 */}
-                      <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
-                        <label className="block text-white font-medium mb-3">
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                        <label className="block text-white font-medium text-sm mb-3">
                           粒子数量: <span className="text-purple-400">{controls.particleCount}</span>
                         </label>
                         <input
@@ -614,8 +897,8 @@ export default function ParticleArt() {
                       </div>
                        
                       {/* 粒子大小 */}
-                      <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
-                        <label className="block text-white font-medium mb-3">
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                        <label className="block text-white font-medium text-sm mb-3">
                           粒子大小: <span className="text-cyan-400">{controls.particleSize.toFixed(1)}</span>
                         </label>
                         <input
@@ -634,8 +917,8 @@ export default function ParticleArt() {
                       </div>
                        
                       {/* 动画速度 */}
-                      <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
-                        <label className="block text-white font-medium mb-3">
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                        <label className="block text-white font-medium text-sm mb-3">
                           动画速度: <span className="text-blue-400">{controls.animationSpeed.toFixed(1)}x</span>
                         </label>
                         <input
@@ -654,8 +937,8 @@ export default function ParticleArt() {
                       </div>
                        
                       {/* 旋转速度 */}
-                      <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
-                        <label className="block text-white font-medium mb-3">
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                        <label className="block text-white font-medium text-sm mb-3">
                           旋转速度: <span className="text-orange-400">{controls.rotationSpeed.toFixed(1)}x</span>
                         </label>
                         <input
@@ -674,8 +957,8 @@ export default function ParticleArt() {
                       </div>
                        
                       {/* 颜色变化 */}
-                      <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
-                        <label className="block text-white font-medium mb-3">
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                        <label className="block text-white font-medium text-sm mb-3">
                           颜色变化: <span className="text-pink-400">{controls.colorVariation.toFixed(1)}</span>
                         </label>
                         <input
@@ -693,10 +976,10 @@ export default function ParticleArt() {
                         </div>
                       </div>
                        
-                      {/* 手势灵敏度 */}
-                      <div className="bg-white/5 rounded-xl p-5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
-                        <label className="block text-white font-medium mb-3">
-                          手势灵敏度: <span className="text-green-400">{controls.gestureSensitivity.toFixed(1)}</span>
+                      {/* 粒子扩散范围 */}
+                      <div className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:translate-y-[-5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.2)]">
+                        <label className="block text-white font-medium text-sm mb-3">
+                          粒子扩散: <span className="text-green-400">{controls.gestureSensitivity.toFixed(1)}</span>
                         </label>
                         <input
                           type="range"
@@ -708,58 +991,59 @@ export default function ParticleArt() {
                           className="w-full h-2 bg-white/20 rounded-full appearance-none cursor-pointer accent-green-500"
                         />
                         <div className="flex justify-between text-xs text-gray-400 mt-2">
-                          <span>迟钝</span>
-                          <span>灵敏</span>
+                          <span>集中</span>
+                          <span>扩散</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
+          </div>
 
-            {/* 使用说明 */}
-            <div>
-              <div className="max-w-3xl mx-auto bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-2xl relative overflow-hidden">
-                {/* 装饰背景 */}
-                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
-                <div className="absolute -top-10 -left-10 w-32 h-32 bg-pink-500/20 rounded-full blur-3xl"></div>
-                
-                <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
-                  <div className="text-6xl">
-                    🖐️
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-6 text-center md:text-left">
-                      <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                        使用说明
-                      </span>
-                    </h3>
-                    <div className="space-y-4 text-gray-300">
-                      {[
-                        { icon: 'fa-hand-sparkles', color: 'text-pink-500', text: '使用手势控制粒子的缩放与扩散' },
-                        { icon: 'fa-expand-alt', color: 'text-blue-500', text: '张开双手：放大粒子，增加扩散范围' },
-                        { icon: 'fa-compress-alt', color: 'text-purple-500', text: '握拳：缩小粒子，减少扩散范围' },
-                        { icon: 'fa-palette', color: 'text-yellow-500', text: '选择不同的津门老字号品牌，体验不同风格的粒子效果' }
-                      ].map((item, index) => (
-                        <p 
-                          key={index}
-                          className="flex items-center gap-3 hover:translate-x-2.5 transition-transform duration-300 hover:text-white"
-                        >
-                          <i className={`fas ${item.icon} ${item.color} text-lg`}></i>
-                          <span>{item.text}</span>
-                        </p>
-                      ))}
-                    </div>
+          {/* 使用说明 */}
+          <div className={`transition-all duration-1000 ease-in-out ${showBrandCards ? 'opacity-100' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
+            <div className="max-w-3xl mx-auto bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-2xl relative overflow-hidden">
+              {/* 装饰背景 */}
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
+              <div className="absolute -top-10 -left-10 w-32 h-32 bg-pink-500/20 rounded-full blur-3xl"></div>
+              
+              <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
+                <div className="text-6xl">
+                  🖐️
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-6 text-center md:text-left">
+                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                      使用说明
+                    </span>
+                  </h3>
+                  <div className="space-y-4 text-gray-300">
+                    {[
+                      { icon: 'fa-mouse-pointer', color: 'text-pink-500', text: '点击品牌卡片选择不同的粒子效果主题' },
+                      { icon: 'fa-eye-slash', color: 'text-blue-500', text: '使用左上角按钮切换显示/隐藏品牌卡片' },
+                      { icon: 'fa-sliders-h', color: 'text-purple-500', text: '通过控制面板调整粒子效果参数' },
+                      { icon: 'fa-palette', color: 'text-yellow-500', text: '品牌卡片选择后1秒自动隐藏，展现完整粒子效果' }
+                    ].map((item, index) => (
+                      <p 
+                        key={index}
+                        className="flex items-center gap-3 hover:translate-x-2.5 transition-transform duration-300 hover:text-white"
+                      >
+                        <i className={`fas ${item.icon} ${item.color} text-lg`}></i>
+                        <span>{item.text}</span>
+                      </p>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </main>
+        </div>
+      </main>
 
         {/* 页脚 */}
-        <footer className="py-8 px-6 text-center text-gray-400 text-sm bg-gradient-to-t from-white/5 to-transparent backdrop-blur-sm">
+        <footer className={`py-8 px-6 text-center text-gray-400 text-sm bg-gradient-to-t from-white/5 to-transparent backdrop-blur-sm transition-all duration-1000 ease-in-out ${showBrandCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20 pointer-events-none'}`}>
           <div className="max-w-3xl mx-auto">
             <div className="mb-4">
               <p className="text-lg font-medium text-white">

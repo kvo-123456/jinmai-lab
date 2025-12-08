@@ -2,6 +2,7 @@ import { Routes, Route, Outlet, useLocation } from "react-router-dom";
 import { Suspense, lazy, useState, useEffect } from 'react'
 import { smartPrefetch } from './services/prefetch';
 
+
 // 路由组件惰性加载
 const Home = lazy(() => import("@/pages/Home"));
 const Login = lazy(() => import("@/pages/Login"));
@@ -185,23 +186,6 @@ export default function App() {
     );
   };
 
-  // 布局组件包装器
-  const LayoutWrapper = () => {
-    return isMobile ? (
-      <MobileLayout>
-        <AnimatedPage>
-          <Outlet />
-        </AnimatedPage>
-      </MobileLayout>
-    ) : (
-      <SidebarLayout>
-        <AnimatedPage>
-          <Outlet />
-        </AnimatedPage>
-      </SidebarLayout>
-    );
-  };
-
   // 全局加载骨架屏
   const GlobalLoadingSkeleton = () => (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -229,7 +213,21 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           
           {/* 使用布局的页面 */}
-          <Route element={<LayoutWrapper />}>
+          <Route element={
+            isMobile ? (
+              <MobileLayout>
+                <AnimatedPage>
+                  <Outlet />
+                </AnimatedPage>
+              </MobileLayout>
+            ) : (
+              <SidebarLayout>
+                <AnimatedPage>
+                  <Outlet />
+                </AnimatedPage>
+              </SidebarLayout>
+            )
+          }>
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/explore/:id" element={<WorkDetail />} />
@@ -301,8 +299,6 @@ export default function App() {
               element={<PrivateRoute component={CulturalKnowledge} />} 
             />
             
-            
-            
             {/* 创新功能路由 */}
             <Route 
               path="/daily-checkin" 
@@ -354,6 +350,7 @@ export default function App() {
     <PWAInstallButton />
     {/* 首次启动引导 */}
     <FirstLaunchGuide />
+
   </div>
 );
 }

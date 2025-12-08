@@ -32,6 +32,10 @@ const PostGrid: React.FC<PostGridProps> = ({
               className="w-full h-full object-cover"
               priority={index < 3} // 前3张图片优先加载
               quality={index < 6 ? 'high' : 'medium'} // 前6张图片使用高质量
+              ratio="square"
+              fit="cover"
+              loading="lazy"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
             <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
               {post.likes} ❤️
