@@ -1,5 +1,9 @@
 // 移除控制台日志增强代码，减少可能的错误
 
+// 导入three.js并添加到全局作用域，解决three-photo-dome.module.js中THREE is not defined的问题
+import * as THREE from 'three';
+// @ts-ignore
+window.THREE = THREE;
 
 import { StrictMode } from "react";
 import "./styles/tianjin.css";
