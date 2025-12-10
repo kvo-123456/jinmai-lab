@@ -377,20 +377,36 @@ export default function Explore() {
     }
   }, [selectedCategory, searchQuery, sortBy, selectedTags]);
 
-  // 获取热门作品（展示在推荐区）- 添加唯一参数确保图片API返回不同图片
+  // 获取热门作品（展示在推荐区）- 仅对代理URL添加唯一参数
   const featuredWorks = mockWorks
     .filter(work => work.featured)
-    .map(work => ({
-      ...work,
-      thumbnail: `${work.thumbnail}&unique=${work.id}`
-    }));
+    .map(work => {
+      // 只对代理路径的图片添加唯一参数，避免破坏其他图片URL
+      const isProxyUrl = work.thumbnail.startsWith('/api/proxy/trae-api');
+      const thumbnail = isProxyUrl 
+        ? `${work.thumbnail}${work.thumbnail.includes('?') ? '&' : '?'}unique=${work.id}`
+        : work.thumbnail;
+      
+      return {
+        ...work,
+        thumbnail
+      };
+    });
   
-  // 分页作品 - 添加唯一参数确保图片API返回不同图片
+  // 分页作品 - 仅对代理URL添加唯一参数
   const pagedWorks = useMemo(() => {
-    return filteredWorks.slice(0, page * pageSize).map(work => ({
-      ...work,
-      thumbnail: `${work.thumbnail}&unique=${work.id}`
-    }));
+    return filteredWorks.slice(0, page * pageSize).map(work => {
+      // 只对代理路径的图片添加唯一参数，避免破坏其他图片URL
+      const isProxyUrl = work.thumbnail.startsWith('/api/proxy/trae-api');
+      const thumbnail = isProxyUrl 
+        ? `${work.thumbnail}${work.thumbnail.includes('?') ? '&' : '?'}unique=${work.id}`
+        : work.thumbnail;
+      
+      return {
+        ...work,
+        thumbnail
+      };
+    });
   }, [filteredWorks, page]);
 
   // 处理分类选择
