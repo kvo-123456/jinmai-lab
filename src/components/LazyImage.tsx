@@ -97,12 +97,9 @@ export default function LazyImage({
     return canvas.toDataURL('image/png');
   };
 
-  // 直接使用默认图片，避免API认证问题
+  // 移除默认图片逻辑，直接尝试加载API图片
   const defaultImage = useMemo(() => {
-    // 对于特定API图片，直接返回备用图像
-    if (src.includes('/api/proxy/trae-api/api/ide/v1/text_to_image')) {
-      return generateFallbackImage();
-    }
+    // 不再直接返回备用图像，尝试加载真实的API图片
     return null;
   }, [src]);
 
