@@ -34,7 +34,7 @@ const recentWorks = [
   {
     id: 2,
     title: '老字号包装设计',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20brand%20packaging%20design',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20brand%20packaging%20design',
     status: '审核中',
     views: 0,
     likes: 0,
@@ -44,7 +44,7 @@ const recentWorks = [
   {
     id: 3,
     title: '传统纹样AI创作',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20patterns',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20patterns',
     status: '草稿',
     views: 0,
     likes: 0,

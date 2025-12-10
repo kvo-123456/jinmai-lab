@@ -25,17 +25,17 @@ const aiGeneratedResults = [
   },
   {
     id: 2,
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20design%202',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20design%202',
     score: 78,
   },
   {
     id: 3,
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20design%203',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20design%203',
     score: 92,
   },
   {
     id: 4,
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20design%204',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=AI%20generated%20traditional%20Chinese%20design%204',
     score: 75,
   },
 ];
@@ -45,37 +45,37 @@ const traditionalPatterns = [
   {
     id: 1,
     name: '云纹',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20cloud%20pattern',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20cloud%20pattern',
     description: '象征吉祥如意，常用于传统服饰和建筑',
   },
   {
     id: 2,
     name: '龙纹',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20dragon%20pattern',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20dragon%20pattern',
     description: '象征权力与尊贵，中国传统文化的重要象征',
   },
   {
     id: 3,
     name: '凤纹',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20phoenix%20pattern',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20phoenix%20pattern',
     description: '象征美好与幸福，常与龙纹配合使用',
   },
   {
     id: 4,
     name: '回纹',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20key%20pattern',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20key%20pattern',
     description: '寓意吉祥绵延，是传统装饰中常见的纹样',
   },
   {
     id: 5,
     name: '花卉纹',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20flower%20pattern',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20flower%20pattern',
     description: '象征自然与生机，常见牡丹、莲花等纹样',
   },
   {
     id: 6,
     name: '几何纹',
-    thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20geometric%20pattern',
+    thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20Chinese%20geometric%20pattern',
     description: '简洁明快，富有节奏感和韵律感',
   },
 ];
@@ -753,9 +753,9 @@ export default function Create() {
       } else {
         // 中文注释：豆包未返回内容时，回退占位图，保证界面可用
         const fallback = [
-          { id: 1, thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Tianjin%20design%20A', score: 80 },
-          { id: 2, thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Tianjin%20design%20B', score: 80 },
-          { id: 3, thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Tianjin%20design%20C', score: 80 }
+          { id: 1, thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Tianjin%20design%20A', score: 80 },
+          { id: 2, thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Tianjin%20design%20B', score: 80 },
+          { id: 3, thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Tianjin%20design%20C', score: 80 }
         ]
         setGeneratedResults(fallback)
         setSelectedResult(1)

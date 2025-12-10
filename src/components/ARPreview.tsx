@@ -107,7 +107,7 @@ const ARModelPlacer: React.FC<{
           
           {/* 2D图像预览 */}
             {config.imageUrl && texture && (
-              <mesh matrix={hitPose.current} scale={[scale * 0.03, scale * 0.03, 0.01]} rotation={[rotation.x, rotation.y, rotation.z]}>
+              <mesh matrix={hitPose.current} scale={[scale * 3, scale * 3, 0.01]} rotation={[rotation.x, rotation.y, rotation.z]}>
                 <planeGeometry args={[1, 1]} />
                 <meshBasicMaterial map={texture} transparent side={THREE.DoubleSide} />
               </mesh>
@@ -131,7 +131,7 @@ const ARModelPlacer: React.FC<{
         <>
           {/* 2D图像 */}
             {config.imageUrl && texture && (
-              <mesh scale={[scale * 0.03, scale * 0.03, 0.01]} rotation={[rotation.x, rotation.y, rotation.z]} position={[position.x, position.y, position.z]}>
+              <mesh scale={[scale * 3, scale * 3, 0.01]} rotation={[rotation.x, rotation.y, rotation.z]} position={[position.x, position.y, position.z]}>
                 <planeGeometry args={[1, 1]} />
                 <meshBasicMaterial map={texture} transparent side={THREE.DoubleSide} />
               </mesh>
@@ -1116,7 +1116,7 @@ const ThreeDPreviewContent: React.FC<{
     let isMounted = true;
     let currentUrl: string | null = null;
     
-    // 立即将加载状态设置为false，防止任何情况下显示加载屏幕
+    // 只有在真正的占位图时才跳过加载
     if (isPlaceholderImage) {
       setTextureLoading(false);
       setModelLoading(false);
@@ -1129,6 +1129,11 @@ const ThreeDPreviewContent: React.FC<{
       }
       return;
     }
+    
+    // 确保开始加载流程
+    setTextureLoading(true);
+    setTextureError(false);
+    setLoadingProgress(0);
     
     const loadTexture = async (url: string, isFallback: boolean = false) => {
       // 如果是占位符图像，直接跳过加载流程
