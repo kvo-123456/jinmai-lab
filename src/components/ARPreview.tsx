@@ -69,10 +69,12 @@ const ARModelPlacer: React.FC<{
     onPlace();
   }, [onPlace]);
   
+  // 将useThree Hook移到组件顶层
+  const { gl } = useThree();
+  
   // 添加点击事件监听器
   useEffect(() => {
-    const { gl } = useThree();
-    const canvas = gl.domElement;
+    const canvas = gl?.domElement;
     if (!canvas || !isARMode) return;
     
     const handleClick = () => {
@@ -83,7 +85,7 @@ const ARModelPlacer: React.FC<{
     
     canvas.addEventListener('click', handleClick);
     return () => canvas.removeEventListener('click', handleClick);
-  }, [isPlaced, handlePlaceModel, isARMode, useThree]);
+  }, [isPlaced, handlePlaceModel, isARMode, gl]);
   
   return (
     <>
@@ -429,7 +431,7 @@ const CanvasContent: React.FC<{
           {/* 渲染2D图像为3D平面 */}
           {config.type === '2d' && config.imageUrl && texture && !textureError && (
             <mesh
-              scale={[scale * 0.03, scale * 0.03, 0.01]}
+              scale={[scale * 3, scale * 3, 0.01]}
               rotation={[rotation.x, rotation.y, rotation.z]}
               position={[position.x, position.y, position.z]}
             >
@@ -445,7 +447,7 @@ const CanvasContent: React.FC<{
           {/* 图像加载错误时的回退显示 */}
           {config.imageUrl && textureError && (
             <mesh
-              scale={[scale * 0.03, scale * 0.03, 0.01]}
+              scale={[scale * 3, scale * 3, 0.01]}
               rotation={[rotation.x, rotation.y, rotation.z]}
               position={[position.x, position.y, position.z]}
             >
@@ -1089,16 +1091,23 @@ const ThreeDPreviewContent: React.FC<{
     config.imageUrl === '/images/placeholder-image.svg' ||
     config.imageUrl === '/images/placeholder-image.jpg' ||
     config.imageUrl === '/images/default-image.png' ||
-    config.imageUrl.includes('placeholder') ||
-    config.imageUrl.includes('default') ||
+    // 只检查精确的占位图URL，不检查URL中是否包含关键词
     config.imageUrl.length === 0;
   
   // 确保组件初始化时就将加载状态设置为正确值
   useEffect(() => {
-    setTextureLoading(false);
-    setModelLoading(false);
-    setLoadingProgress(100);
-  }, []);
+    // 检查是否有实际需要加载的资源，排除占位符图像
+    const hasResourcesToLoad = 
+      (config.type === '2d' && config.imageUrl && !isPlaceholderImage) || 
+      (config.type === '3d' && config.modelUrl);
+    
+    // 只有在没有资源需要加载时才设置完成状态
+    if (!hasResourcesToLoad) {
+      setTextureLoading(false);
+      setModelLoading(false);
+      setLoadingProgress(100);
+    }
+  }, [config.type, config.imageUrl, config.modelUrl, isPlaceholderImage]);
   
   // 加载纹理 - 增强版本：添加URL验证和更好的错误处理，包括降级策略
   useEffect(() => {
