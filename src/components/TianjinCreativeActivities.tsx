@@ -1319,10 +1319,12 @@ export default function TianjinCreativeActivities() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={`p-6 rounded-xl ${isDark ? 'bg-gray-800/50 backdrop-blur-sm border border-gray-700' : 'bg-white/80 backdrop-blur-sm border border-gray-100'} shadow-lg flex-1`}
+      className={`p-6 rounded-xl ${isDark ? 'bg-gray-800/50 backdrop-blur-sm border border-gray-700' : 'bg-white/80 backdrop-blur-sm border border-gray-100'} shadow-lg flex-1 flex flex-col md:flex-row gap-6`}
     >
-      {/* 标签页切换 */}
-      <div className="relative mb-6">
+      {/* 左侧主内容区 */}
+      <div className="w-full md:w-2/3">
+        {/* 标签页切换 */}
+        <div className="relative mb-6">
         <div
           className={`pointer-events-none absolute left-0 top-0 bottom-0 w-8 ${
             isDark ? 'bg-gradient-to-r from-gray-800/50 to-transparent' : 'bg-gradient-to-r from-white/80 to-transparent'
@@ -1435,6 +1437,16 @@ export default function TianjinCreativeActivities() {
                     <i className="far fa-calendar-alt mr-1"></i>
                     {activity.startDate} - {activity.endDate}
                   </span>
+                  <div className="flex gap-2">
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
+                      <i className="fas fa-map-marker-alt mr-1"></i>
+                      线上
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${isDark ? 'bg-gray-600' : 'bg-gray-100'}`}>
+                      <i className="fas fa-tag mr-1"></i>
+                      设计
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={() => handleParticipate(activity)}
@@ -1649,6 +1661,105 @@ export default function TianjinCreativeActivities() {
           )}
         </div>
       )}
+      </div>
+      
+      {/* 右侧补充内容区 */}
+      <div className="w-full md:w-1/3 space-y-6">
+        {/* 热门话题 */}
+        <div className={`p-4 rounded-xl shadow-md ${isDark ? 'bg-gray-700' : 'bg-white'}`}>
+          <h3 className="font-bold text-lg mb-4">热门话题</h3>
+          <div className="space-y-3">
+            {[
+              { tag: '#国潮设计', count: 234 },
+              { tag: '#天津老字号', count: 189 },
+              { tag: '#文创产品', count: 156 },
+              { tag: '#津味插画', count: 123 },
+              { tag: '#非遗传承', count: 98 }
+            ].map((topic, index) => (
+              <div key={index} className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <span className={`inline-block w-2 h-2 rounded-full ${isDark ? 'bg-red-500' : 'bg-red-400'} mr-2`}></span>
+                  <span className={`${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{topic.tag}</span>
+                </div>
+                <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{topic.count}人参与</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* 活动推荐 */}
+        <div className={`p-4 rounded-xl shadow-md ${isDark ? 'bg-gray-700' : 'bg-white'}`}>
+          <h3 className="font-bold text-lg mb-4">活动推荐</h3>
+          <div className="space-y-3">
+            {filteredActivities.slice(0, 2).map((activity) => (
+              <div key={activity.id} className="flex gap-3">
+                <TianjinImage 
+                  src={activity.image} 
+                  alt={activity.title} 
+                  className="w-20 h-20 object-cover rounded-lg"
+                  ratio="square"
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm truncate">{activity.title}</h4>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                    <i className="far fa-calendar-alt mr-1"></i>
+                    {activity.startDate}
+                  </p>
+                  <span className={`inline-block mt-1 px-1.5 py-0.5 rounded-full text-xs ${
+                    activity.status === 'active' 
+                      ? 'bg-green-600 text-white' 
+                      : activity.status === 'upcoming'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-600 text-white'
+                  }`}>
+                    {activity.status === 'active' ? '进行中' : 
+                     activity.status === 'upcoming' ? '即将开始' : '已结束'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* 数据统计 */}
+        <div className={`p-4 rounded-xl shadow-md ${isDark ? 'bg-gray-700' : 'bg-white'}`}>
+          <h3 className="font-bold text-lg mb-4">数据统计</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`p-3 rounded-lg ${
+              isDark ? 'bg-gray-600' : 'bg-gray-100'
+            } text-center`}>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                总活动数
+              </p>
+              <p className="font-bold text-xl">{filteredActivities.length}</p>
+            </div>
+            <div className={`p-3 rounded-lg ${
+              isDark ? 'bg-gray-600' : 'bg-gray-100'
+            } text-center`}>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                总模板数
+              </p>
+              <p className="font-bold text-xl">{filteredTemplates.length}</p>
+            </div>
+            <div className={`p-3 rounded-lg ${
+              isDark ? 'bg-gray-600' : 'bg-gray-100'
+            } text-center`}>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                线下体验
+              </p>
+              <p className="font-bold text-xl">{filteredExperiences.length}</p>
+            </div>
+            <div className={`p-3 rounded-lg ${
+              isDark ? 'bg-gray-600' : 'bg-gray-100'
+            } text-center`}>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                老字号品牌
+              </p>
+              <p className="font-bold text-xl">{filteredBrands.length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
         {/* 活动详情弹层 */}
         {selectedActivity && (
           <div className="fixed inset-0 z-40 flex items-center justify-center">

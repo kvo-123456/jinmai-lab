@@ -104,6 +104,7 @@ export const DiscussionSection: React.FC<DiscussionSectionProps> = ({
                   alt={msg.user} 
                   size="sm" 
                   className="mr-3" 
+                  variant="heritage" // 使用非遗风格变体
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">

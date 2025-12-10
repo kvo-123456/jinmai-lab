@@ -151,7 +151,6 @@ export default function Dashboard() {
             <div className="relative mb-4 md:mb-0 md:mr-6">
               <img 
                 src={user?.avatar || 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop&prompt=User%20avatar'} 
-                
                 alt={user?.username || '用户头像'} 
                 className="w-24 h-24 rounded-full object-cover border-4 border-red-600"
                 loading="lazy" decoding="async"

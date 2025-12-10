@@ -10,6 +10,8 @@ export type Work = {
   category: string;
   tags: string[];
   featured: boolean;
+  // 中文注释：作品描述
+  description?: string;
   // 中文注释：可选视频地址（存在则视为视频作品）
   videoUrl?: string;
   // 中文注释：视频时长（可选，用于展示）

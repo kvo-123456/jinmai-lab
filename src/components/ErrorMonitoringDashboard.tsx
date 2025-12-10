@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import errorService, { ERROR_MESSAGES, ErrorInfo } from '../services/errorService';
@@ -282,21 +282,22 @@ const ErrorMonitoringDashboard: React.FC<ErrorMonitoringDashboardProps> = ({ ref
       </motion.div>
       
       {/* 错误详情模态框 */}
-      {isDetailOpen && selectedError && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => setIsDetailOpen(false)}
-        >
+      <AnimatePresence>
+        {isDetailOpen && selectedError && (
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className={`w-full max-w-4xl rounded-2xl overflow-y-auto max-h-[90vh] ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-2xl`}
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setIsDetailOpen(false)}
           >
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className={`w-full max-w-4xl rounded-2xl overflow-y-auto max-h-[90vh] ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-2xl`}
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* 模态框头部 */}
             <div className="flex justify-between items-center p-6 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-750">
               <h4 className="text-xl font-bold">错误详情</h4>
@@ -388,7 +389,8 @@ const ErrorMonitoringDashboard: React.FC<ErrorMonitoringDashboardProps> = ({ ref
             </div>
           </motion.div>
         </motion.div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

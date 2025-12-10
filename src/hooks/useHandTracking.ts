@@ -77,13 +77,13 @@ const useHandTracking = (config: HandTrackingConfig = {}) => {
         const allArgsString = args.map(arg => String(arg)).join(' ');
         
         // 1. 检查是否是包含多个内存地址的数组字符串，如：[0xc00b795760 0xc00b795790 ...]
-        const bracketedMemoryAddressPattern = /^\[(\s*0x[0-9a-f]{8,}\s*){5,}\]$/i;
+        const bracketedMemoryAddressPattern = /^\[(\s*0x[0-9a-f]{8,}\s*){3,}\]$/i;
         
         // 2. 检查是否是纯内存地址格式，如：0xc00b795760
         const pureMemoryAddressPattern = /^0x[0-9a-f]{8,}$/i;
         
         // 3. 检查是否是多个独立的内存地址参数
-        const multipleMemoryAddresses = args.length >= 5 && args.every(arg => {
+        const multipleMemoryAddresses = args.length >= 3 && args.every(arg => {
           const argStr = String(arg);
           return pureMemoryAddressPattern.test(argStr);
         });
@@ -106,8 +106,8 @@ const useHandTracking = (config: HandTrackingConfig = {}) => {
           
           // 检查实际的数组参数，可能包含多个内存地址
           if (Array.isArray(arg)) {
-            // 如果数组长度大于等于5，且所有元素都是内存地址，过滤
-            if (arg.length >= 5) {
+            // 如果数组长度大于等于3，且所有元素都是内存地址，过滤
+            if (arg.length >= 3) {
               const allAreMemoryAddresses = arg.every(item => {
                 const itemStr = String(item);
                 return pureMemoryAddressPattern.test(itemStr) || 
@@ -124,7 +124,7 @@ const useHandTracking = (config: HandTrackingConfig = {}) => {
           if (typeof arg === 'object' && arg !== null) {
             const objStr = JSON.stringify(arg);
             const memoryAddressCount = (objStr.match(/0x[0-9a-f]{8,}/gi) || []).length;
-            if (memoryAddressCount >= 5) {
+            if (memoryAddressCount >= 3) {
               isMemoryAddressLog = true;
               break;
             }
@@ -136,9 +136,14 @@ const useHandTracking = (config: HandTrackingConfig = {}) => {
           isMemoryAddressLog = true;
         }
         
-        // 检查字符串中是否包含5个以上内存地址
+        // 检查字符串中是否包含3个以上内存地址
         const memoryAddressCount = (allArgsString.match(/0x[0-9a-f]{8,}/gi) || []).length;
-        if (memoryAddressCount >= 5) {
+        if (memoryAddressCount >= 3) {
+          isMemoryAddressLog = true;
+        }
+        
+        // 检查是否是特定格式的MediaPipe内存地址日志
+        if (/^\[(\s*0x[0-9a-f]{16,}\s*)+\]$/i.test(allArgsString)) {
           isMemoryAddressLog = true;
         }
         

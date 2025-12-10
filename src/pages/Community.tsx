@@ -1584,9 +1584,16 @@ export default function Community() {
             <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'}`}>实时</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {mockCreators.map((c) => (
+            {mockCreators.map((c, index) => (
               <div key={c.name} className="flex items-center p-2 rounded-xl">
-                <TianjinAvatar src={c.avatar} alt={c.name} size="md" online={c.online} onClick={() => openProfile(c)} />
+                <TianjinAvatar 
+                  src={c.avatar} 
+                  alt={c.name} 
+                  size="md" 
+                  online={c.online} 
+                  onClick={() => openProfile(c)} 
+                  variant={index % 2 === 0 ? 'heritage' : 'gradient'} // 交替使用不同变体
+                />
                 <div className="flex-1">
                   <div className="text-sm font-medium">{c.name}</div>
                   <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.role}</div>

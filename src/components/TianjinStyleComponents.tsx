@@ -683,6 +683,7 @@ export const TianjinAvatar: React.FC<{
   online?: boolean;
   onClick?: () => void;
   withBorder?: boolean;
+  variant?: 'default' | 'gradient' | 'heritage'; // 新增：头像变体
 }> = ({
   src,
   alt,
@@ -691,6 +692,7 @@ export const TianjinAvatar: React.FC<{
   online = false,
   onClick,
   withBorder = true,
+  variant = 'default', // 新增：默认变体
 }) => {
   // 简化主题处理
   const { isDark = false } = useTheme() || {};
@@ -704,9 +706,22 @@ export const TianjinAvatar: React.FC<{
     xl: 'w-16 h-16',
   }), []);
   
+  // 边框变体映射
+  const borderVariants = useMemo(() => {
+    const baseBorder = withBorder ? (isDark ? 'ring-2 ring-gray-700' : 'ring-2 ring-gray-300') : '';
+    const gradientBorder = withBorder ? (isDark ? 'ring-2 ring-blue-500/60' : 'ring-2 ring-blue-600') : '';
+    const heritageBorder = withBorder ? (isDark ? 'ring-2 ring-red-500/60' : 'ring-2 ring-red-600') : '';
+    
+    return {
+      default: baseBorder,
+      gradient: gradientBorder,
+      heritage: heritageBorder,
+    };
+  }, [withBorder, isDark]);
+  
   // 缓存最终className
   const combinedClassName = useMemo(() => {
-    return `relative ${sizeMap[size]} ${className} cursor-pointer`;
+    return `relative ${sizeMap[size]} ${className} cursor-pointer group transition-all duration-300`;
   }, [sizeMap, size, className]);
   
   return (
@@ -714,16 +729,76 @@ export const TianjinAvatar: React.FC<{
       className={combinedClassName}
       onClick={onClick}
     >
-      <LazyImage
-        src={src}
-        alt={alt}
-        className={`w-full h-full rounded-full ${withBorder ? (isDark ? 'ring-1 ring-gray-700' : 'ring-1 ring-gray-300') : ''}`}
-        ratio="square"
-        fit="cover"
-        loading="lazy"
-      />
+      {/* 渐变光环效果 */}
+      {variant === 'gradient' && (
+        <motion.div
+          className="absolute inset-[-2px] rounded-full bg-gradient-to-r from-red-500 via-blue-500 to-green-500 blur-sm opacity-70"
+          initial={{ scale: 0.95 }}
+          whileHover={{ scale: 1.1 }}
+          animate={{ opacity: [0.7, 1, 0.7] }}
+          transition={{ 
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      )}
+      
+      {/* 非遗风格装饰环效果 */}
+      {variant === 'heritage' && (
+        <motion.div
+          className="absolute inset-[-3px] rounded-full border-2 border-dashed border-red-500/60 opacity-80"
+          whileHover={{ rotate: 5, scale: 1.05 }}
+          animate={{ rotate: [0, 360] }}
+          transition={{ 
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      )}
+      
+      <motion.div
+        className={`relative z-10 w-full h-full rounded-full overflow-hidden ${borderVariants[variant]}`}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+      >
+        <LazyImage
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          ratio="square"
+          fit="cover"
+          loading="lazy"
+        />
+        
+        {/* 添加轻微的发光效果 */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </motion.div>
+      
+      {/* 改进的在线状态指示器 */}
       {online && (
-        <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ${isDark ? 'bg-green-500 ring-2 ring-gray-800' : 'bg-green-500 ring-2 ring-white'}`} />
+        <motion.span
+          className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 ${isDark ? 'ring-2 ring-gray-800' : 'ring-2 ring-white'} z-20`}
+          initial={{ scale: 0 }}
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ 
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          {/* 在线状态光晕 */}
+          <motion.span
+            className="absolute inset-[-2px] rounded-full bg-green-500 opacity-50"
+            animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        </motion.span>
       )}
     </div>
   );
