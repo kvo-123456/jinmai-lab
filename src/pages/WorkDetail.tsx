@@ -7,6 +7,7 @@ const ARPreview = lazy(() => import('@/components/ARPreview'))
 import postsApi from '@/services/postService'
 import exportService, { ExportOptions, ExportFormat } from '@/services/exportService'
 import type { ARPreviewConfig } from '@/components/ARPreview'
+import LazyImage from '@/components/LazyImage'
 
 export default function WorkDetail() {
   const { isDark } = useTheme()
@@ -137,7 +138,7 @@ export default function WorkDetail() {
                   <span className={`text-sm px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>{work.category}</span>
                 </div>
                 <div className="flex items-center mb-4">
-                  <img src={work.creatorAvatar} alt="avatar" className="w-10 h-10 rounded-full mr-3 object-cover" />
+                  <LazyImage src={work.creatorAvatar} alt="avatar" className="w-10 h-10 rounded-full mr-3 object-cover" ratio="square" fit="cover" priority={false} quality="medium" />
                   <div>
                     <div className="font-medium">{work.creator}</div>
                     <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>创作者</div>
@@ -187,7 +188,14 @@ export default function WorkDetail() {
                     className="w-full h-full object-cover max-h-[520px]"
                   />
                 ) : (
-                  <img src={work.thumbnail} alt={work.title} className="w-full h-full object-cover max-h-[520px]"
+                  <LazyImage 
+                    src={work.thumbnail} 
+                    alt={work.title} 
+                    className="w-full h-full object-cover max-h-[520px]"
+                    ratio="auto"
+                    fit="cover"
+                    priority={true}
+                    quality="high"
                   />
                 )}
               </div>
@@ -203,7 +211,15 @@ export default function WorkDetail() {
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {related.map((w) => (
                   <motion.div key={w.id} whileHover={{ scale: 1.02 }} className={`rounded-xl overflow-hidden cursor-pointer ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'}`} onClick={() => navigate(`/explore/${w.id}`)}>
-                    <img src={w.thumbnail} alt={w.title} className="w-full h-28 object-cover" />
+                    <LazyImage 
+                      src={w.thumbnail} 
+                      alt={w.title} 
+                      className="w-full h-28 object-cover"
+                      ratio="auto"
+                      fit="cover"
+                      priority={false}
+                      quality="medium"
+                    />
                     <div className="p-3">
                       <div className="text-sm font-medium truncate mb-1">{w.title}</div>
                       <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} truncate`}>{w.creator}</div>

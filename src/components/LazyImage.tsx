@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { clsx } from 'clsx';
+import imageService from '../services/imageService';
 
 interface LazyImageProps {
   src: string;
@@ -27,6 +28,7 @@ export default function LazyImage({
   height,
   onLoad,
   onError,
+  priority,
   loading = 'lazy',
   sizes = '100vw',
   ratio = 'auto',
@@ -97,65 +99,48 @@ export default function LazyImage({
     return canvas.toDataURL('image/png');
   };
 
-  // 移除默认图片逻辑，直接尝试加载API图片
-  const defaultImage = useMemo(() => {
-    // 不再直接返回备用图像，尝试加载真实的API图片
-    return null;
-  }, [src]);
+  // 使用imageService获取可靠的图片URL
+  const [finalSrc, setFinalSrc] = useState<string>(src);
+  const [isLoadingImage, setIsLoadingImage] = useState<boolean>(true);
 
-  // 处理API图片的重定向问题
-  const [resolvedSrc, setResolvedSrc] = useState<string>(src);
-
+  // 初始化时获取可靠的图片URL
   useEffect(() => {
-    // 只处理API图片URL
-    if (!src.includes('/api/proxy/trae-api/api/ide/v1/text_to_image')) {
-      setResolvedSrc(src);
-      return;
-    }
-
-    // 使用fetch API处理重定向，获取真实图片URL
-    const fetchRealImageUrl = async () => {
+    const getReliableUrl = async () => {
       try {
-        const response = await fetch(src, {
-          method: 'HEAD', // 只获取头信息，不下载图片
-          redirect: 'follow', // 自动跟随重定向
+        const reliableUrl = await imageService.getReliableImageUrl(src, alt, {
+          priority: priority,
+          size: 'md',
+          validate: false // 快速返回，不进行验证
         });
-        
-        // 如果请求成功，使用最终的URL
-        if (response.ok) {
-          setResolvedSrc(response.url);
-        }
+        setFinalSrc(reliableUrl);
       } catch (error) {
-        // 如果请求失败，继续使用原始URL
-        console.error('Failed to resolve image URL:', error);
+        console.error('Failed to get reliable image URL:', error);
       }
     };
 
-    fetchRealImageUrl();
-  }, [src]);
-
-  // 优化图片加载，直接处理API返回JSON错误的情况
-  const optimizedSrc = useMemo(() => {
-    // 对于API图片URL，添加时间戳防止缓存
-    if (resolvedSrc.includes('/api/proxy/trae-api')) {
-      return `${resolvedSrc}${resolvedSrc.includes('?') ? '&' : '?'}t=${Date.now()}`;
-    }
-    return resolvedSrc;
-  }, [resolvedSrc]);
+    getReliableUrl();
+  }, [src, alt, priority]);
 
   const handleLoad = () => {
     setIsLoading(false);
     setIsError(false);
+    setIsLoadingImage(false);
+    // 更新图片服务的缓存状态
+    imageService.updateImageStatus(src, true);
     onLoad?.();
   };
 
   const handleError = () => {
-    if (!isError || retryCount < 2) {
+    // 更新图片服务的缓存状态
+    imageService.updateImageStatus(src, false);
+    
+    if (retryCount < 2) {
       // 生成备用图像并设置
       const fallbackImage = generateFallbackImage();
       setFallbackSrc(fallbackImage);
       setIsError(true);
       setIsLoading(false);
+      setIsLoadingImage(false);
       onError?.();
     }
   };
@@ -164,10 +149,29 @@ export default function LazyImage({
     setIsLoading(true);
     setIsError(false);
     setRetryCount(prev => prev + 1);
-    if (imgRef.current) {
-      // 重新加载图片
-      imgRef.current.src = src;
-    }
+    setIsLoadingImage(true);
+    
+    // 清除旧的缓存条目，强制重新加载
+    imageService.clearCache(src);
+    
+    // 获取新的图片URL并重新加载
+    const getNewUrl = async () => {
+      try {
+        const newUrl = await imageService.getReliableImageUrl(src, alt, {
+          priority: priority,
+          size: 'md',
+          validate: false
+        });
+        setFinalSrc(newUrl);
+        if (imgRef.current) {
+          imgRef.current.src = newUrl;
+        }
+      } catch (error) {
+        console.error('Failed to get new image URL:', error);
+      }
+    };
+
+    getNewUrl();
   };
 
   return (
@@ -182,10 +186,10 @@ export default function LazyImage({
         ...ratioStyle
       }}
     >
-      {/* 图片元素 - 针对API图片使用默认图像，避免认证问题 */}
+      {/* 图片元素 */}
       <img
         ref={imgRef}
-        src={defaultImage || (isError ? fallbackSrc : optimizedSrc)}
+        src={isError ? fallbackSrc : finalSrc}
         alt={alt}
         className={clsx(
           'w-full h-full object-cover transition-opacity duration-300',
@@ -195,16 +199,8 @@ export default function LazyImage({
         width={width}
         height={height}
         sizes={sizes}
-        onLoad={defaultImage ? () => {
-          setIsLoading(false);
-          setIsError(false);
-          onLoad?.();
-        } : handleLoad}
-        onError={defaultImage ? () => {
-          // 已经使用默认图像，不再处理错误
-          setIsLoading(false);
-          setIsError(false);
-        } : handleError}
+        onLoad={handleLoad}
+        onError={handleError}
         loading={loading}
         decoding="async"
         style={{

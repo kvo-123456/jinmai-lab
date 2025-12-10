@@ -351,10 +351,14 @@ export const TianjinEmptyState: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center sm:py-16 md:py-20">
       <div className="mb-6 relative w-full max-w-xs sm:max-w-sm md:max-w-md">
-        <img 
+        <LazyImage 
           src="https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Tianjin%20ancient%20city%20scenery%20traditional%20Chinese%20painting%20style" 
           alt="天津卫历史场景" 
           className="w-full h-auto max-w-full rounded-xl shadow-lg border-4 border-double border-blue-600 sm:w-64 sm:h-48 md:w-80 md:h-60 object-cover"
+          ratio="landscape"
+          fit="cover"
+          priority={false}
+          quality="medium"
         />
         <div className="absolute -bottom-3 -right-3 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-red-600 rounded-full opacity-20 z-0"></div>
       </div>
