@@ -104,17 +104,17 @@ const AID点评: React.FC<AID点评Props> = ({ workId, onClose }) => {
           similarWorks: [
             {
               id: 1,
-              thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Similar%20traditional%20Chinese%20design%20work%201',
+              thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Similar%20traditional%20Chinese%20design%20work%201',
               title: '国潮新风尚'
             },
             {
               id: 2,
-              thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Similar%20traditional%20Chinese%20design%20work%202',
+              thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Similar%20traditional%20Chinese%20design%20work%202',
               title: '传统纹样创新'
             },
             {
               id: 3,
-              thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Similar%20traditional%20Chinese%20design%20work%203',
+              thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Similar%20traditional%20Chinese%20design%20work%203',
               title: '东方美学重构'
             }
           ]
@@ -492,13 +492,13 @@ const AID点评: React.FC<AID点评Props> = ({ workId, onClose }) => {
                       title: '老字号品牌创新大赛', 
                       deadline: '2025-12-31', 
                       reward: '最高奖金¥50,000',
-                      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Design%20competition%20poster%20traditional%20Chinese%20elements'
+                      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Design%20competition%20poster%20traditional%20Chinese%20elements'
                     },
                     { 
                       title: '国潮文创设计营', 
                       deadline: '2025-11-30', 
                       reward: '专业导师指导+展示机会',
-                      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Cultural%20creative%20design%20workshop'
+                      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Cultural%20creative%20design%20workshop'
                     }
                   ].map((activity, index) => (
                     <div key={index} className={`rounded-lg overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>

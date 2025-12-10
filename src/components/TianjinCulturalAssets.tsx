@@ -407,7 +407,7 @@ export default function TianjinCulturalAssets() {
       name: '杨柳青年画',
       description: '中国著名的民间木版年画，始于明代崇祯年间，与苏州桃花坞年画并称"南桃北柳"。',
       detailedDescription: '杨柳青年画采用木版套印和手工彩绘相结合的方法，既有版味、木味，又有手绘的色彩斑斓与工艺性，形成了鲜明的艺术特色。题材广泛，包括历史故事、神话传说、戏曲人物、世俗生活等。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Yangliuqing%20New%20Year%20Painting%20traditional%20Chinese%20folk%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Yangliuqing%20New%20Year%20Painting%20traditional%20Chinese%20folk%20art',
       category: '传统绘画',
       history: '始于明代崇祯年间，清中叶达到鼎盛。2006年5月20日，杨柳青年画经国务院批准列入第一批国家级非物质文化遗产名录。'
     },
@@ -416,7 +416,7 @@ export default function TianjinCulturalAssets() {
       name: '泥人张',
       description: '天津传统民间彩塑，创始于清代道光年间，以其形神兼备的艺术风格闻名中外。',
       detailedDescription: '泥人张彩塑以细腻的手法、逼真的形象、生动的表情著称，题材多为民间传说、历史人物、市井生活等。作品尺寸从几厘米到数米不等，既可作为案头陈设，也可作为大型雕塑。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Nirenzhang%20traditional%20clay%20sculpture%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Nirenzhang%20traditional%20clay%20sculpture%20art',
       category: '传统雕塑',
       history: '创始于清代道光年间，由张明山所创。2006年，泥人张彩塑入选第一批国家级非物质文化遗产名录。'
     },
@@ -425,7 +425,7 @@ export default function TianjinCulturalAssets() {
       name: '风筝魏',
       description: '天津特色风筝制作技艺，创始于清代光绪年间，以其精巧的工艺和精美的画工著称。',
       detailedDescription: '风筝魏制作的风筝以造型美观、工艺精湛、放飞性能好而闻名。其特点是：骨架精细、彩绘逼真、飞行平稳、放飞高度高。作品种类繁多，包括硬翅风筝、软翅风筝、串式风筝等。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Weifeng%20traditional%20kite%20making%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Weifeng%20traditional%20kite%20making%20art',
       category: '传统工艺',
       history: '创始于清代光绪年间，由魏元泰所创。2006年，风筝魏风筝制作技艺入选第一批国家级非物质文化遗产名录。'
     },
@@ -434,7 +434,7 @@ export default function TianjinCulturalAssets() {
       name: '天津面塑',
       description: '天津传统民间工艺，以糯米面为主料，通过手工捏制成各种形象，造型生动，色彩鲜艳。',
       detailedDescription: '天津面塑以糯米面、澄面为主要原料，加入颜料、蜂蜜、甘油等成分，经过揉面、配色、塑形、晾干等工序制作而成。作品包括人物、动物、花卉等，造型生动，色彩鲜艳，具有较高的艺术价值。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20dough%20sculpture%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20dough%20sculpture%20art',
       category: '传统雕塑',
       history: '天津面塑历史悠久，可追溯到清代。其发展与天津的民俗文化密切相关，常用于节日庆典、婚丧嫁娶等场合。'
     },
@@ -443,7 +443,7 @@ export default function TianjinCulturalAssets() {
       name: '天津刻砖刘',
       description: '天津传统砖雕技艺，创始于清代光绪年间，以其精湛的雕刻技艺和独特的艺术风格著称。',
       detailedDescription: '刻砖刘的砖雕作品以立体浮雕为主，题材包括花卉、人物、动物、吉祥图案等。作品线条流畅，造型生动，具有浓郁的民间艺术特色。常用于建筑装饰，如影壁、门楼、屋脊等。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Kezuanliu%20traditional%20brick%20carving%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Kezuanliu%20traditional%20brick%20carving%20art',
       category: '传统工艺',
       history: '创始于清代光绪年间，由刘凤鸣所创。2008年，刻砖刘砖雕技艺入选第二批国家级非物质文化遗产名录。'
     },
@@ -452,7 +452,7 @@ export default function TianjinCulturalAssets() {
       name: '天津地毯织造技艺',
       description: '天津传统地毯织造工艺，历史悠久，以其精细的做工和精美的图案闻名于世。',
       detailedDescription: '天津地毯采用优质羊毛为原料，经过选毛、洗毛、梳毛、纺线、染色、织毯、剪花、洗毯、定型等多道工序制作而成。图案多为中国传统纹样，如牡丹、龙凤、云纹等，色彩鲜艳，层次分明。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20carpet%20weaving%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20carpet%20weaving%20art',
       category: '传统工艺',
       history: '天津地毯织造技艺始于清代，20世纪初达到鼎盛。2011年，天津地毯织造技艺入选第三批国家级非物质文化遗产名录。'
     },
@@ -461,7 +461,7 @@ export default function TianjinCulturalAssets() {
       name: '天津宝坻评剧',
       description: '天津宝坻地区的传统戏曲剧种，具有浓郁的地方特色和独特的艺术风格。',
       detailedDescription: '宝坻评剧以其独特的唱腔、表演风格和剧目深受当地群众喜爱。其唱腔委婉动听，表演细腻逼真，剧目多反映民间生活和历史故事。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Baodi%20Pingju%20traditional%20opera',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Baodi%20Pingju%20traditional%20opera',
       category: '传统戏曲',
       history: '宝坻评剧起源于清末民初，由莲花落演变而来。2008年，宝坻评剧入选第二批国家级非物质文化遗产名录。'
     },
@@ -470,7 +470,7 @@ export default function TianjinCulturalAssets() {
       name: '天津时调',
       description: '天津传统民间曲艺形式，以其独特的唱腔和表演风格深受天津人民喜爱。',
       detailedDescription: '天津时调是天津特有的曲艺形式，以天津方言演唱，具有浓郁的地方特色。唱腔包括靠山调、鸳鸯调、喇哈调等，题材多反映天津的市井生活和民俗风情。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Shidiao%20traditional%20folk%20music',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Shidiao%20traditional%20folk%20music',
       category: '传统音乐',
       history: '形成于清代末年，20世纪30年代达到鼎盛。2006年，天津时调入选第一批国家级非物质文化遗产名录。'
     },
@@ -479,7 +479,7 @@ export default function TianjinCulturalAssets() {
       name: '天津京东大鼓',
       description: '天津传统曲艺形式，起源于河北，在天津得到发展和完善，具有独特的艺术魅力。',
       detailedDescription: '京东大鼓以其独特的唱腔、简洁的伴奏和生动的表演著称。唱腔流畅自然，伴奏以三弦为主，题材多反映民间生活和历史故事。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Jingdong%20Dagu%20traditional%20folk%20music',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Jingdong%20Dagu%20traditional%20folk%20music',
       category: '传统音乐',
       history: '起源于河北三河、香河一带，20世纪初传入天津并得到发展。2006年，京东大鼓入选第一批国家级非物质文化遗产名录。'
     },
@@ -488,7 +488,7 @@ export default function TianjinCulturalAssets() {
       name: '天津皇会',
       description: '天津传统的民间宗教庆典活动，始于明代，以其规模宏大、内容丰富著称。',
       detailedDescription: '天津皇会是为祭祀海神天后娘娘而举办的庆典活动，包括出会、巡行、表演等环节。活动内容包括舞龙、舞狮、高跷、旱船、秧歌等民间艺术表演，规模宏大，参与人数众多。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Imperial%20Procession%20traditional%20folk%20festival',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Imperial%20Procession%20traditional%20folk%20festival',
       category: '民俗活动',
       history: '始于明代永乐年间，清康乾时期达到鼎盛。2008年，天津皇会入选第二批国家级非物质文化遗产名录。'
     },
@@ -497,7 +497,7 @@ export default function TianjinCulturalAssets() {
       name: '天津风筝',
       description: '天津传统民间工艺，以其精巧的设计和良好的放飞性能著称。',
       detailedDescription: '天津风筝种类繁多，包括硬翅风筝、软翅风筝、串式风筝、板子风筝等。制作工艺包括扎骨架、糊纸、绘画、拴线等环节，要求工艺精细，造型美观。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20kite%20making%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20kite%20making%20art',
       category: '传统工艺',
       history: '天津风筝历史悠久，20世纪初形成了以"风筝魏"为代表的制作流派。2008年，天津风筝入选第二批国家级非物质文化遗产名录。'
     },
@@ -506,7 +506,7 @@ export default function TianjinCulturalAssets() {
       name: '天津木雕',
       description: '天津传统雕刻工艺，以其精湛的技艺和独特的艺术风格著称。',
       detailedDescription: '天津木雕以硬木为原料，采用浮雕、透雕、圆雕等技法，题材包括花卉、人物、动物、吉祥图案等。作品常用于家具、建筑装饰、工艺品等。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20wood%20carving%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20wood%20carving%20art',
       category: '传统工艺',
       history: '天津木雕始于清代，20世纪初达到鼎盛。2014年，天津木雕入选第四批国家级非物质文化遗产名录。'
     },
@@ -515,7 +515,7 @@ export default function TianjinCulturalAssets() {
       name: '天津糖画',
       description: '天津传统民间工艺，以糖为原料，通过手工绘制而成各种形象。',
       detailedDescription: '天津糖画以红糖、白糖、饴糖等为原料，在石板上加热融化后，用勺子舀起糖汁，在石板上快速绘制出各种形象，如花鸟鱼虫、飞禽走兽、神话人物等。作品既可观赏，又可食用。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20sugar%20painting%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20sugar%20painting%20art',
       category: '传统工艺',
       history: '天津糖画起源于清代，由四川传入天津并得到发展。2011年，天津糖画入选第三批天津市非物质文化遗产名录。'
     },
@@ -524,7 +524,7 @@ export default function TianjinCulturalAssets() {
       name: '天津剪纸',
       description: '天津传统民间工艺，以剪刀或刻刀在纸上剪刻出各种图案。',
       detailedDescription: '天津剪纸以其精细的刀法、丰富的题材、生动的造型著称。题材包括吉祥图案、花卉、人物、动物等，常用于节日装饰、婚丧嫁娶等场合。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20paper%20cutting%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20paper%20cutting%20art',
       category: '传统工艺',
       history: '天津剪纸始于清代，20世纪初达到鼎盛。2008年，天津剪纸入选第二批国家级非物质文化遗产名录。'
     },
@@ -533,7 +533,7 @@ export default function TianjinCulturalAssets() {
       name: '天津泥塑',
       description: '天津传统民间工艺，以泥土为原料，通过手工塑造而成各种形象。',
       detailedDescription: '天津泥塑包括泥人、泥玩具、泥哨等，以其生动的造型、鲜艳的色彩、浓郁的地方特色著称。题材多为民间传说、历史人物、市井生活等。',
-      thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20clay%20sculpture%20art',
+      thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20traditional%20clay%20sculpture%20art',
       category: '传统雕塑',
       history: '天津泥塑历史悠久，可追溯到唐代。2014年，天津泥塑入选第四批国家级非物质文化遗产名录。'
     }
@@ -546,7 +546,7 @@ export default function TianjinCulturalAssets() {
       name: '五大道建筑',
       description: '天津著名历史文化街区，保留了大量欧洲风格建筑，被誉为"万国建筑博览馆"。',
       detailedDescription: '五大道地区拥有上世纪二、三十年代建成的英、法、意、德、西班牙不同国家建筑风格的花园式房屋2000多所，建筑面积达到100多万平方米。这些建筑不仅是天津历史文化的重要组成部分，也是中国近现代建筑史上的珍贵遗产。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Five%20Avenues%20historical%20buildings',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Five%20Avenues%20historical%20buildings',
       category: '建筑景观',
       history: '五大道地区形成于19世纪末20世纪初，是天津租界文化的重要体现。2005年，五大道被建设部和国家文物局命名为"中国历史文化名街"。'
     },
@@ -555,7 +555,7 @@ export default function TianjinCulturalAssets() {
       name: '海河桥梁',
       description: '海河上的桥梁是天津城市景观的重要组成部分，每座桥都有其独特的设计和历史。',
       detailedDescription: '海河是天津的母亲河，海河上的桥梁见证了天津的发展变迁。从最早的浮桥、铁桥到现代化的斜拉桥、悬索桥，海河桥梁不仅具有交通功能，更是天津城市景观的重要组成部分。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Haihe%20River%20bridges%20scenery',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Haihe%20River%20bridges%20scenery',
       category: '城市地标',
       history: '海河上最早的桥梁是建于1404年的浮桥，随着城市的发展，先后建成了解放桥、金汤桥、北安桥等著名桥梁。目前，海河上共有30多座桥梁。'
     },
@@ -564,7 +564,7 @@ export default function TianjinCulturalAssets() {
       name: '狗不理包子',
       description: '天津著名小吃，创始于清代光绪年间，以皮薄馅大、鲜香味美著称。',
       detailedDescription: '狗不理包子以猪肉和三鲜为主要馅料，采用"半发面"工艺制作，具有皮薄馅大、汤汁丰富、鲜香味美的特点。包子外形美观，褶子均匀，每个包子不少于15个褶。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Goubuli%20steamed%20buns%20local%20food',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Goubuli%20steamed%20buns%20local%20food',
       category: '地方美食',
       history: '创始于清代光绪年间（1858年），由高贵友所创。因其乳名"狗子"，且性格木讷，故得名"狗不理"。2011年，狗不理包子制作技艺入选第三批国家级非物质文化遗产名录。'
     },
@@ -573,7 +573,7 @@ export default function TianjinCulturalAssets() {
       name: '桂发祥麻花',
       description: '天津传统特色小吃，酥脆香甜，风味独特，是天津的"三绝"之一。',
       detailedDescription: '桂发祥麻花以优质面粉、芝麻、花生油、白糖等为原料，采用传统工艺制作，具有酥脆香甜、久放不绵的特点。麻花外形美观，色泽金黄，香气浓郁。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Guifaxiang%20fried%20dough%20twists%20local%20food',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Guifaxiang%20fried%20dough%20twists%20local%20food',
       category: '地方美食',
       history: '创始于清代光绪年间（1927年），由刘老八所创。2008年，桂发祥十八街麻花制作技艺入选第二批国家级非物质文化遗产名录。'
     },
@@ -582,7 +582,7 @@ export default function TianjinCulturalAssets() {
       name: '耳朵眼炸糕',
       description: '天津传统特色小吃，外焦里嫩，香甜可口，是天津的"三绝"之一。',
       detailedDescription: '耳朵眼炸糕以糯米粉、红豆沙为主要原料，采用传统工艺制作，具有外焦里嫩、香甜可口的特点。炸糕外形呈圆形，色泽金黄，口感酥脆。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Erduoyan%20fried%20cake%20local%20food',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Erduoyan%20fried%20cake%20local%20food',
       category: '地方美食',
       history: '创始于清代光绪年间（1900年），由刘万春所创。因其店址位于天津耳朵眼胡同，故得名"耳朵眼炸糕"。2011年，耳朵眼炸糕制作技艺入选第三批国家级非物质文化遗产名录。'
     },
@@ -591,7 +591,7 @@ export default function TianjinCulturalAssets() {
       name: '天津劝业场',
       description: '天津著名商业地标，始建于1928年，是天津商业文化的重要象征。',
       detailedDescription: '劝业场是天津历史最悠久、规模最大的综合性百货商场，也是天津商业文化的重要象征。商场建筑风格独特，融合了中西建筑元素，内部装饰精美。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Quanye%20Department%20Store%20historical%20building',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Quanye%20Department%20Store%20historical%20building',
       category: '商业地标',
       history: '始建于1928年，由高星桥投资兴建。劝业场是天津租界时期的重要商业建筑，也是中国近现代商业史上的重要遗产。2001年，劝业场被国务院公布为第五批全国重点文物保护单位。'
     },
@@ -600,7 +600,7 @@ export default function TianjinCulturalAssets() {
       name: '天津解放桥',
       description: '天津标志性桥梁，原名万国桥，建于1927年，是天津历史的重要见证。',
       detailedDescription: '解放桥原名万国桥，是一座全钢结构可开启的桥梁，也是天津的标志性建筑之一。桥梁设计精美，结构复杂，开启时可通过大型船只。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Jiefang%20Bridge%20historical%20bridge',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Jiefang%20Bridge%20historical%20bridge',
       category: '城市地标',
       history: '建于1927年，由法国工程师设计。1949年天津解放后，更名为解放桥。2005年，解放桥被建设部和国家文物局命名为"中国历史文化名桥"。'
     },
@@ -609,7 +609,7 @@ export default function TianjinCulturalAssets() {
       name: '天津古文化街',
       description: '天津著名文化旅游景点，以传统民俗文化为特色，展现天津文化魅力。',
       detailedDescription: '古文化街是天津最具代表性的文化旅游景点之一，以传统民俗文化为特色，汇集了众多天津传统老字号和民间工艺。街道建筑风格独特，融合了明清建筑元素。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Ancient%20Culture%20Street%20tourist%20spot',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Ancient%20Culture%20Street%20tourist%20spot',
       category: '文化景点',
       history: '古文化街始建于1985年，位于天津南开区东门外，全长580米。2007年，古文化街被国家旅游局命名为"国家5A级旅游景区"。'
     },
@@ -618,7 +618,7 @@ export default function TianjinCulturalAssets() {
       name: '天津之眼摩天轮',
       description: '天津标志性建筑，世界上唯一建在桥上的摩天轮，是天津的"城市名片"。',
       detailedDescription: '天津之眼摩天轮位于海河永乐桥上，是世界上唯一建在桥上的摩天轮。摩天轮高度为120米，共有48个座舱，每个座舱可乘坐8人。乘坐天津之眼可以俯瞰天津市区的美丽景色。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Eye%20Ferris%20Wheel%20landmark',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Eye%20Ferris%20Wheel%20landmark',
       category: '城市地标',
       history: '天津之眼摩天轮于2007年12月17日建成，2008年4月18日正式开放。它不仅是天津的标志性建筑，也是世界上唯一建在桥上的摩天轮。'
     },
@@ -627,7 +627,7 @@ export default function TianjinCulturalAssets() {
       name: '天津南开大学',
       description: '中国著名高等学府，创建于1919年，是天津教育文化的重要象征。',
       detailedDescription: '南开大学是中国著名的综合性研究型大学，也是天津教育文化的重要象征。学校师资力量雄厚，学科门类齐全，在国内外享有盛誉。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Nankai%20University%20campus%20scenery',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Nankai%20University%20campus%20scenery',
       category: '教育地标',
       history: '南开大学创建于1919年，由爱国教育家张伯苓和严修创办。学校是中国最早的现代大学之一，也是中国高等教育史上的重要遗产。'
     },
@@ -636,7 +636,7 @@ export default function TianjinCulturalAssets() {
       name: '天津相声',
       description: '天津传统曲艺形式，以幽默风趣的语言和独特的表演风格闻名全国。',
       detailedDescription: '天津相声是中国相声的重要流派之一，以幽默风趣的语言、独特的表演风格和浓郁的地方特色著称。相声表演通常由两人合作，通过对话、动作、表情等方式展现幽默效果。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20cross%20talk%20traditional%20comedy%20art',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20cross%20talk%20traditional%20comedy%20art',
       category: '民俗文化',
       history: '天津相声起源于清代末年，20世纪初达到鼎盛。天津是中国相声的重要发源地之一，也是中国相声演员的摇篮。'
     },
@@ -645,7 +645,7 @@ export default function TianjinCulturalAssets() {
       name: '天津火车站',
       description: '天津重要交通枢纽，是天津城市发展的重要见证。',
       detailedDescription: '天津火车站是天津最大的铁路客运站，也是中国北方重要的交通枢纽之一。车站建筑风格独特，融合了中西建筑元素，内部设施先进。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Railway%20Station%20modern%20building',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Railway%20Station%20modern%20building',
       category: '交通枢纽',
       history: '天津火车站始建于1888年，是中国最早的火车站之一。经过多次扩建和改造，目前的天津火车站于2008年投入使用。'
     },
@@ -654,7 +654,7 @@ export default function TianjinCulturalAssets() {
       name: '天津意式风情区',
       description: '天津著名历史文化街区，保留了大量意大利风格建筑。',
       detailedDescription: '意式风情区是天津租界时期的意大利租界，保留了大量意大利风格建筑。街区内建筑风格独特，环境优雅，是天津重要的旅游景点之一。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Italian%20Style%20Street%20historical%20buildings',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Italian%20Style%20Street%20historical%20buildings',
       category: '建筑景观',
       history: '意式风情区始建于1902年，是意大利在天津的租界。2002年，天津市政府对意式风情区进行了全面改造，使其成为天津重要的旅游景点。'
     },
@@ -663,7 +663,7 @@ export default function TianjinCulturalAssets() {
       name: '天津博物馆',
       description: '天津最大的综合性博物馆，展示天津历史文化的重要窗口。',
       detailedDescription: '天津博物馆是天津最大的综合性博物馆，馆藏丰富，包括历史文物、艺术品、民俗文物等。博物馆建筑风格独特，是天津重要的文化地标之一。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Museum%20modern%20architecture',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Museum%20modern%20architecture',
       category: '文化景点',
       history: '天津博物馆始建于1918年，经过多次合并和扩建，目前的天津博物馆于2004年投入使用。2008年，天津博物馆被国家文物局评为"国家一级博物馆"。'
     },
@@ -672,7 +672,7 @@ export default function TianjinCulturalAssets() {
       name: '天津水上公园',
       description: '天津最大的城市公园，是天津市民休闲娱乐的重要场所。',
       detailedDescription: '水上公园是天津最大的城市公园，占地面积164.6公顷，其中水域面积89.2公顷。公园内环境优美，景色宜人，是天津市民休闲娱乐的重要场所。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Water%20Park%20scenery',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Water%20Park%20scenery',
       category: '城市公园',
       history: '水上公园始建于1950年，1951年正式开放。经过多次扩建和改造，目前的水上公园是天津重要的旅游景点之一。'
     },
@@ -681,7 +681,7 @@ export default function TianjinCulturalAssets() {
       name: '天津天塔',
       description: '天津广播电视塔，是天津标志性建筑之一。',
       detailedDescription: '天津广播电视塔简称天塔，高度为415.2米，是亚洲第六、中国第三高塔。天塔集广播电视发射、旅游观光、餐饮娱乐等功能于一体，是天津重要的城市地标之一。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Tower%20landmark%20building',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Tower%20landmark%20building',
       category: '城市地标',
       history: '天塔始建于1988年，1991年正式投入使用。2001年，天塔被国家旅游局评为"国家4A级旅游景区"。'
     },
@@ -690,7 +690,7 @@ export default function TianjinCulturalAssets() {
       name: '天津鼓楼',
       description: '天津历史文化名城的重要标志，展现天津历史文化的重要窗口。',
       detailedDescription: '天津鼓楼是天津历史文化名城的重要标志，始建于明代永乐年间。鼓楼建筑风格独特，融合了明清建筑元素，是天津历史文化的重要载体。',
-      image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Drum%20Tower%20historical%20building',
+      image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Drum%20Tower%20historical%20building',
       category: '历史建筑',
       history: '天津鼓楼始建于明代永乐二年（1404年），1952年被拆除，2001年重建。重建后的鼓楼是天津重要的历史文化景点之一。'
     }

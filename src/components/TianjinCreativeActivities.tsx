@@ -5,7 +5,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { isPrefetched } from '@/services/prefetch';
 import { toast } from 'sonner';
 import { TianjinImage, TianjinButton } from './TianjinStyleComponents';
-import LazyImage from './LazyImage';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { BRANDS } from '@/lib/brands';
@@ -1399,12 +1398,12 @@ export default function TianjinCreativeActivities() {
               whileHover={{ y: -5 }}
             >
               <div className="relative">
-                <LazyImage
-                  src={activity.image}
-                  alt={activity.title}
+                <img 
+                  src={activity.image} 
+                  alt={activity.title} 
                   className="w-full h-48 object-cover cursor-pointer"
                   onClick={() => openActivityDetail(activity)}
-                  ratio="landscape"
+                  loading="lazy"
                 />
                 <div className="absolute top-3 left-3">
                   <span className={`text-xs px-2 py-1 rounded-full ${
@@ -1472,12 +1471,12 @@ export default function TianjinCreativeActivities() {
               }`}
               whileHover={{ y: -5 }}
             >
-              <LazyImage
-                src={template.thumbnail}
-                alt={template.name}
+              <img 
+                src={template.thumbnail} 
+                alt={template.name} 
                 className="w-full h-40 object-cover cursor-pointer"
+                loading="lazy"
                 onClick={() => openTemplateDetail(template)}
-                ratio="landscape"
               />
               <div className={`p-3 ${isDark ? 'bg-gray-700' : 'bg-white'}`}>
                 <div className="flex justify-between items-start mb-1">
@@ -1592,12 +1591,9 @@ export default function TianjinCreativeActivities() {
                     isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
                   } group-hover:border-blue-400`}
                 >
-                  <LazyImage
-                    src={brand.logo}
-                    alt={brand.name}
-                    className="w-full h-full object-contain"
-                    ratio="square"
-                  />
+                  <div className="w-full h-full">
+                    <img src={brand.logo} alt={brand.name} className="w-full h-full object-contain" loading="lazy" />
+                  </div>
                 </div>
                 <div>
                   <h4 className="font-bold">{brand.name}</h4>
@@ -1674,12 +1670,7 @@ export default function TianjinCreativeActivities() {
               </div>
               <div className="px-6 py-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <LazyImage
-                    src={selectedActivity.image}
-                    alt={selectedActivity.title}
-                    className="w-full h-56 object-cover rounded-xl"
-                    ratio="landscape"
-                  />
+                  <img src={selectedActivity.image} alt={selectedActivity.title} className="w-full h-56 object-cover rounded-xl" loading="lazy" />
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <span className={`px-2 py-1 rounded ${selectedActivity.status === 'active' ? 'bg-green-600 text-white' : selectedActivity.status === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'}`}>{selectedActivity.status === 'active' ? '进行中' : selectedActivity.status === 'upcoming' ? '即将开始' : '已结束'}</span>
                     <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>参与 {selectedActivity.participants}</span>
@@ -1764,12 +1755,7 @@ export default function TianjinCreativeActivities() {
               </div>
               <div className="px-6 py-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <LazyImage
-                    src={selectedTemplate.thumbnail}
-                    alt={selectedTemplate.name}
-                    className="w-full h-56 object-cover rounded-xl"
-                    ratio="landscape"
-                  />
+                  <img src={selectedTemplate.thumbnail} alt={selectedTemplate.name} className="w-full h-56 object-cover rounded-xl" loading="lazy" />
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>{selectedTemplate.category}</span>
                     <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>使用 {selectedTemplate.usageCount}</span>
@@ -1816,12 +1802,7 @@ export default function TianjinCreativeActivities() {
               </div>
               <div className="px-6 py-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <LazyImage
-                    src={selectedExperience.image}
-                    alt={selectedExperience.name}
-                    className="w-full h-56 object-cover rounded-xl"
-                    ratio="landscape"
-                  />
+                  <img src={selectedExperience.image} alt={selectedExperience.name} className="w-full h-56 object-cover rounded-xl" loading="lazy" />
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>评分 {selectedExperience.rating}</span>
                     <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>点评 {selectedExperience.reviewCount}</span>
@@ -1875,12 +1856,7 @@ export default function TianjinCreativeActivities() {
               <div className="px-6 py-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <div className="w-full h-56 bg-white rounded-xl flex items-center justify-center p-6">
-                    <LazyImage
-                      src={selectedBrand.logo}
-                      alt={selectedBrand.name}
-                      className="max-h-full object-contain"
-                      ratio="square"
-                    />
+                    <img src={selectedBrand.logo} alt={selectedBrand.name} className="max-h-full object-contain" loading="lazy" />
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>创立 {selectedBrand.establishedYear}</span>

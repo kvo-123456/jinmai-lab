@@ -93,7 +93,7 @@ export default function IPIncubationCenter() {
           brand: '桂发祥',
           reward: '¥15,000',
           status: 'open',
-          image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20brand%20packaging%20design%20opportunity'
+          image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Traditional%20brand%20packaging%20design%20opportunity'
         },
         {
           id: 2,
@@ -102,7 +102,7 @@ export default function IPIncubationCenter() {
           brand: '杨柳青画社',
           reward: '¥20,000',
           status: 'open',
-          image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Cultural%20creative%20product%20development'
+          image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Cultural%20creative%20product%20development'
         },
         {
           id: 3,
@@ -111,7 +111,7 @@ export default function IPIncubationCenter() {
           brand: '数字艺术馆',
           reward: '分成模式',
           status: 'matched',
-          image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Digital%20collectibles%20creation%20opportunity'
+          image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Digital%20collectibles%20creation%20opportunity'
         }
       ];
 
@@ -120,7 +120,7 @@ export default function IPIncubationCenter() {
         {
           id: 1,
           name: '国潮插画系列',
-          thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Copyrighted%20artwork%20example%201',
+          thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Copyrighted%20artwork%20example%201',
           type: '插画',
           createdAt: '2025-11-01',
           status: '已存证',
@@ -129,7 +129,7 @@ export default function IPIncubationCenter() {
         {
           id: 2,
           name: '传统纹样创新',
-          thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Copyrighted%20artwork%20example%202',
+          thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Copyrighted%20artwork%20example%202',
           type: '纹样',
           createdAt: '2025-10-25',
           status: '已授权',
@@ -138,7 +138,7 @@ export default function IPIncubationCenter() {
         {
           id: 3,
           name: '老字号品牌视觉',
-          thumbnail: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Copyrighted%20artwork%20example%203',
+          thumbnail: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=1024x1024&prompt=Copyrighted%20artwork%20example%203',
           type: '品牌设计',
           createdAt: '2025-10-15',
           status: '已存证',

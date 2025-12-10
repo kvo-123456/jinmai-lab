@@ -45,7 +45,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 100,
         participants: 125,
         deadline: '2024-12-31',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Creative%20design%20incorporating%20Tianjin%20cultural%20elements',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Creative%20design%20incorporating%20Tianjin%20cultural%20elements',
         tags: ['天津文化', '创意设计', '插画']
       },
       {
@@ -57,7 +57,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 150,
         participants: 89,
         deadline: '2024-12-25',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=AI-assisted%20creative%20writing%20about%20future%20cities',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=AI-assisted%20creative%20writing%20about%20future%20cities',
         tags: ['AI写作', '科幻', '创意故事']
       },
       {
@@ -69,7 +69,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 120,
         participants: 156,
         deadline: '2025-01-15',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Modern%20interpretation%20of%20traditional%20Chinese%20cultural%20elements',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Modern%20interpretation%20of%20traditional%20Chinese%20cultural%20elements',
         tags: ['传统文化', '创新', '设计']
       },
       {
@@ -81,7 +81,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 200,
         participants: 56,
         deadline: '2025-01-10',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=AR%20interactive%20creative%20design',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=AR%20interactive%20creative%20design',
         tags: ['AR', '互动设计', '技术创意']
       },
       {
@@ -93,7 +93,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 80,
         participants: 203,
         deadline: '2024-12-20',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Creative%20photography%20with%20light%20and%20shadow',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Creative%20photography%20with%20light%20and%20shadow',
         tags: ['摄影', '创意', '光影']
       },
       {
@@ -105,7 +105,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 100,
         participants: 189,
         deadline: '2025-01-20',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Digital%20illustration%20of%20future%20life',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Digital%20illustration%20of%20future%20life',
         tags: ['数字插画', '未来', '创意设计']
       },
       {
@@ -117,7 +117,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 90,
         participants: 256,
         deadline: '2025-01-05',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Creative%20short%20video%20challenge',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Creative%20short%20video%20challenge',
         tags: ['短视频', '创意', '视频制作']
       },
       {
@@ -129,7 +129,7 @@ export default function ChallengeCenter({ isOpen = true, onClose }: ChallengeCen
         reward: 250,
         participants: 78,
         deadline: '2025-02-10',
-        imageUrl: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=UI%2FUX%20design%20competition%20mobile%20app%20interface',
+        imageUrl: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=UI%2FUX%20design%20competition%20mobile%20app%20interface',
         tags: ['UI设计', 'UX设计', '移动应用']
       }
     ];

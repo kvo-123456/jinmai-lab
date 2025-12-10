@@ -223,18 +223,10 @@ export default function Home() {
   const latestWorks = [...mockWorks]
     .sort((a, b) => b.id - a.id)
     .slice(0, 8)
-    .map(work => {
-      // 只对代理路径的图片添加唯一参数，避免破坏其他图片URL
-      const isProxyUrl = work.thumbnail.startsWith('/api/proxy/trae-api');
-      const thumbnail = isProxyUrl 
-        ? `${work.thumbnail}${work.thumbnail.includes('?') ? '&' : '?'}unique=${work.id}`
-        : work.thumbnail;
-      
-      return {
-        ...work,
-        thumbnail
-      };
-    });
+    .map(work => ({
+      ...work,
+      thumbnail: `${work.thumbnail}&unique=${work.id}`
+    }));
   
   // 热门标签 - 统计标签出现次数并排序
   const tagCounts = mockWorks
