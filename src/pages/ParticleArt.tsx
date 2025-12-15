@@ -179,7 +179,7 @@ export default function ParticleArt() {
     };
 
     // 加载所需的外部库
-    const loadScript = (src) => {
+    const loadScript = (src: string) => {
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = src;
@@ -237,7 +237,7 @@ export default function ParticleArt() {
       
       const styles = document.querySelectorAll('style');
       styles.forEach(style => {
-        if (style.textContent.includes('摄像头预览窗口样式')) {
+        if (style.textContent && style.textContent.includes('摄像头预览窗口样式')) {
           style.remove();
         }
       });

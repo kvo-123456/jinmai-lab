@@ -158,7 +158,7 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
       
       // 4. GPU性能检测（简单方法）
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      const gl = canvas.getContext('webgl') as WebGLRenderingContext | null || canvas.getContext('experimental-webgl') as WebGLRenderingContext | null;
       let gpuScore = 2;
       
       if (gl) {
@@ -166,9 +166,9 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
         if (debugInfo) {
           const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
           // 根据GPU渲染器名称进行简单分类
-          if (renderer.toLowerCase().includes('intel')) {
+          if (renderer && (renderer.toLowerCase().includes('intel'))) {
             gpuScore = 2;
-          } else if (renderer.toLowerCase().includes('nvidia') || renderer.toLowerCase().includes('amd')) {
+          } else if (renderer && (renderer.toLowerCase().includes('nvidia') || renderer.toLowerCase().includes('amd'))) {
             gpuScore = 4;
           }
         }

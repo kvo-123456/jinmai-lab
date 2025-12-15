@@ -42,7 +42,7 @@ jest.mock('@react-three/fiber', () => ({
         clone: function() {
           return { x: this.x, y: this.y, z: this.z };
         },
-        lerpVectors: function(start, end, alpha) {
+        lerpVectors: function(start: { x: number; y: number; z: number }, end: { x: number; y: number; z: number }, alpha: number) {
           this.x = start.x + (end.x - start.x) * alpha;
           this.y = start.y + (end.y - start.y) * alpha;
           this.z = start.z + (end.z - start.z) * alpha;

@@ -43,13 +43,14 @@ export default function LazyImage({
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   
-  // 默认fallback图片 - 使用本地占位图，避免ORB策略阻止
-  const defaultFallbackSrc = '/images/placeholder-image.jpg';
+  // 默认fallback图片 - 使用内联base64图片作为占位符，确保可靠加载
+  const defaultFallbackSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSI1NzYiIGZpbGw9IiM3Nzc3NzciIGZpbGwtb3BhY2l0eT0iMC4yIiB2aWV3Qm94PSIwIDAgMTAyNCA1NzYiIG1pZGRsZT0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMjQiIGhlaWdodD0iNTc2IiBmaWxsPSIjMjIyMjIyIi8+CjxjaXJjbGUgY3g9IjUwMiIgY3k9IjI2MiIgcj0iMTAwIiBmaWxsPSIjQjFCOUIxIi8+CjxjaXJjbGUgY3g9IjUwMiIgY3k9IjI2MiIgcj0iNzAiIGZpbGw9IiNEMURFRDEiLz4KPHN2ZyB4PSI0NTIiIHk9IjIyMiIgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIiBmaWxsPSJub25lIiBmaWxsLW9wYWNpdHk9IjAuMyI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwIiB5MT0iMCIgeDI9IjEyMCIgeTI9IjEyMCI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNCNUI1QjUiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjQjFCOUIxIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPHJlY3Qgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiIGZpbGw9InVybCgjYSkiIG9wYWNpdHk9IjAuNiIvPgogIDwvZGVmcz4KICA8L3N2Zz4KPHN2ZyB4PSI1ODIiIHk9IjIwMCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSJub25lIiBmaWxsLW9wYWNpdHk9IjAuNCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImIiIHgxPSIwIiB5MT0iMCIgeDI9IjUwIiIgeTI9IjUwIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0I1QjVCNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNCMUJ5QjEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmVjdCB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIGZpbGw9InVybCgjYikiIG9wYWNpdHk9IjAuNiIvPgogIDwvZGVmcz4KICA8L3N2Zz4KPC9zdmc+';
   
   // 图片加载完成处理
   const handleLoad = () => {
     console.log('Image loaded successfully:', currentSrc);
     setIsLoaded(true);
+    setIsError(false);
     if (onLoad) {
       onLoad();
     }
@@ -81,7 +82,7 @@ export default function LazyImage({
     } else if (!isFallback) {
       // 重试失败或URL为空，使用fallback图片
       console.log('Using fallback image:', finalFallback);
-      // 重置加载状态，确保fallback图片能够显示
+      // 重置状态，确保fallback图片能够正常加载
       setIsLoaded(false);
       setIsError(false);
       setRetryCount(0);
@@ -207,9 +208,9 @@ export default function LazyImage({
         {/* 图片元素 */}
         <img
           ref={imgRef}
-          src={isVisible ? currentSrc : ''}
+          src={currentSrc}
           alt={alt}
-          className={`w-full h-full object-${fit} transition-opacity duration-500 ease-in-out ${isLoaded ? 'opacity-100' : 'opacity-0'} ${isError ? 'hidden' : ''}`}
+          className={`w-full h-full object-${fit} transition-opacity duration-500 ease-in-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={handleLoad}
           onError={handleError}
           {...rest}

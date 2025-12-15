@@ -1026,6 +1026,36 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    // 代理 Unsplash 图片请求，解决 CORS 问题
+    if (req.method === 'GET' && path.startsWith('/api/proxy/unsplash')) {
+      const remotePath = path.replace('/api/proxy/unsplash', '')
+      const queryString = u.search
+      const remoteUrl = `https://images.unsplash.com${remotePath}${queryString}`
+      
+      try {
+        const resp = await fetch(remoteUrl, {
+          method: req.method,
+          headers: {
+            'Accept': 'image/*, */*',
+            'User-Agent': req.headers['user-agent'] || '',
+          }
+        })
+        
+        // 设置响应头
+        res.statusCode = resp.status
+        const contentType = resp.headers.get('content-type') || 'image/jpeg'
+        res.setHeader('Content-Type', contentType)
+        
+        // 返回图片二进制数据
+        const buffer = Buffer.from(await resp.arrayBuffer())
+        res.end(buffer)
+      } catch (e) {
+        console.error('Unsplash proxy error:', e.message)
+        sendJson(res, 500, { error: 'UNSPLASH_PROXY_ERROR', message: e?.message || 'Failed to proxy Unsplash image' })
+      }
+      return
+    }
+
     // 健康检查：返回各模型的配置状态，便于前端快速定位问题
     if (req.method === 'GET' && path === '/api/health/llms') {
       const status = {

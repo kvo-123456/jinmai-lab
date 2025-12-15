@@ -22,7 +22,14 @@ export function processImageUrl(url: string): string {
     }
     
     // 检查是否为有效的URL格式
-    const urlObj = new URL(url);
+    let urlObj;
+    try {
+      urlObj = new URL(url);
+    } catch (error) {
+      // 如果URL格式无效，直接返回原始URL，不进行额外处理
+      console.warn('Invalid URL format, returning original:', url, error);
+      return url;
+    }
     
     // 检查是否为Unsplash图片URL
     if (urlObj.hostname.includes('unsplash.com') || urlObj.hostname.includes('images.unsplash.com')) {
@@ -55,8 +62,8 @@ export function processImageUrl(url: string): string {
           // 对于其他URL，直接返回真实URL
           return realUrl;
         } catch (error) {
-          console.warn('Invalid real URL in proxy format:', realUrl, error);
-          return '';
+          console.warn('Invalid real URL in proxy format, returning original:', realUrl, error);
+          return realUrl || url;
         }
       }
     }
@@ -64,9 +71,9 @@ export function processImageUrl(url: string): string {
     // 其他URL保持不变
     return url;
   } catch (error) {
-    console.warn('Invalid URL format:', url, error);
-    // 对于无效的URL，返回空字符串，这样LazyImage会使用fallback图片
-    return '';
+    console.warn('Unexpected error processing URL, returning original:', url, error);
+    // 对于任何错误，返回原始URL，而不是空字符串，确保图片能够尝试加载
+    return url;
   }
 }
 

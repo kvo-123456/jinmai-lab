@@ -44,6 +44,10 @@
       "destination": "https://trae-api-sg.mchost.guru/$1"
     },
     {
+      "source": "/api/proxy/unsplash/(.*)",
+      "destination": "https://images.unsplash.com/$1"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

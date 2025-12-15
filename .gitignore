@@ -53,3 +53,4 @@ data/
 # AI-generated files
 .trae/
 .vercel
+.env*.local

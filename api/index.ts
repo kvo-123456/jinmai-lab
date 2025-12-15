@@ -11,6 +11,7 @@ import postsIdHandler from './posts/[id]'
 import postsHandler from './posts/index'
 import tagsIdHandler from './tags/[id]'
 import tagsHandler from './tags/index'
+import https from 'https' // 添加https模块，用于代理请求
 
 // 定义路由处理函数类型
 type RouteHandler = (req: VercelRequest, res: VercelResponse) => Promise<any>
@@ -25,6 +26,71 @@ type RouteMethods = {
 
 // 定义路由映射类型
 type RouteMap = Record<string, RouteMethods>
+
+// 创建Unsplash图片代理处理函数
+const unsplashProxyHandler = async (req: VercelRequest, res: VercelResponse) => {
+  try {
+    // 提取路径参数
+    const proxyPath = req.url?.replace('/api/proxy/unsplash', '') || '';
+    const targetUrl = `https://images.unsplash.com${proxyPath}`;
+    
+    console.log('Proxying to Unsplash:', targetUrl);
+    
+    // 创建代理请求
+    const proxyReq = https.request(targetUrl, {
+      method: req.method,
+      headers: {
+        // 只传递必要的请求头
+        'User-Agent': req.headers['user-agent'] || '',
+        'Accept': req.headers['accept'] || '*/*',
+        'Accept-Encoding': req.headers['accept-encoding'] || ''
+      }
+    }, (proxyRes) => {
+      // 设置响应头
+      res.statusCode = proxyRes.statusCode || 500;
+      
+      // 传递响应头，排除可能导致问题的头
+      Object.keys(proxyRes.headers).forEach(header => {
+        const value = proxyRes.headers[header];
+        if (value && typeof value === 'string') {
+          res.setHeader(header, value);
+        }
+      });
+      
+      // 传递响应体
+      proxyRes.pipe(res);
+    });
+    
+    // 处理错误
+    proxyReq.on('error', (error) => {
+      console.error('Proxy request error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'PROXY_ERROR',
+          message: 'Failed to proxy request to Unsplash'
+        }
+      });
+    });
+    
+    // 传递请求体
+    if (req.body) {
+      proxyReq.write(JSON.stringify(req.body));
+    }
+    
+    // 结束请求
+    proxyReq.end();
+  } catch (error) {
+    console.error('Unsplash proxy error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Internal server error while proxying to Unsplash'
+      }
+    });
+  }
+};
 
 // 创建路由映射
 const routes: RouteMap = {
@@ -77,6 +143,9 @@ const routes: RouteMap = {
   '/api/tags': {
     GET: tagsHandler,
     POST: tagsHandler
+  },
+  '/api/proxy/unsplash/*': {
+    GET: unsplashProxyHandler
   }
 }
 

@@ -176,7 +176,7 @@ class PerformanceMonitor {
             }
             // 处理 LCP 条目
             else if (entry.entryType === 'largest-contentful-paint') {
-              const lcpEntry = entry as LargestContentfulPaint;
+              const lcpEntry = entry as unknown as LargestContentfulPaint;
               this.recordMetric({
                 name: 'LCP',
                 value: lcpEntry.renderTime || lcpEntry.loadTime || 0,
@@ -192,7 +192,7 @@ class PerformanceMonitor {
             }
             // 处理 CLS 条目
             else if (entry.entryType === 'layout-shift') {
-              const clsEntry = entry as LayoutShift;
+              const clsEntry = entry as unknown as LayoutShift;
               if (!clsEntry.hadRecentInput) {
                 this.recordMetric({
                   name: 'CLS',
@@ -206,7 +206,7 @@ class PerformanceMonitor {
             }
             // 处理 FID 条目
             else if (entry.entryType === 'first-input') {
-              const fidEntry = entry as FirstInputDelay;
+              const fidEntry = entry as unknown as FirstInputDelay;
               this.recordMetric({
                 name: 'FID',
                 value: fidEntry.processingStart - fidEntry.startTime,
@@ -222,7 +222,7 @@ class PerformanceMonitor {
             }
             // 处理 INP 条目
             else if (entry.entryType === 'event') {
-              const inpEntry = entry as InteractionToNextPaint;
+              const inpEntry = entry as unknown as InteractionToNextPaint;
               this.recordMetric({
                 name: 'INP',
                 value: inpEntry.duration,
@@ -296,7 +296,7 @@ class PerformanceMonitor {
     if ('PerformanceObserver' in window) {
       try {
         const observer = new PerformanceObserver((list) => {
-          const entries = list.getEntries() as PerformanceNavigationTiming[];
+          const entries = list.getEntries() as unknown as PerformanceNavigationTiming[];
           entries.forEach((entry) => {
             // 记录导航性能指标
             this.recordMetric({
@@ -343,7 +343,7 @@ class PerformanceMonitor {
     if ('PerformanceObserver' in window) {
       try {
         const observer = new PerformanceObserver((list) => {
-          const entries = list.getEntries() as PerformanceLongTaskTiming[];
+          const entries = list.getEntries() as unknown as PerformanceLongTaskTiming[];
           entries.forEach((entry) => {
             // 记录长任务
             if (entry.duration > 50) {
@@ -744,9 +744,9 @@ class PerformanceMonitor {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // 获取性能数据
-    const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    const resourceEntries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-    const longTaskEntries = performance.getEntriesByType('longtask') as PerformanceLongTaskTiming[];
+    const navigationEntry = performance.getEntriesByType('navigation')[0] as unknown as PerformanceNavigationTiming;
+    const resourceEntries = performance.getEntriesByType('resource') as unknown as PerformanceResourceTiming[];
+    const longTaskEntries = performance.getEntriesByType('longtask') as unknown as PerformanceLongTaskTiming[];
     
     // 计算审计结果
     const auditResult: PerformanceAuditResult = {

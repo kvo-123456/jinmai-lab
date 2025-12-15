@@ -1715,8 +1715,8 @@ interface RenderSettings {
   advancedLighting: boolean;
 }
 
-// 3D预览内容组件 - 使用React.memo优化性能
-const ThreeDPreviewContent: React.FC<{
+// 定义ARPreviewSceneProps类型
+interface ARPreviewSceneProps {
   config: ARPreviewConfig;
   scale: number;
   rotation: { x: number; y: number; z: number };
@@ -1731,7 +1731,10 @@ const ThreeDPreviewContent: React.FC<{
   onPositionChange?: (position: { x: number; y: number; z: number }) => void;
   renderSettings: RenderSettings;
   devicePerformance: ReturnType<typeof getDevicePerformance>;
-}> = (React.memo ? React.memo : (Component) => Component)(({ config, scale, rotation, position, isARMode, particleEffect, clickInteraction, cameraView, isPlaced, onLoadingComplete, onProgress, onPositionChange, renderSettings, devicePerformance }) => {
+}
+
+// 分离渲染逻辑，避免React.memo导致的类型问题
+const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMode, particleEffect, clickInteraction, cameraView, isPlaced, onLoadingComplete, onProgress, onPositionChange, renderSettings, devicePerformance }: ARPreviewSceneProps) => {
   // 使用useState和useEffect手动加载纹理，避免useLoader的硬性错误
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   // 初始化为false，避免不必要的加载状态显示
@@ -2707,7 +2710,7 @@ const ThreeDPreviewContent: React.FC<{
   
   // 加载3D模型 - 优化版本：支持多种格式，使用增强缓存机制和requestIdleCallback
   useEffect(() => {
-    let loader: GLTFLoader | FBXLoader | OBJLoader | ColladaLoader | null = null;
+    let loader: any | null = null;
     let loadedModel: THREE.Group | null = null;
     let isMounted = true;
     let idleCallbackId: number | null = null;
@@ -2811,13 +2814,15 @@ const ThreeDPreviewContent: React.FC<{
       // 使用requestIdleCallback在空闲时加载模型，减少主线程阻塞
       const loadModel = () => {
         // 根据模型格式选择合适的加载器
-        switch (modelFormat) {
-          case 'gltf':
-          case 'glb':
-            loader = new GLTFLoader();
-            (loader as GLTFLoader).load(
-              config.modelUrl as string,
-              (gltf: any) => {
+          switch (modelFormat) {
+            case 'gltf':
+            case 'glb':
+              // 使用any类型处理动态加载的加载器
+              loader = new (window as any).THREE.GLTFLoader ? new (window as any).THREE.GLTFLoader() : null;
+              if (loader) {
+                loader.load(
+                  config.modelUrl as string,
+                  (gltf: any) => {
                 if (!isMounted) return;
                 
                 const gltfScene = gltf.scene as THREE.Group;
@@ -2885,14 +2890,17 @@ const ThreeDPreviewContent: React.FC<{
                 }
               }
             );
+              }
             break;
             
-          case 'fbx':
-            loader = new FBXLoader();
-            (loader as FBXLoader).load(
-              config.modelUrl as string,
-              (fbxScene: THREE.Group) => {
-                if (!isMounted) return;
+            case 'fbx':
+              // 使用any类型处理动态加载的加载器
+              loader = new (window as any).THREE.FBXLoader ? new (window as any).THREE.FBXLoader() : null;
+              if (loader) {
+                loader.load(
+                  config.modelUrl as string,
+                  (fbxScene: THREE.Group) => {
+                    if (!isMounted) return;
                 
                 loadedModel = fbxScene;
                 
@@ -2953,14 +2961,17 @@ const ThreeDPreviewContent: React.FC<{
                 }
               }
             );
+              }
             break;
             
-          case 'obj':
-            loader = new OBJLoader();
-            (loader as OBJLoader).load(
-              config.modelUrl as string,
-              (objScene: THREE.Group) => {
-                if (!isMounted) return;
+            case 'obj':
+              // 使用any类型处理动态加载的加载器
+              loader = new (window as any).THREE.OBJLoader ? new (window as any).THREE.OBJLoader() : null;
+              if (loader) {
+                loader.load(
+                  config.modelUrl as string,
+                  (objScene: THREE.Group) => {
+                    if (!isMounted) return;
                 
                 loadedModel = objScene;
                 
@@ -3028,14 +3039,17 @@ const ThreeDPreviewContent: React.FC<{
                 }
               }
             );
+              }
             break;
             
-          case 'dae':
-            loader = new ColladaLoader();
-            (loader as ColladaLoader).load(
-              config.modelUrl as string,
-              (collada: any) => {
-                if (!isMounted) return;
+            case 'dae':
+              // 使用any类型处理动态加载的加载器
+              loader = new (window as any).THREE.ColladaLoader ? new (window as any).THREE.ColladaLoader() : null;
+              if (loader) {
+                loader.load(
+                  config.modelUrl as string,
+                  (collada: any) => {
+                    if (!isMounted) return;
                 
                 const colladaScene = collada.scene as THREE.Group;
                 loadedModel = colladaScene;
@@ -3097,9 +3111,10 @@ const ThreeDPreviewContent: React.FC<{
                 }
               }
             );
+              }
             break;
             
-          default:
+            default:
             console.error('Unsupported model format:', modelFormat);
             if (isMounted) {
               setModel(null);
@@ -3699,7 +3714,10 @@ const ThreeDPreviewContent: React.FC<{
       )}
     </div>
   );
-});
+}
+
+// 3D预览内容组件 - 使用React.memo优化性能
+const ThreeDPreviewContent: React.FC<ARPreviewSceneProps> = React.memo ? React.memo(renderThreeDPreviewContent) : renderThreeDPreviewContent;
 
 // 添加自定义比较函数，优化React.memo的比较逻辑
 ThreeDPreviewContent.displayName = 'ThreeDPreviewContent';

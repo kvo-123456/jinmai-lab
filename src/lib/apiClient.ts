@@ -38,11 +38,24 @@ interface ApiResponse<T> {
   fromCache?: boolean // 新增：是否来自缓存
 }
 
+// 定义ApiError类型
+interface ApiError extends Error {
+  status?: number
+  data?: any
+  path?: string
+  method?: string
+}
+
 const DEFAULT_TIMEOUT = 10000
 const DEFAULT_RETRIES = 1
 const DEFAULT_CACHE_TTL = 60000 // 默认缓存时间1分钟
 const DEFAULT_DEBOUNCE_DELAY = 300 // 默认防抖延迟300ms
 const DEFAULT_THROTTLE_LIMIT = 1000 // 默认节流限制1秒
+
+// 重试延迟配置
+const baseDelay = 1000 // 基础延迟1秒
+const jitter = 500 // 抖动延迟500ms
+const maxDelay = 10000 // 最大延迟10秒
 
 // 缓存存储类型
 type CacheStorageType = 'memory' | 'session' | 'local'
@@ -417,27 +430,6 @@ export async function apiRequest<TResp, TBody = unknown>(
   const isCacheEnabled = cacheOptions.enabled !== false && method === 'GET'
   let cachedResult: { data: any; isStale: boolean } | null = null
   
-  if (isCacheEnabled) {
-    cachedResult = cacheStore.get(requestKey)
-    if (cachedResult) {
-      // 如果数据过期但未失效，返回缓存数据并在后台重新验证
-      if (cachedResult.isStale) {
-        // 在后台重新验证缓存
-        actualRequest().catch(error => {
-          console.warn('Cache revalidation failed:', error);
-          // 记录缓存重新验证错误
-          errorService.logError(error, {
-            path,
-            method,
-            fromCache: true,
-            isRevalidation: true
-          });
-        })
-      }
-      return { ok: true, status: 200, data: cachedResult.data as TResp, fromCache: true }
-    }
-  }
-  
   // 定义实际请求函数
   const actualRequest = async (): Promise<ApiResponse<TResp>> => {
     let attempt = 0
@@ -468,193 +460,116 @@ export async function apiRequest<TResp, TBody = unknown>(
         const endTime = performance.now()
         const duration = endTime - startTime
         
-        const contentType = res.headers.get('content-type') || ''
-        const isJson = contentType.includes('application/json')
-        const data = isJson ? await res.json() : (await res.text()) as any
+        // 记录请求日志
+        console.log(`API Request: ${method} ${path} ${res.status} (${duration.toFixed(2)}ms)`)
         
-        if (!res.ok) {
-          // 处理HTTP错误
-          const statusCode = res.status
-          const message = (data && (data.message || data.error)) || `HTTP ${statusCode}`
-          
-          // 分类HTTP错误
-          let errorType = 'HTTP_ERROR'
-          if (statusCode >= 400 && statusCode < 500) {
-            errorType = 'CLIENT_ERROR'
-          } else if (statusCode >= 500) {
-            errorType = 'SERVER_ERROR'
-          } else if (statusCode === 401) {
-            errorType = 'UNAUTHORIZED_ERROR'
-          } else if (statusCode === 403) {
-            errorType = 'FORBIDDEN_ERROR'
-          } else if (statusCode === 404) {
-            errorType = 'NOT_FOUND_ERROR'
-          }
-          
-          // 记录HTTP错误
-          const httpError = new Error(`${errorType}: ${message}`)
-          const context = {
-            path,
-            method,
-            url: target,
-            statusCode,
-            duration,
-            requestBody: options.body,
-            responseData: data
-          }
-          errorService.logError(httpError, context)
-          
-          return { ok: false, status: statusCode, error: message }
-        }
-        
-        // 缓存结果（仅GET请求）
-        if (isCacheEnabled) {
-          const ttl = cacheOptions.ttl ?? DEFAULT_CACHE_TTL
-          const staleTtl = cacheOptions.staleTtl ?? ttl * 2
-          cacheStore.set(requestKey, data, { ttl, staleTtl })
-        }
-        
-        return { ok: true, status: res.status, data }
-      } catch (err: any) {
-        // 处理网络错误
-        const errorMessage = err?.message || 'UNKNOWN_ERROR'
-        const isCanceled = errorMessage.includes('AbortError')
-        
-        if (isCanceled) {
-          return { ok: false, status: 0, error: '请求已取消' }
-        }
-        
-        // 分类网络错误
-        let errorType = 'NETWORK_ERROR'
-        if (errorMessage.includes('timeout') || errorMessage.includes('TIMEOUT')) {
-          errorType = 'TIMEOUT_ERROR'
-        } else if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('Connection refused')) {
-          errorType = 'CONNECTION_REFUSED_ERROR'
-        } else if (errorMessage.includes('ECONNRESET') || errorMessage.includes('Connection reset')) {
-          errorType = 'CONNECTION_RESET_ERROR'
-        } else if (errorMessage.includes('fetch failed') || errorMessage.includes('Failed to fetch')) {
-          errorType = 'FETCH_ERROR'
-        }
-        
-        // 检查是否是可重试的错误
-        const isRetryable = retryableErrors.some(retryableError => 
-          errorMessage.includes(retryableError)
-        )
-        
-        if (!isRetryable) {
-          // 记录不可重试的错误
-          const networkError = new Error(`${errorType}: ${errorMessage}`)
-          const context = {
-            path,
-            method,
-            url: useFallback ? altUrl : url,
-            attempt: useFallback ? fallbackAttempt : attempt,
-            useFallback,
-            requestBody: options.body
-          }
-          errorService.logError(networkError, context)
-          
-          return { ok: false, status: 0, error: errorService.getFriendlyErrorMessage(errorType) }
-        }
-        
-        // 尝试回退URL（如果可用且未尝试过）
-        if (base && !useFallback) {
-          useFallback = true
-          fallbackAttempt = 0
-          continue
-        }
-        
-        // 更新尝试计数
-        if (useFallback) {
-          fallbackAttempt++
+        // 解析响应
+        const contentType = res.headers.get('content-type')
+        let data: any
+        if (contentType?.includes('application/json')) {
+          data = await res.json()
         } else {
-          attempt++
+          // 非JSON响应作为文本处理
+          data = await res.text()
         }
         
-        // 检查是否达到最大尝试次数
-        const maxAttemptsReached = useFallback 
-          ? fallbackAttempt > retries 
-          : attempt > retries
-        
-        if (maxAttemptsReached) {
-          // 记录重试失败的错误
-          const retryError = new Error(`${errorType}: ${errorMessage}`)
-          const context = {
-            path,
-            method,
-            url: useFallback ? altUrl : url,
-            retries: retries + 1,
-            useFallback,
-            requestBody: options.body
-          }
-          errorService.logError(retryError, context)
+        // 处理成功响应
+        if (res.ok) {
+          // 尝试解析API响应格式
+          const apiResponse = data as ApiResponse<TResp>
+          let responseData: any = apiResponse
           
-          return { 
-            ok: false, 
-            status: 0, 
-            error: `API请求失败，已尝试${retries + 1}次：${errorService.getFriendlyErrorMessage(errorType)}` 
+          // 如果响应是嵌套的，提取实际数据
+          if (apiResponse.ok && 'data' in apiResponse) {
+            responseData = apiResponse.data
+          }
+          
+          // 更新缓存
+          if (isCacheEnabled && res.ok) {
+            cacheStore.set(requestKey, {
+              data: responseData,
+              timestamp: Date.now(),
+              isStale: false
+            })
+          }
+          
+          return { ok: true, status: res.status, data: responseData as TResp, fromCache: false }
+        }
+        
+        // 处理错误响应
+        const errorMessage = data.message || data.error || `Request failed with status ${res.status}`
+        const error = new Error(errorMessage) as ApiError
+        error.status = res.status
+        error.data = data
+        error.path = path
+        error.method = method
+        
+        // 记录错误
+        console.error(`API Error: ${method} ${path} ${res.status}`, error)
+        
+        throw error
+      } catch (error) {
+        attempt++
+        
+        // 记录失败的请求
+        console.error(`API Request Failed: ${method} ${path} (Attempt ${attempt}/${retries + 1})`, error)
+        
+        // 如果是最后一次尝试，或者错误不可重试，抛出错误
+        if (attempt > retries || !retryableErrors.some(code => error instanceof Error && error.message.includes(code))) {
+          // 如果未使用回退URL，尝试使用回退URL
+          if (!useFallback && altUrl) {
+            useFallback = true
+            attempt = 0
+            continue
+          }
+          
+          // 回退URL也失败了，抛出最终错误
+          const finalError = error as Error
+          return {
+            ok: false,
+            status: 500,
+            error: finalError.message || 'Unknown error',
+            data: null as any,
+            fromCache: false
           }
         }
         
-        // 记录重试尝试
-        console.warn(`Request retry attempt ${useFallback ? fallbackAttempt : attempt} for ${method} ${useFallback ? altUrl : url}: ${errorMessage}`)
+        // 计算延迟时间（指数退避）
+        const delay = Math.min(baseDelay * Math.pow(2, attempt - 1) + Math.random() * jitter, maxDelay)
         
-        // 指数退避重试
-        const backoffTime = 300 * Math.pow(2, Math.min(useFallback ? fallbackAttempt : attempt, 5))
-        await sleep(backoffTime)
+        // 等待延迟后重试
+        await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
     
-    // 所有尝试都失败了
-    const finalError = new Error('所有请求尝试都失败了')
-    errorService.logError(finalError, {
-      path,
-      method,
-      retries,
-      requestBody: options.body
-    })
-    
-    return { ok: false, status: 0, error: 'API请求失败，请检查网络连接后重试' }
-  }
-  
-  // 窗口聚焦时重新验证缓存
-  if (isCacheEnabled && cacheOptions.revalidateOnFocus && typeof window !== 'undefined') {
-    const handleFocus = () => {
-      actualRequest().catch(error => {
-        console.warn('Cache revalidation on focus failed:', error);
-        // 记录缓存重新验证错误
-        errorService.logError(error, {
-          path,
-          method,
-          fromCache: true,
-          isFocusRevalidation: true
-        });
-      })
+    // 这个return语句理论上不会被执行，因为while循环中已经处理了所有情况
+    return {
+      ok: false,
+      status: 500,
+      error: 'Max retries exceeded',
+      data: null as any,
+      fromCache: false
     }
-    window.addEventListener('focus', handleFocus)
-    // 清理事件监听器
-    setTimeout(() => {
-      window.removeEventListener('focus', handleFocus)
-    }, 30000) // 30秒后移除监听器
   }
   
-  // 应用防抖
-  const debounceOptions = options.debounce || {}
-  const isDebounceEnabled = debounceOptions.enabled === true
-  if (isDebounceEnabled) {
-    const delay = debounceOptions.delay ?? DEFAULT_DEBOUNCE_DELAY
-    return debounceRequest(requestKey, actualRequest, delay)
+  // 检查缓存
+  if (isCacheEnabled) {
+    cachedResult = cacheStore.get(requestKey)
+    if (cachedResult) {
+      // 如果数据过期但未失效，返回缓存数据并在后台重新验证
+      if (cachedResult.isStale) {
+        // 在后台重新验证缓存
+        actualRequest().catch(error => {
+          console.warn('Cache revalidation failed:', error);
+          // 记录缓存重新验证错误
+          console.error(`Cache Revalidation Failed: ${method} ${path}`, error);
+        })
+      }
+      return { ok: true, status: 200, data: cachedResult.data as TResp, fromCache: true }
+    }
   }
   
-  // 应用节流
-  const throttleOptions = options.throttle || {}
-  const isThrottleEnabled = throttleOptions.enabled === true
-  if (isThrottleEnabled) {
-    const limit = throttleOptions.limit ?? DEFAULT_THROTTLE_LIMIT
-    return throttleRequest(requestKey, actualRequest, limit)
-  }
-  
-  // 直接执行请求
+  // 执行实际请求
   return actualRequest()
 }
 
