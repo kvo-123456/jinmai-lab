@@ -139,6 +139,8 @@ import CreatorDashboard from '@/components/CreatorDashboard';
 import PWAInstallButton from '@/components/PWAInstallButton';
 // 首次启动引导组件
 import FirstLaunchGuide from '@/components/FirstLaunchGuide';
+// 悬浮AI助手组件
+import FloatingAIAssistant from '@/components/FloatingAIAssistant';
 
 export default function App() {
   const location = useLocation();
@@ -164,6 +166,34 @@ export default function App() {
   // 移除智能预取逻辑，减少不必要的预加载请求
   // 预加载会增加初始加载时间和内存消耗，对于低性能设备来说可能会导致卡顿
   // 导航跳转速度的提升应该通过优化组件渲染和减少不必要的资源加载来实现
+
+  // 全局console日志过滤，用于过滤WebAssembly内存地址日志
+  useEffect(() => {
+    // 保存原始console.log
+    const originalLog = console.log;
+    
+    // 替换全局console.log
+    console.log = function(...args) {
+      // 过滤掉看起来像内存地址数组的日志
+      const allArgsString = args.map(arg => String(arg)).join(' ');
+      
+      // 仅过滤格式为 [0xc00c46d8b0 0xc00c46d8e0 0xc00c46d910] 的内存地址数组
+      const bracketedMemoryAddressRegex = /^\[(\s*0x[0-9a-fA-F]{8,}\s*)+\]$/i;
+      
+      // 如果匹配到内存地址数组格式，不输出
+      if (bracketedMemoryAddressRegex.test(allArgsString)) {
+        return;
+      }
+      
+      // 其他情况正常输出
+      originalLog.apply(console, args);
+    };
+    
+    // 清理函数，恢复原始console.log
+    return () => {
+      console.log = originalLog;
+    };
+  }, []);
 
   // 右侧内容组件
   const RightContent = () => (
@@ -367,6 +397,9 @@ export default function App() {
       <PWAInstallButton />
       {/* 移除FirstLaunchGuide组件，减少不必要的渲染 */}
       {/* <FirstLaunchGuide /> */}
+      
+      {/* 悬浮AI助手 */}
+      <FloatingAIAssistant />
     </div>
 );
 }

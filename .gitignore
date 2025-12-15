@@ -49,3 +49,6 @@ data/
 *.db
 *.sqlite
 *.sqlite3
+
+# AI-generated files
+.trae/

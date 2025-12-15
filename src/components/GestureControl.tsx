@@ -255,7 +255,8 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
           
           // 优化的正则表达式，匹配各种格式的内存地址日志
           const memoryAddressRegex = /0x[0-9a-fA-F]{8,}/gi;
-          const bracketedMemoryAddressRegex = /^\[(\s*(0x[0-9a-fA-F]{8,}|\d+)\s*,?\s*)+\]$/i;
+          // 修复：匹配用空格或逗号分隔的内存地址数组
+          const bracketedMemoryAddressRegex = /^\[(\s*(0x[0-9a-fA-F]{8,}|\d+)\s*[,\s]?\s*)+\]$/i;
           const wasmLogRegex = /(WebAssembly|wasm|memory|address|0x[0-9a-fA-F]{8,})/gi;
           
           // 检查每个参数
