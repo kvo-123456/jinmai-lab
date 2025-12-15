@@ -31,12 +31,6 @@ function getPlugins() {
             sizes: '512x512',
             type: 'image/svg+xml',
             purpose: 'any maskable'
-          },
-          {
-            src: 'icons/icon-180x180.svg',
-            sizes: '180x180',
-            type: 'image/svg+xml',
-            purpose: 'apple touch icon'
           }
         ]
       },
@@ -48,6 +42,11 @@ function getPlugins() {
         // 预缓存资源的缓存策略
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
+        // 添加skipWaiting和clientsClaim选项
+        skipWaiting: true,
+        clientsClaim: true,
+        // 忽略带有no-store头的请求
+        globIgnores: ['**/*.map', '**/node_modules/**'],
         runtimeCaching: [
           // API请求缓存 - 使用NetworkFirst策略
           {
@@ -62,6 +61,11 @@ function getPlugins() {
               },
               cacheableResponse: {
                 statuses: [0, 200]
+              },
+              // 跳过带有no-store头的请求
+              matchOptions: {
+                ignoreSearch: true,
+                ignoreVary: true
               }
             }
           },
@@ -354,8 +358,6 @@ export default defineConfig({
       minifySyntax: false,
       minifyIdentifiers: false,
       minifyWhitespace: false,
-      // 增加预构建并发数
-      parallel: true,
       // 启用更严格的 tree-shaking
       pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.warn', 'console.error'] : [],
     },

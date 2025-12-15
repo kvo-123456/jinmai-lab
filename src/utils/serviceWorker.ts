@@ -20,7 +20,12 @@ export const registerServiceWorker = async (): Promise<void> => {
 
   try {
     // Vite PWA插件会自动生成service-worker.js文件
-    const registration = await navigator.serviceWorker.register('/service-worker.js');
+    const registration = await navigator.serviceWorker.register('/service-worker.js', {
+      // 添加更新策略配置
+      updateViaCache: 'none',
+      // 添加作用域配置
+      scope: '/'
+    });
     
     console.log('Service Worker registered with scope:', registration.scope);
     
@@ -28,6 +33,11 @@ export const registerServiceWorker = async (): Promise<void> => {
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
       if (newWorker) {
+        // 监听安装错误
+        newWorker.addEventListener('error', (error) => {
+          console.error('Service Worker installation error:', error);
+        });
+        
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // 新的Service Worker已安装，但需要用户刷新页面才能激活
@@ -43,6 +53,13 @@ export const registerServiceWorker = async (): Promise<void> => {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       console.log('Service Worker controller changed.');
       // 可以在这里处理控制变更，比如重新加载数据
+    });
+    
+    // 监听消息事件，处理来自Service Worker的消息
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'CACHE_ERROR') {
+        console.warn('Service Worker cache error:', event.data.error);
+      }
     });
     
   } catch (error) {
@@ -135,5 +152,27 @@ export const getServiceWorkerRegistration = async (): Promise<ServiceWorkerRegis
   } catch (error) {
     console.error('Error getting Service Worker registration:', error);
     return null;
+  }
+};
+
+// 清理旧的Service Worker缓存
+export const cleanupOldCaches = async (): Promise<void> => {
+  if (!isServiceWorkerSupported()) {
+    return;
+  }
+  
+  try {
+    const cacheNames = await caches.keys();
+    const currentCacheNames = ['api-cache', 'font-cache', 'image-cache', 'static-resources', 'cdn-cache', 'video-cache'];
+    
+    for (const cacheName of cacheNames) {
+      // 删除旧的缓存
+      if (!cacheName.startsWith('workbox-') && !currentCacheNames.includes(cacheName)) {
+        await caches.delete(cacheName);
+        console.log('Deleted old cache:', cacheName);
+      }
+    }
+  } catch (error) {
+    console.error('Error cleaning up old caches:', error);
   }
 };

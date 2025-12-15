@@ -52,3 +52,4 @@ data/
 
 # AI-generated files
 .trae/
+.vercel
