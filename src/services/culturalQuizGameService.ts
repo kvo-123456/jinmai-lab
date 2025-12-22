@@ -1,4 +1,5 @@
 // 文化知识问答游戏服务，用于管理游戏关卡和题目数据
+import { gameStorage } from '@/utils/gameStorage';
 
 // 题目类型定义
 export interface Question {
@@ -57,6 +58,7 @@ class CulturalQuizGameService {
   constructor() {
     this.initQuestions();
     this.initLevels();
+    this.loadGameProgress();
   }
 
   // 初始化题目数据
@@ -248,6 +250,24 @@ class CulturalQuizGameService {
     return this.questions.find(question => question.id === questionId);
   }
 
+  // 加载游戏进度
+  private loadGameProgress(): void {
+    const savedProgress = gameStorage.load<Map<string, GameProgress>>("quiz_game_progress", new Map());
+    if (savedProgress instanceof Map) {
+      this.gameProgress = savedProgress;
+    } else {
+      // 兼容旧格式
+      this.gameProgress = new Map(Object.entries(savedProgress || {}));
+    }
+  }
+
+  // 保存游戏进度
+  private saveGameProgress(): void {
+    // 转换Map为普通对象以便存储
+    const progressObj = Object.fromEntries(this.gameProgress.entries());
+    gameStorage.save("quiz_game_progress", progressObj);
+  }
+
   // 获取用户游戏进度
   getGameProgress(userId: string): GameProgress {
     if (!this.gameProgress.has(userId)) {
@@ -261,6 +281,7 @@ class CulturalQuizGameService {
         lastPlayed: new Date()
       };
       this.gameProgress.set(userId, progress);
+      this.saveGameProgress();
     }
     return this.gameProgress.get(userId)!;
   }
@@ -274,6 +295,7 @@ class CulturalQuizGameService {
       lastPlayed: new Date()
     };
     this.gameProgress.set(userId, updatedProgress);
+    this.saveGameProgress();
     return updatedProgress;
   }
 
@@ -385,6 +407,7 @@ class CulturalQuizGameService {
     };
     
     this.gameProgress.set(userId, updatedProgress);
+    this.saveGameProgress();
     return updatedProgress;
   }
 
@@ -395,6 +418,7 @@ class CulturalQuizGameService {
       this.updateGameProgress(userId, {
         unlockedHints: progress.unlockedHints - 1
       });
+      this.saveGameProgress();
       return true;
     }
     return false;
@@ -406,6 +430,7 @@ class CulturalQuizGameService {
     this.updateGameProgress(userId, {
       unlockedHints: progress.unlockedHints + 1
     });
+    this.saveGameProgress();
   }
 
   // 检查关卡是否解锁

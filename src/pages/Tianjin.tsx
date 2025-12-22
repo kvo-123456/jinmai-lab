@@ -60,6 +60,30 @@ export default function Tianjin() {
               </motion.div>
             </div>
             
+            {/* 天津地图入口 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mb-8"
+            >
+              <div className={`p-6 rounded-2xl shadow-lg ${isDark ? 'bg-gray-800/80 backdrop-blur-sm border border-gray-700' : 'bg-white/80 backdrop-blur-sm border border-gray-200'}`}>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold mb-2">探索天津老字号历史地图</h2>
+                    <p className={`mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>通过交互式地图了解天津老字号的历史分布与文化传承</p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/tianjin/map')}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${isDark ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-500 hover:bg-red-600 text-white'} flex items-center gap-2`}
+                  >
+                    <i className="fas fa-map-marked-alt"></i>
+                    查看天津地图
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+
             {/* 活动内容 */}
             <Suspense fallback={
               <div className="flex justify-center items-center h-32">
@@ -69,7 +93,7 @@ export default function Tianjin() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <TianjinCreativeActivities />
               </motion.div>

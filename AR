@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>津门老字号 3D 交互网页系统 - 1928</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入复古字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --retro-gold: #d4af37;
+            --retro-red: #8a1c1c;
+            --retro-dark: #1a1a1a;
+        }
+
+        html, body { 
+            margin: 0; 
+            overflow: hidden; 
+            height: 100%; 
+            width: 100%; 
+            background-color: #0f1115;
+            color: #e5e5e5;
+        }
+        
+        /* 字体 */
+        .font-title { font-family: 'Ma Shan Zheng', cursive; }
+        .font-body { font-family: 'Noto Serif SC', serif; }
+
+        /* 界面暗角与噪点效果 - 营造胶片感 */
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .noise {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 4;
+            opacity: 0.4;
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            width: 60px; height: 60px;
+            border: 4px solid var(--retro-gold);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #2c2c2c; }
+        ::-webkit-scrollbar-thumb { background: var(--retro-gold); border-radius: 3px; }
+
+        /* 模态框进入动画 */
+        #modal-content {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .modal-open #modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D 容器 -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+    <!-- 视觉滤镜层 -->
+    <div class="vignette"></div>
+    <div class="noise"></div>
+
+    <!-- UI 层 -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-6">
+        
+        <!-- 左上角标题 -->
+        <div class="pointer-events-auto transition-transform hover:translate-x-1 duration-300">
+            <div class="flex items-center space-x-3">
+                <div class="w-1 h-12 bg-yellow-600 shadow-[0_0_10px_#d4af37]"></div>
+                <div>
+                    <h1 class="text-4xl font-title text-yellow-500 tracking-widest drop-shadow-lg">劝业场</h1>
+                    <p class="text-xs text-gray-400 font-body tracking-[0.2em] uppercase">Tianjin Grand Bazaar · 1928</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右下角操作提示 -->
+        <div class="self-end text-right pointer-events-auto">
+            <div class="bg-black/40 backdrop-blur-sm border border-white/10 p-4 rounded-lg">
+                <p class="text-xs text-yellow-500/80 font-body mb-2 border-b border-white/10 pb-1">交互指南</p>
+                <div class="text-xs text-gray-300 space-y-1 font-sans">
+                    <p>🖱️ 左键点击 <span class="text-yellow-400">霓虹招牌</span></p>
+                    <p>🖐️ 拖拽旋转视角</p>
+                    <p>🔍 滚轮缩放场景</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载屏幕 -->
+    <div id="loading-screen" class="absolute inset-0 bg-[#0f1115] z-50 flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-auto">
+        <div class="loading-spinner mb-6"></div>
+        <h2 class="text-2xl font-title text-yellow-600 tracking-widest">津门夜色</h2>
+        <p class="text-gray-500 text-xs mt-2 font-mono uppercase tracking-wide">Initializing 3D Environment...</p>
+    </div>
+
+    <!-- 调试日志 (隐藏) -->
+    <div id="debug-console" class="hidden fixed bottom-0 left-0 w-full max-h-32 bg-black/80 text-green-400 font-mono text-xs p-2 overflow-y-auto z-50 pointer-events-none"></div>
+
+    <!-- 模态框：狗不理 -->
+    <div id="modal-goubuli" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300 pointer-events-auto">
+        <!-- 纸质风格卡片 -->
+        <div id="modal-content" class="relative w-full max-w-2xl bg-[#e8e0d0] text-[#2c2c2c] rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row border-8 border-double border-[#5c4033]">
+            
+            <!-- 关闭按钮 -->
+            <button id="btn-close" class="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-[#8a1c1c] text-white rounded-full hover:bg-red-700 transition shadow-md">
+                ✕
+            </button>
+
+            <!-- 左侧：图片与印章 -->
+            <div class="md:w-5/12 bg-[#2c2c2c] relative overflow-hidden">
+                <img src="https://placehold.co/400x600/2c2c2c/d4af37?text=Goubuli" class="w-full h-full object-cover opacity-80" alt="包子">
+                <div class="absolute bottom-4 left-4 border-2 border-[#d4af37] p-2 text-[#d4af37]">
+                    <p class="font-title text-2xl writing-vertical-rl">非遗美食</p>
+                </div>
+                <!-- 装饰性印章 -->
+                <div class="absolute top-4 right-4 w-12 h-12 border-2 border-red-800 rounded-sm flex items-center justify-center rotate-12 opacity-80">
+                    <span class="text-red-800 font-title text-xs">老字号</span>
+                </div>
+            </div>
+
+            <!-- 右侧：内容 -->
+            <div class="md:w-7/12 p-8 flex flex-col justify-between bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+                <div>
+                    <h2 class="text-4xl font-title text-[#8a1c1c] mb-2">狗不理包子</h2>
+                    <p class="text-xs text-gray-600 font-serif italic mb-6">Go Believe Steamed Buns · Since 1858</p>
+                    
+                    <div class="space-y-4 font-body text-sm leading-relaxed text-gray-800">
+                        <p>
+                            <span class="font-bold text-[#8a1c1c]">【工艺】</span> 
+                            采用“半发面，水打馅”技艺。面皮柔软而有嚼劲，馅料汤汁丰盈。
+                        </p>
+                        <p>
+                            <span class="font-bold text-[#8a1c1c]">【特色】</span> 
+                            每个包子不少于十八个褶，褶花匀称，形似白菊。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 border-t-2 border-[#5c4033] pt-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-500">今日挂牌价</p>
+                        <p class="text-3xl font-bold text-[#8a1c1c] font-body">¥ 38.00 <span class="text-sm font-normal">/ 笼</span></p>
+                    </div>
+                    <button class="bg-[#8a1c1c] text-[#e8e0d0] px-6 py-2 font-title text-lg hover:bg-[#a62828] transition shadow-lg border-2 border-[#5c4033]">
+                        加入食单
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS 逻辑 -->
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+
+        // 调试工具
+        const debugConsole = document.getElementById('debug-console');
+        function log(msg, isError = false) {
+            console.log(msg);
+            if (isError) {
+                debugConsole.innerHTML += `<div class="text-red-500">> ${msg}</div>`;
+                debugConsole.classList.remove('hidden');
+            }
+        }
+        window.onerror = (e) => log(e, true);
+
+        // 核心变量
+        let scene, camera, renderer, controls;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let clock = new THREE.Clock();
+        
+        // 交互对象列表
+        let interactables = [];
+        let hoverObject = null; // 当前鼠标悬停的对象
+
+        // 动画对象
+        let mahuaGroup;
+        let isMahuaAnimating = false;
+
+        init();
+        animate();
+
+        function init() {
+            try {
+                const container = document.getElementById('canvas-container');
+
+                // 1. 场景
+                scene = new THREE.Scene();
+                // 使用雾气营造深夜的景深感
+                scene.fog = new THREE.FogExp2(0x0f1115, 0.025);
+
+                // 2. 相机
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+                camera.position.set(12, 6, 16); // 侧方视角，突出转角
+
+                // 3. 渲染器
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                // 物理光照设置
+                renderer.physicallyCorrectLights = true;
+                renderer.toneMapping = THREE.ReinhardToneMapping;
+                renderer.toneMappingExposure = 2.5;
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                container.appendChild(renderer.domElement);
+
+                // 4. 灯光
+                setupLighting();
+
+                // 5. 建筑环境
+                createCornerBuilding();
+                createStreetElements();
+
+                // 6. 控制器
+                controls = new OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.minDistance = 8;
+                controls.maxDistance = 30;
+                controls.maxPolarAngle = Math.PI / 2 - 0.05; // 禁止穿地
+                controls.target.set(0, 4, 0);
+
+                // 7. 事件
+                window.addEventListener('resize', onWindowResize);
+                window.addEventListener('pointermove', onPointerMove);
+                window.addEventListener('click', onClick);
+
+                // 隐藏加载
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.opacity = '0';
+                    setTimeout(() => document.getElementById('loading-screen').remove(), 1000);
+                }, 1000);
+
+            } catch (err) {
+                log(`Init Error: ${err.message}`, true);
+            }
+        }
+
+        function setupLighting() {
+            // 月光（冷色，背光）
+            const moonLight = new THREE.DirectionalLight(0x4a6fa5, 1);
+            moonLight.position.set(-10, 20, -10);
+            moonLight.castShadow = true;
+            scene.add(moonLight);
+
+            // 街道环境光
+            const ambient = new THREE.AmbientLight(0x222222, 0.5);
+            scene.add(ambient);
+
+            // 重点暖光源（模拟路灯/橱窗光）
+            const warmLight = new THREE.PointLight(0xffaa55, 10, 20);
+            warmLight.position.set(5, 5, 5);
+            warmLight.castShadow = true;
+            scene.add(warmLight);
+            
+            // 补光
+            const fillLight = new THREE.PointLight(0x88ccff, 2, 15);
+            fillLight.position.set(-5, 5, 5);
+            scene.add(fillLight);
+        }
+
+        // 创建转角建筑 (Art Deco 风格)
+        function createCornerBuilding() {
+            const buildingGroup = new THREE.Group();
+
+            // 材质
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x8c8c8c, roughness: 0.7 }); // 灰色石材
+            const trimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.4, metalness: 0.6 }); // 金色装饰
+            const winMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.1, metalness: 0.8 }); // 深色窗户
+            
+            // --- 1. 转角圆塔 (Corner Tower) ---
+            const towerGeo = new THREE.CylinderGeometry(2, 2, 12, 16, 1, true, 0, Math.PI/2);
+            // 旋转使其朝向外侧
+            const tower = new THREE.Mesh(towerGeo, wallMat);
+            tower.position.set(0, 6, 0);
+            tower.rotation.y = Math.PI / 4; // 45度角
+            buildingGroup.add(tower);
+
+            // 塔顶穹顶
+            const domeGeo = new THREE.SphereGeometry(2, 16, 16, 0, Math.PI * 2, 0, Math.PI/2);
+            const dome = new THREE.Mesh(domeGeo, new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.5 }));
+            dome.position.set(0, 12, 0);
+            buildingGroup.add(dome);
+            
+            // 塔尖
+            const spire = new THREE.Mesh(new THREE.ConeGeometry(0.2, 3, 8), trimMat);
+            spire.position.set(0, 14, 0);
+            buildingGroup.add(spire);
+
+            // --- 2. 两侧翼楼 (Wings) ---
+            // 左翼
+            const leftWing = createWing(8, 10, 0);
+            leftWing.position.set(-4.5, 5, -1.2);
+            leftWing.rotation.y = -Math.PI / 6; // 稍微内收
+            buildingGroup.add(leftWing);
+
+            // 右翼
+            const rightWing = createWing(8, 10, 0);
+            rightWing.position.set(4.5, 5, -1.2);
+            rightWing.rotation.y = Math.PI / 6;
+            buildingGroup.add(rightWing);
+
+            // --- 3. 装饰柱 (Columns) ---
+            const colGeo = new THREE.CylinderGeometry(0.3, 0.3, 8, 16);
+            const col1 = new THREE.Mesh(colGeo, trimMat); col1.position.set(-1.8, 4, 1.2);
+            const col2 = new THREE.Mesh(colGeo, trimMat); col2.position.set(1.8, 4, 1.2);
+            buildingGroup.add(col1, col2);
+
+            scene.add(buildingGroup);
+
+            // --- 4. 招牌与交互物 ---
+            createSignage(buildingGroup);
+        }
+
+        // 辅助函数：创建侧翼楼
+        function createWing(width, height, depth) {
+            const group = new THREE.Group();
+            
+            const wallGeo = new THREE.BoxGeometry(width, height, 2);
+            const wall = new THREE.Mesh(wallGeo, new THREE.MeshStandardMaterial({ color: 0x7f8c8d }));
+            group.add(wall);
+
+            // 窗户阵列
+            const winGeo = new THREE.PlaneGeometry(1, 1.5);
+            const winMat = new THREE.MeshStandardMaterial({ color: 0x000, emissive: 0x332200, emissiveIntensity: 0.5 }); // 微微发光的窗户
+            
+            for(let i=-2; i<=2; i++) {
+                // 一层
+                const w1 = new THREE.Mesh(winGeo, winMat);
+                w1.position.set(i * 1.5, -2, 1.01);
+                group.add(w1);
+                // 二层
+                const w2 = new THREE.Mesh(winGeo, winMat);
+                w2.position.set(i * 1.5, 2, 1.01);
+                group.add(w2);
+            }
+
+            return group;
+        }
+
+        function createSignage(parent) {
+            // 1. 狗不理 (竖向霓虹灯牌)
+            const signGroup = new THREE.Group();
+            signGroup.position.set(-4, 5, 2.5);
+            
+            // 牌体
+            const board = new THREE.Mesh(
+                new THREE.BoxGeometry(1.2, 4, 0.2),
+                new THREE.MeshStandardMaterial({ color: 0x330000 })
+            );
+            signGroup.add(board);
+
+            // 发光字 (简化为发光块)
+            const glowMat = new THREE.MeshStandardMaterial({ 
+                color: 0xff3300, 
+                emissive: 0xff0000, 
+                emissiveIntensity: 2 
+            });
+            const textBlock = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3.5, 0.05), glowMat);
+            textBlock.position.z = 0.1;
+            textBlock.name = "GOUBULI"; // 交互ID
+            signGroup.add(textBlock);
+
+            // 悬挂架
+            const hanger = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1, 8), new THREE.MeshStandardMaterial({color: 0x333}));
+            hanger.rotation.z = Math.PI / 2;
+            hanger.position.x = 1;
+            signGroup.add(hanger);
+
+            scene.add(signGroup);
+            interactables.push(textBlock);
+
+            // 2. 桂发祥 (横幅幌子)
+            const bannerGroup = new THREE.Group();
+            bannerGroup.position.set(4, 6, 2.5);
+
+            // 幌子面
+            const clothGeo = new THREE.BoxGeometry(2.5, 4, 0.1);
+            const clothMat = new THREE.MeshStandardMaterial({ color: 0xb8860b }); // 暗金色
+            const banner = new THREE.Mesh(clothGeo, clothMat);
+            banner.name = "GUIFAXIAN";
+            bannerGroup.add(banner);
+            
+            // 装饰字区域
+            const textZone = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3), new THREE.MeshStandardMaterial({color: 0x800000}));
+            textZone.position.z = 0.06;
+            textZone.name = "GUIFAXIAN"; // 也可以点击
+            bannerGroup.add(textZone);
+
+            scene.add(bannerGroup);
+            interactables.push(banner);
+            interactables.push(textZone);
+
+            // 3. 麻花模型 (隐藏)
+            mahuaGroup = new THREE.Group();
+            const twistGeo = new THREE.TorusKnotGeometry(0.6, 0.2, 100, 16);
+            const pastryMat = new THREE.MeshStandardMaterial({ 
+                color: 0xd4af37, 
+                roughness: 0.4, 
+                emissive: 0xaa6600,
+                emissiveIntensity: 0.2
+            });
+            const twist = new THREE.Mesh(twistGeo, pastryMat);
+            mahuaGroup.add(twist);
+            
+            // 添加一些粒子/碎屑
+            const particleGeo = new THREE.BufferGeometry();
+            const count = 50;
+            const positions = new Float32Array(count * 3);
+            for(let i=0; i<count*3; i++) positions[i] = (Math.random() - 0.5) * 3;
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({color: 0xffd700, size: 0.1}));
+            mahuaGroup.add(particles);
+
+            mahuaGroup.position.set(4, 3, 4);
+            mahuaGroup.scale.set(0, 0, 0);
+            scene.add(mahuaGroup);
+        }
+
+        function createStreetElements() {
+            // 地面 - 湿润反光路面
+            const ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(100, 100),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0x050505, 
+                    roughness: 0.1, 
+                    metalness: 0.3 
+                })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground);
+
+            // 路灯
+            const lampGeo = new THREE.CylinderGeometry(0.1, 0.15, 6, 8);
+            const lampMat = new THREE.MeshStandardMaterial({ color: 0x111 });
+            
+            const lamp1 = new THREE.Mesh(lampGeo, lampMat);
+            lamp1.position.set(-8, 3, 8);
+            scene.add(lamp1);
+
+            // 灯头辉光
+            const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3), new THREE.MeshBasicMaterial({color: 0xffaa00}));
+            bulb.position.set(0, 3, 0);
+            lamp1.add(bulb);
+        }
+
+        // 交互逻辑
+        function onPointerMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(interactables, false);
+
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                if (hoverObject !== obj) {
+                    document.body.style.cursor = 'pointer';
+                    // 简单的缩放反馈
+                    if(hoverObject) hoverObject.scale.set(1, 1, 1); 
+                    hoverObject = obj;
+                    // 某些对象可能已经在父级有缩放，这里为了简单只微调
+                    // 实际项目中应保存原始scale
+                }
+            } else {
+                if (hoverObject) {
+                    document.body.style.cursor = 'default';
+                    hoverObject = null;
+                }
+            }
+        }
+
+        function onClick() {
+            if (hoverObject) {
+                const name = hoverObject.name;
+                if (name === "GOUBULI") {
+                    openModal();
+                } else if (name === "GUIFAXIAN") {
+                    triggerMahuaEffect();
+                }
+            }
+        }
+
+        // 模态框逻辑
+        const modal = document.getElementById('modal-goubuli');
+        const closeBtn = document.getElementById('btn-close');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('modal-open'), 10);
+        }
+        function closeModal() {
+            modal.classList.remove('modal-open');
+            setTimeout(() => modal.classList.add('hidden'), 500);
+        }
+        closeBtn.onclick = closeModal;
+        modal.onclick = (e) => { if(e.target === modal) closeModal(); }
+
+        // 麻花特效
+        function triggerMahuaEffect() {
+            if (isMahuaAnimating) return;
+            isMahuaAnimating = true;
+
+            const start = performance.now();
+            const duration = 3000;
+
+            function loop(now) {
+                const elapsed = now - start;
+                const p = Math.min(elapsed / duration, 1);
+
+                // 弹跳放大旋转
+                const scale = Math.sin(p * Math.PI) * 2; // 0 -> 2 -> 0
+                mahuaGroup.scale.setScalar(scale);
+                mahuaGroup.rotation.y = p * Math.PI * 6; // 旋转3圈
+                mahuaGroup.rotation.z = Math.sin(p * Math.PI * 2) * 0.5;
+
+                if (p < 1) requestAnimationFrame(loop);
+                else {
+                    isMahuaAnimating = false;
+                    mahuaGroup.scale.set(0, 0, 0);
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = clock.getElapsedTime();
+
+            // 招牌浮动动画
+            scene.traverse(obj => {
+                if (obj.name === 'GOUBULI') {
+                    // 霓虹灯闪烁
+                    obj.material.emissiveIntensity = 1.5 + Math.sin(t * 10) * 0.5;
+                }
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+    </script>
+</body>
+</html>

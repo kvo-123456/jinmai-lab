@@ -524,6 +524,10 @@ const MobileLayout = memo(function MobileLayout({ children }: MobileLayoutProps)
               <i className="fas fa-landmark mr-2"></i>
               天津特色专区
             </NavLink>
+            <NavLink to="/tianjin/map" title="天津地图" onTouchStart={() => prefetchRoute('/tianjin/map')} className={({ isActive }) => `${isDark ? 'text-gray-300 hover:bg-gray-800' : theme === 'pink' ? 'text-pink-900 hover:bg-pink-200' : 'text-gray-900 hover:bg-gray-200'} flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${isActive ? (isDark ? 'bg-gray-800 text-white' : theme === 'pink' ? 'bg-pink-200 font-semibold' : 'bg-gray-200 font-semibold') : ''}`} onClick={() => setShowSidebarDrawer(false)}>
+              <i className="fas fa-map-marked-alt mr-2"></i>
+              天津地图
+            </NavLink>
             <NavLink to="/events" title="文化活动" onTouchStart={() => prefetchRoute('/events')} className={({ isActive }) => `${isDark ? 'text-gray-300 hover:bg-gray-800' : theme === 'pink' ? 'text-pink-900 hover:bg-pink-200' : 'text-gray-900 hover:bg-gray-200'} flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${isActive ? (isDark ? 'bg-gray-800 text-white' : theme === 'pink' ? 'bg-pink-200 font-semibold' : 'bg-gray-200 font-semibold') : ''}`} onClick={() => setShowSidebarDrawer(false)}>
               <i className="fas fa-calendar-alt mr-2"></i>
               文化活动

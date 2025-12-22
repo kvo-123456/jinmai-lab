@@ -604,6 +604,11 @@ export const TianjinImage: React.FC<{
   imageTag?: string;
   priority?: boolean;
   quality?: 'low' | 'medium' | 'high';
+  // 是否禁用fallback机制，始终使用原始URL
+  disableFallback?: boolean;
+  // 图片加载事件
+  onLoad?: () => void;
+  onError?: () => void;
 }> = ({
   src,
   alt,
@@ -618,6 +623,9 @@ export const TianjinImage: React.FC<{
   imageTag,
   priority = false,
   quality = 'medium',
+  disableFallback = false,
+  onLoad,
+  onError,
 }) => {
   // 简化主题处理
   const { isDark = false } = useTheme() || {};
@@ -652,6 +660,9 @@ export const TianjinImage: React.FC<{
         loading={loading}
         priority={priority}
         quality={quality}
+        onLoad={onLoad}
+        onError={onError}
+        disableFallback={disableFallback}
       />
       
       {badge && (
@@ -667,7 +678,7 @@ export const TianjinImage: React.FC<{
           className={`absolute bottom-2 right-2 text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-800/90 ring-1 ring-gray-700 text-gray-200' : 'bg-white/90 ring-1 ring-gray-200 text-gray-700'} backdrop-blur-sm z-50`}
           style={{ fontSize: '10px', fontWeight: 'bold' }}
         >
-          {imageTag.split('_').find(part => ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(part)) || '图片'}
+          {imageTag === 'unsplash' ? 'Unsplash' : imageTag.split('_').find(part => ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(part)) || ''}
         </span>
       )}
     </div>

@@ -1,4 +1,5 @@
 // 文化记忆游戏服务，用于管理游戏关卡和卡片数据
+import { gameStorage } from '@/utils/gameStorage';
 
 // 记忆卡片类型定义
 export interface MemoryCard {
@@ -56,6 +57,7 @@ class CulturalMemoryGameService {
   constructor() {
     this.initCardDatabase();
     this.initLevels();
+    this.loadGameProgress();
   }
 
   // 初始化卡片数据库
@@ -305,6 +307,24 @@ class CulturalMemoryGameService {
     return JSON.parse(JSON.stringify(level.cards));
   }
 
+  // 加载游戏进度
+  private loadGameProgress(): void {
+    const savedProgress = gameStorage.load<Map<string, MemoryGameProgress>>("memory_game_progress", new Map());
+    if (savedProgress instanceof Map) {
+      this.gameProgress = savedProgress;
+    } else {
+      // 兼容旧格式
+      this.gameProgress = new Map(Object.entries(savedProgress || {}));
+    }
+  }
+
+  // 保存游戏进度
+  private saveGameProgress(): void {
+    // 转换Map为普通对象以便存储
+    const progressObj = Object.fromEntries(this.gameProgress.entries());
+    gameStorage.save("memory_game_progress", progressObj);
+  }
+
   // 获取用户游戏进度
   getGameProgress(userId: string): MemoryGameProgress {
     if (!this.gameProgress.has(userId)) {
@@ -317,6 +337,7 @@ class CulturalMemoryGameService {
         lastPlayed: new Date()
       };
       this.gameProgress.set(userId, progress);
+      this.saveGameProgress();
     }
     return this.gameProgress.get(userId)!;
   }
@@ -330,6 +351,7 @@ class CulturalMemoryGameService {
       lastPlayed: new Date()
     };
     this.gameProgress.set(userId, updatedProgress);
+    this.saveGameProgress();
     return updatedProgress;
   }
 
@@ -405,6 +427,7 @@ class CulturalMemoryGameService {
     };
 
     this.gameProgress.set(userId, updatedProgress);
+    this.saveGameProgress();
     return updatedProgress;
   }
 

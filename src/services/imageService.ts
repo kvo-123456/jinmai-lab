@@ -367,15 +367,37 @@ class ImageService {
   }
 
   // 生成标准化的图片URL
-  private normalizeUrl(url: string): string {
+  public normalizeUrl(url: string): string {
     try {
-      const urlObj = new URL(url);
+      // 清理URL，移除多余空格和无效字符
+      let cleanedUrl = url.trim().replace(/[\s\t\n\r]+/g, '');
+      
+      // 检查是否为base64编码的图片数据
+      if (cleanedUrl.startsWith('data:')) {
+        return cleanedUrl;
+      }
+      
+      // 检查是否为完整的URL
+      const urlObj = cleanedUrl.startsWith('http') ? new URL(cleanedUrl) : new URL(cleanedUrl, window.location.origin);
+      
+      // 对于GitHub相关的图片URL，直接返回，不进行标准化处理
+      if (urlObj.hostname.includes('github.com') || urlObj.hostname.includes('raw.githubusercontent.com')) {
+        return urlObj.toString();
+      }
+      
       // 移除不必要的参数或标准化参数顺序
       const params = new URLSearchParams(urlObj.search);
       params.sort();
       urlObj.search = params.toString();
+      
+      // 移除URL末尾的斜杠
+      if (urlObj.pathname.endsWith('/') && urlObj.pathname.length > 1) {
+        urlObj.pathname = urlObj.pathname.slice(0, -1);
+      }
+      
       return urlObj.toString();
-    } catch {
+    } catch (error) {
+      console.error(`[ImageService] URL标准化失败: ${url}`, error);
       return url;
     }
   }
@@ -415,11 +437,31 @@ class ImageService {
         // 直接返回原始URL，让浏览器处理重定向
         return urlObj.toString();
       } catch (error) {
-        console.error('Error processing image URL:', error);
         return url;
       }
     }
-    return url;
+    
+    // 对于GitHub图片，不要添加响应式参数，直接返回原始URL
+    if (url.includes('github.com') || url.includes('raw.githubusercontent.com')) {
+      return url;
+    }
+    
+    // 对于普通图片，生成响应式URL
+    try {
+      // 检查是否为完整的URL
+      const urlObj = url.startsWith('http') ? new URL(url) : new URL(url, window.location.origin);
+      const sizeInfo = RESPONSIVE_SIZES[size];
+      const finalQuality = quality || sizeInfo.quality;
+      
+      // 添加响应式参数
+      urlObj.searchParams.set('w', sizeInfo.width.toString());
+      urlObj.searchParams.set('q', finalQuality.toString());
+      
+      return urlObj.toString();
+    } catch (error) {
+      // 如果URL处理失败，返回原始URL
+      return url;
+    }
   }
 
   // 生成低质量占位图URL - 优化版
@@ -434,11 +476,29 @@ class ImageService {
         // 直接返回原始URL
         return urlObj.toString();
       } catch (error) {
-        console.error('Error processing low quality image URL:', error);
         return url;
       }
     }
-    return url;
+    
+    // 对于GitHub图片，不要添加低质量参数，直接返回原始URL
+    if (url.includes('github.com') || url.includes('raw.githubusercontent.com')) {
+      return url;
+    }
+    
+    // 对于普通图片，生成低质量占位图URL
+    try {
+      // 检查是否为完整的URL
+      const urlObj = url.startsWith('http') ? new URL(url) : new URL(url, window.location.origin);
+      
+      // 添加低质量参数
+      urlObj.searchParams.set('w', '100');
+      urlObj.searchParams.set('q', '20');
+      
+      return urlObj.toString();
+    } catch (error) {
+      // 如果URL处理失败，返回原始URL
+      return url;
+    }
   }
 
   // 生成备用图片URL - 根据alt文本生成不同的备用图片
@@ -645,19 +705,50 @@ class ImageService {
     // 获取现有缓存项，保留原有字段
     const existingItem = this.cache.get(normalizedUrl);
     
+    // 计算平均加载时间和平均大小
+    if (existingItem?.loadTime) {
+      this.stats.totalLoadTime += existingItem.loadTime;
+      const totalLoads = this.stats.loadSuccess + this.stats.loadFailed;
+      this.stats.averageLoadTime = totalLoads > 0 ? Math.round(this.stats.totalLoadTime / totalLoads) : 0;
+    }
+    
+    if (size) {
+      this.stats.totalSize += size;
+      const totalLoads = this.stats.loadSuccess + this.stats.loadFailed;
+      this.stats.averageSize = totalLoads > 0 ? Math.round(this.stats.totalSize / totalLoads) : 0;
+    }
+    
+    // 更新缓存命中率和成功率
+    if (this.stats.totalRequests > 0) {
+      this.stats.cacheHitRate = Math.round((this.stats.cacheHits / this.stats.totalRequests) * 100);
+    }
+    
+    const totalLoads = this.stats.loadSuccess + this.stats.loadFailed;
+    if (totalLoads > 0) {
+      this.stats.successRate = Math.round((this.stats.loadSuccess / totalLoads) * 100);
+    }
+    
+    // 更新预加载命中率
+    if (this.stats.preloadCount > 0) {
+      this.stats.preloadHitRate = Math.round((this.stats.preloadHitCount / this.stats.preloadCount) * 100);
+    }
+    
+    // 设置或更新缓存项
     this.cache.set(normalizedUrl, {
       url: normalizedUrl,
       timestamp: Date.now(),
       success,
       size,
       usageCount: existingItem?.usageCount || 1,
-      lastUsed: existingItem?.lastUsed || Date.now(),
+      lastUsed: Date.now(), // 每次更新都刷新最后使用时间
       format: existingItem?.format,
       quality: existingItem?.quality,
       width: existingItem?.width,
       height: existingItem?.height,
       loadTime: existingItem?.loadTime,
     });
+    
+    // 清理过期缓存
     this.cleanupCache();
   }
 

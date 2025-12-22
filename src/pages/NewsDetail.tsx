@@ -34,19 +34,22 @@ export default function NewsDetail() {
         id: parseInt(id || '1'),
         title: '全国非物质文化遗产保护工作会议在京召开',
         description: '会议总结了近年来非遗保护工作成果，部署了下一阶段重点任务，强调要加强非遗的活态传承和创新发展。',
-        image: 'https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=National%20intangible%20cultural%20heritage%20protection%20work%20conference%20Beijing',
+        image: '/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=National%20intangible%20cultural%20heritage%20protection%20work%20conference%20Beijing',
         date: '2025-12-03',
         category: '政策动态',
         source: '文化和旅游部',
         views: 12563,
-        content: `
-          <p>12月3日，全国非物质文化遗产保护工作会议在北京召开。文化和旅游部部长胡和平出席会议并讲话，副部长李群主持会议。</p>
-          <p>会议总结了近年来我国非物质文化遗产保护工作取得的显著成效。截至目前，我国已建立了国家、省、市、县四级非物质文化遗产保护体系，认定了国家级非物质文化遗产代表性项目1557项，国家级非物质文化遗产代表性传承人3068名，设立了23个国家级文化生态保护区。</p>
-          <p>会议强调，要深入学习贯彻习近平总书记关于非物质文化遗产保护的重要指示精神，坚持以社会主义核心价值观为引领，坚持创造性转化、创新性发展，加强非遗的活态传承和创新发展。</p>
-          <p>下一阶段，我国将重点推进以下工作：一是加强非遗保护立法和政策体系建设；二是完善非遗代表性项目和代表性传承人管理制度；三是加强非遗传承人群培养；四是推进非遗与旅游融合发展；五是加强非遗数字化保护和传播；六是推动非遗走向世界。</p>
-          <p>会议还表彰了全国非物质文化遗产保护工作先进集体和先进个人，并对2026年重点工作进行了部署。</p>
-          <p>来自全国各省、自治区、直辖市文化和旅游厅（局）主要负责同志，以及有关专家学者、非遗代表性传承人代表等共300余人参加了会议。</p>
-        `
+        content: `12月3日，全国非物质文化遗产保护工作会议在北京召开。文化和旅游部部长胡和平出席会议并讲话，副部长李群主持会议。
+
+会议总结了近年来我国非物质文化遗产保护工作取得的显著成效。截至目前，我国已建立了国家、省、市、县四级非物质文化遗产保护体系，认定了国家级非物质文化遗产代表性项目1557项，国家级非物质文化遗产代表性传承人3068名，设立了23个国家级文化生态保护区。
+
+会议强调，要深入学习贯彻习近平总书记关于非物质文化遗产保护的重要指示精神，坚持以社会主义核心价值观为引领，坚持创造性转化、创新性发展，加强非遗的活态传承和创新发展。
+
+下一阶段，我国将重点推进以下工作：一是加强非遗保护立法和政策体系建设；二是完善非遗代表性项目和代表性传承人管理制度；三是加强非遗传承人群培养；四是推进非遗与旅游融合发展；五是加强非遗数字化保护和传播；六是推动非遗走向世界。
+
+会议还表彰了全国非物质文化遗产保护工作先进集体和先进个人，并对2026年重点工作进行了部署。
+
+来自全国各省、自治区、直辖市文化和旅游厅（局）主要负责同志，以及有关专家学者、非遗代表性传承人代表等共300余人参加了会议。`
       };
       
       setNews(newsDetail);
@@ -101,7 +104,7 @@ export default function NewsDetail() {
       <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl p-8 shadow-md max-w-4xl mx-auto`}>
         {/* 返回按钮 */}
         <motion.button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/news')}
           className={`mb-6 flex items-center ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
           whileHover={{ x: -5 }}
         >
@@ -166,8 +169,11 @@ export default function NewsDetail() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          dangerouslySetInnerHTML={{ __html: news.content }}
-        />
+        >
+          {news.content.split('\n\n').map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+        </motion.div>
         
         {/* 分享按钮 */}
         <div className="mt-12 pt-6 border-t border-gray-700/30">

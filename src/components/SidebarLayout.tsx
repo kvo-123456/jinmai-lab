@@ -262,16 +262,16 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
     };
   };
 
-  // 中文注释：暗色主题下的导航项采用更柔和的文字与半透明悬停背景，提升高级质感
+  // 中文注释：暗色主题下的导航项采用白色文字，提升对比度和可读性
   // 统一导航项高度和内边距，避免激活时布局变化
   const navItemClass = useMemo(() => (
-    `${isDark ? 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'} flex items-center px-3 py-2 rounded-lg transition-all duration-200`
+    `${isDark ? 'text-white hover:bg-[var(--bg-hover)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'} flex items-center px-3 py-2 rounded-lg transition-all duration-200`
   ), [isDark])
 
   // 中文注释：主题激活态使用CSS变量，确保主题变化时样式同步更新
   // 优化激活状态样式，确保不影响整体布局
   const activeClass = useMemo(() => (
-    `${isDark ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] ring-1 ring-[var(--accent-red)] shadow-[var(--shadow-md)]' : 'bg-gradient-to-r from-red-50 to-red-100 text-[var(--text-primary)] border-b-2 border-red-600 font-semibold shadow-sm relative overflow-hidden group active-nav-item'} border-t border-transparent`
+    `${isDark ? 'bg-[var(--bg-tertiary)] text-white ring-1 ring-[var(--accent-red)] shadow-[var(--shadow-md)]' : 'bg-gradient-to-r from-red-50 to-red-100 text-[var(--text-primary)] border-b-2 border-red-600 font-semibold shadow-sm relative overflow-hidden group active-nav-item'} border-t border-transparent`
   ), [isDark])
 
   const title = useMemo(() => {
@@ -338,7 +338,7 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
         <div className={`px-4 py-3 flex items-center justify-between rounded-lg transition-colors group ${isDark ? 'hover:bg-gray-800/60' : theme === 'pink' ? 'hover:bg-pink-50' : 'hover:bg-gray-50'}`}>
           <div className="flex items-center space-x-2">
             <span className={`font-extrabold bg-gradient-to-r ${isDark ? 'from-red-400 to-rose-500' : 'from-red-600 to-rose-500'} bg-clip-text text-transparent tracking-tight`}>津脉</span>
-            {(!collapsed || hovered) && <span className="font-bold">智坊</span>}
+            {(!collapsed || hovered) && <span className={`font-bold ${isDark ? 'text-white' : ''}`}>智坊</span>}
           </div>
           <button
             className={`p-2 rounded-lg ring-1 transition-all ${isDark ? 'hover:bg-gray-800/70 ring-gray-800 hover:ring-2' : 'hover:bg-gray-100 ring-gray-200 hover:ring-2'} hover:shadow-sm`}
@@ -346,7 +346,7 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
             aria-label="折叠侧边栏"
             title={collapsed ? '展开侧边栏' : '折叠侧边栏'}
           >
-            <i className={`fas ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-gray-500 transition-transform group-hover:translate-x-0.5`}></i>
+            <i className={`fas ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'} ${isDark ? 'text-white' : 'text-gray-500'} transition-transform group-hover:translate-x-0.5`}></i>
           </button>
         </div>
 
@@ -419,6 +419,10 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
           <NavLink to="/tianjin" title={collapsed ? '天津特色专区' : undefined} onMouseEnter={() => debouncedPrefetch('/tianjin')} className={({ isActive }) => `${navItemClass} ${isActive ? activeClass : ''}`}> 
             <i className="fas fa-landmark mr-2"></i>
             {(!collapsed || hovered) && '天津特色专区'}
+          </NavLink>
+          <NavLink to="/tianjin/map" title={collapsed ? '天津地图' : undefined} onMouseEnter={() => debouncedPrefetch('/tianjin/map')} className={({ isActive }) => `${navItemClass} ${isActive ? activeClass : ''}`}> 
+            <i className="fas fa-map-marked-alt mr-2"></i>
+            {(!collapsed || hovered) && '天津地图'}
           </NavLink>
           <NavLink to="/events" title={collapsed ? '文化活动' : undefined} onMouseEnter={() => debouncedPrefetch('/events')} className={({ isActive }) => `${navItemClass} ${isActive ? activeClass : ''}`}> 
             <i className="fas fa-calendar-alt mr-2"></i>
@@ -575,9 +579,9 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
                 onClick={toggleTheme}
                 className={`p-2 rounded-lg transition-all duration-300 flex items-center ${isDark ? 'bg-gray-800 hover:bg-gray-700 ring-1 ring-gray-700 text-gray-100 hover:ring-gray-600' : theme === 'pink' ? 'bg-pink-50 hover:bg-pink-100 ring-1 ring-pink-200 text-pink-800 hover:ring-pink-300' : 'bg-white hover:bg-gray-50 ring-1 ring-gray-200 text-gray-900 hover:ring-gray-300'}`}
                 aria-label="切换主题"
-                title="切换主题（浅色/深色/粉色）"
+                title="切换主题（浅色/深色/粉色/自动）"
               >
-                <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'} transition-transform duration-300 hover:scale-110`}></i>
+                <i className={`fas ${theme === 'dark' ? 'fa-sun' : theme === 'light' ? 'fa-moon' : theme === 'pink' ? 'fa-heart' : 'fa-circle-half-stroke'} transition-transform duration-300 hover:scale-110`}></i>
               </button>
               
               {/* 中文注释：快捷键提示入口 */}

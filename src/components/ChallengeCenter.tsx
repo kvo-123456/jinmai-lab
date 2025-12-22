@@ -4,6 +4,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { TianjinImage } from './TianjinStyleComponents';
+import LazyImage from './LazyImage';
 
 interface Challenge {
   id: string;

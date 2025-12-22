@@ -24,7 +24,7 @@ const recentWorks = [
   {
     id: 1,
     title: '国潮插画设计',
-    thumbnail: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=600&h=400&fit=crop&Chinese%20traditional%20cultural%20illustration%20design',
+    thumbnail: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=600&h=400&fit=crop',
     status: '已发布',
     views: 1245,
     likes: 324,
@@ -151,7 +151,7 @@ export default function Dashboard() {
           <div className="flex flex-col md:flex-row items-center md:items-start">
               <div className="relative mb-4 md:mb-0 md:mr-6">
                 <img 
-                  src={user?.avatar || 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop&prompt=User%20avatar'} 
+                  src={user?.avatar || 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=100&h=100&fit=crop'} 
                   alt={user?.username || '用户头像'} 
                   className="w-24 h-24 rounded-full object-cover border-4 border-red-600"
                   loading="lazy" decoding="async"

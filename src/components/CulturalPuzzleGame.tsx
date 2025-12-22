@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
 import { toast } from 'sonner';
-import culturalPuzzleGameService, { PuzzleLevel, PuzzlePiece, GameProgress } from '@/services/culturalPuzzleService';
+import culturalPuzzleGameService, { PuzzleLevel, PuzzlePiece, GameProgress } from '@/services/culturalPuzzleGameService';
+import LazyImage from './LazyImage';
 
 interface CulturalPuzzleGameProps {
   isOpen: boolean;
@@ -355,10 +356,12 @@ const handleDragEnd = useCallback((e: MouseEvent | PointerEvent | TouchEvent) =>
                         onClick={() => isUnlocked && handleSelectLevel(level)}
                       >
                         <div className="relative aspect-video overflow-hidden rounded-lg mb-3">
-                          <img
+                          <LazyImage
                             src={level.imageUrl}
                             alt={level.name}
                             className="w-full h-full object-cover transition-transform hover:scale-105"
+                            ratio="landscape"
+                            fit="cover"
                           />
                           {isCompleted && (
                             <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
@@ -465,10 +468,13 @@ const handleDragEnd = useCallback((e: MouseEvent | PointerEvent | TouchEvent) =>
                     {/* 解决方案预览 */}
                     {showSolution && (
                       <div className="absolute inset-0 opacity-50 z-0">
-                        <img
+                        <LazyImage
                           src={selectedLevel.imageUrl}
                           alt="Solution"
                           className="w-full h-full object-cover"
+                          ratio="landscape"
+                          fit="cover"
+                          priority
                         />
                       </div>
                     )}

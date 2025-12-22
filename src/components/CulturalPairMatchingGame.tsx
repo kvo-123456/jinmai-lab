@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
 import { toast } from 'sonner';
-import culturalPairMatchingGameService, { Level, Pair, PairItem, GameProgress } from '@/services/culturalPairMatchingGameService';
+import culturalPairMatchingGameService, { PairMatchingLevel, PairItem, GameProgress } from '@/services/culturalPairMatchingGameService';
+import LazyImage from './LazyImage';
 
 interface CulturalPairMatchingGameProps {
   isOpen: boolean;
@@ -342,10 +343,12 @@ const CulturalPairMatchingGame: React.FC<CulturalPairMatchingGameProps> = ({ isO
                       >
                         {level.imageUrl && (
                           <div className="relative aspect-video overflow-hidden rounded-lg mb-3">
-                            <img
+                            <LazyImage
                               src={level.imageUrl}
                               alt={level.name}
                               className="w-full h-full object-cover transition-transform hover:scale-105"
+                              ratio="landscape"
+                              fit="cover"
                             />
                             {isCompleted && (
                               <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
@@ -458,10 +461,12 @@ const CulturalPairMatchingGame: React.FC<CulturalPairMatchingGameProps> = ({ isO
                       >
                         {item.imageUrl && (
                           <div className="relative aspect-video overflow-hidden rounded-lg mb-3">
-                            <img
+                            <LazyImage
                               src={item.imageUrl}
                               alt={item.text}
                               className="w-full h-full object-cover transition-transform hover:scale-105"
+                              ratio="landscape"
+                              fit="cover"
                             />
                           </div>
                         )}

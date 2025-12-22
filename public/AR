@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>津门老字号 3D 交互网页系统 - 1928</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入复古字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --retro-gold: #d4af37;
+            --retro-red: #8a1c1c;
+            --retro-dark: #1a1a1a;
+        }
+
+        html, body { 
+            margin: 0; 
+            overflow: hidden; 
+            height: 100%; 
+            width: 100%; 
+            background-color: #0f1115;
+            color: #e5e5e5;
+        }
+        
+        /* 字体 */
+        .font-title { font-family: 'Ma Shan Zheng', cursive; }
+        .font-body { font-family: 'Noto Serif SC', serif; }
+
+        /* 界面暗角与噪点效果 - 营造胶片感 */
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .noise {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 4;
+            opacity: 0.4;
+        }
+
+        /* 加载动画 */
+        .loading-spinner {
+            width: 60px; height: 60px;
+            border: 4px solid var(--retro-gold);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 模态框进入动画 */
+        #modal-content {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .modal-open #modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* 浮动提示 */
+        #floating-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2rem;
+            background: rgba(44, 44, 44, 0.9);
+            color: var(--retro-gold);
+            border: 2px solid var(--retro-gold);
+            border-radius: 8px;
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 30;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D 容器 -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+    <!-- 视觉滤镜层 -->
+    <div class="vignette"></div>
+    <div class="noise"></div>
+
+    <!-- UI 层 -->
+    <div id="ui-layer" class="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-6">
+        
+        <!-- 左上角标题 -->
+        <div class="pointer-events-auto transition-transform hover:translate-x-1 duration-300">
+            <div class="flex items-center space-x-3">
+                <div class="w-1 h-12 bg-yellow-600 shadow-[0_0_10px_#d4af37]"></div>
+                <div>
+                    <h1 class="text-4xl font-title text-yellow-500 tracking-widest drop-shadow-lg">劝业场</h1>
+                    <p class="text-xs text-gray-400 font-body tracking-[0.2em] uppercase">Tianjin Grand Bazaar · 1928</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右上角地图按钮 -->
+        <div class="absolute top-6 right-6 pointer-events-auto">
+            <button id="map-toggle-btn" class="bg-[#d4af37] text-[#1a1a1a] px-4 py-2 font-title text-lg hover:bg-[#e6c24b] transition shadow-lg border-2 border-[#5c4033]">
+                🗺️ 天津老字号历史地图
+            </button>
+        </div>
+
+        <!-- 右下角操作提示 -->
+        <div class="self-end text-right pointer-events-auto">
+            <div class="bg-black/40 backdrop-blur-sm border border-white/10 p-4 rounded-lg">
+                <p class="text-xs text-yellow-500/80 font-body mb-2 border-b border-white/10 pb-1">交互指南</p>
+                <div class="text-xs text-gray-300 space-y-1 font-sans">
+                    <p>🖱️ 左键点击 <span class="text-yellow-400">霓虹招牌</span></p>
+                    <p>🖐️ 拖拽旋转视角</p>
+                    <p>🔍 滚轮缩放场景</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 浮动提示信息 (用于老边饺子) -->
+    <div id="floating-message" class="hidden"></div>
+
+    <!-- 加载屏幕 -->
+    <div id="loading-screen" class="absolute inset-0 bg-[#0f1115] z-50 flex flex-col items-center justify-center transition-opacity duration-1000 pointer-events-auto">
+        <div class="loading-spinner mb-6"></div>
+        <h2 class="text-2xl font-title text-yellow-600 tracking-widest">津门夜色</h2>
+        <p class="text-gray-500 text-xs mt-2 font-mono uppercase tracking-wide">Initializing 3D Environment...</p>
+    </div>
+
+    <!-- 调试日志 (隐藏) -->
+    <div id="debug-console" class="hidden fixed bottom-0 left-0 w-full max-h-32 bg-black/80 text-green-400 font-mono text-xs p-2 overflow-y-auto z-50 pointer-events-none"></div>
+
+    <!-- 模态框：狗不理 -->
+    <div id="modal-goubuli" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity duration-300 pointer-events-auto">
+        <!-- 纸质风格卡片 -->
+        <div id="modal-content" class="relative w-full max-w-2xl bg-[#e8e0d0] text-[#2c2c2c] rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col md:flex-row border-8 border-double border-[#5c4033]">
+            
+            <!-- 关闭按钮 -->
+            <button id="btn-close" class="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center bg-[#8a1c1c] text-white rounded-full hover:bg-red-700 transition shadow-md">
+                ✕
+            </button>
+
+            <!-- 左侧：图片与印章 -->
+            <div class="md:w-5/12 bg-[#2c2c2c] relative overflow-hidden">
+                <img src="https://placehold.co/400x600/2c2c2c/d4af37?text=Goubuli" class="w-full h-full object-cover opacity-80" alt="狗不理包子">
+                <div class="absolute bottom-4 left-4 border-2 border-[#d4af37] p-2 text-[#d4af37]">
+                    <p class="font-title text-2xl" style="writing-mode: vertical-rl;">非遗美食</p>
+                </div>
+                <!-- 装饰性印章 -->
+                <div class="absolute top-4 right-4 w-12 h-12 border-2 border-red-800 rounded-sm flex items-center justify-center rotate-12 opacity-80">
+                    <span class="text-red-800 font-title text-xs">老字号</span>
+                </div>
+            </div>
+
+            <!-- 右侧：内容 -->
+            <div class="md:w-7/12 p-8 flex flex-col justify-between bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+                <div>
+                    <h2 class="text-4xl font-title text-[#8a1c1c] mb-2">狗不理包子</h2>
+                    <p class="text-xs text-gray-600 italic mb-6">Go Believe Steamed Buns · Since 1858</p>
+                    
+                    <div class="space-y-4 font-body text-sm leading-relaxed text-gray-800">
+                        <p>
+                            <span class="font-bold text-[#8a1c1c]">【工艺】</span> 
+                            采用“半发面，水打馅”技艺。面皮柔软而有嚼劲，馅料汤汁丰盈。
+                        </p>
+                        <p>
+                            <span class="font-bold text-[#8a1c1c]">【特色】</span> 
+                            每个包子不少于十八个褶，褶花匀称，形似白菊。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 border-t-2 border-[#5c4033] pt-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-500">今日挂牌价</p>
+                        <p class="text-3xl font-bold text-[#8a1c1c] font-body">¥ 38.00 <span class="text-sm font-normal">/ 笼</span></p>
+                    </div>
+                    <button class="bg-[#8a1c1c] text-[#e8e0d0] px-6 py-2 font-title text-lg hover:bg-[#a62828] transition shadow-lg border-2 border-[#5c4033]">
+                        加入食单
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 天津老字号历史地图 -->
+    <div id="map-container" class="hidden absolute inset-0 bg-[#1a1a1a] z-40 pointer-events-auto">
+        <!-- 地图头部 -->
+        <div class="absolute top-0 left-0 right-0 bg-[#1a1a1a] border-b-2 border-[#d4af37] p-4 z-50 flex items-center justify-between">
+            <h2 class="text-3xl font-title text-[#d4af37] tracking-widest">天津老字号历史地图</h2>
+            <button id="map-close-btn" class="bg-[#8a1c1c] text-white px-4 py-2 font-title text-lg hover:bg-[#a62828] transition shadow-lg border-2 border-[#5c4033]">
+                ✕ 关闭地图
+            </button>
+        </div>
+        
+        <!-- 地图主区域 -->
+        <div id="historical-map" class="absolute inset-0 mt-16 mb-12 p-4">
+            <!-- 地图将在这里渲染 -->
+            <div id="map-content" class="w-full h-full bg-[#2c2c2c] rounded-lg border-2 border-[#d4af37] overflow-hidden relative">
+                <!-- 地图缩放控制 -->
+                <div class="absolute top-4 right-4 bg-[#1a1a1a] border border-[#d4af37] p-2 rounded-lg space-y-2">
+                    <button id="map-zoom-in" class="w-10 h-10 bg-[#d4af37] text-[#1a1a1a] font-bold hover:bg-[#e6c24b] transition">+</button>
+                    <button id="map-zoom-out" class="w-10 h-10 bg-[#d4af37] text-[#1a1a1a] font-bold hover:bg-[#e6c24b] transition">-</button>
+                </div>
+                
+                <!-- 地图分类筛选 -->
+                <div class="absolute bottom-4 left-4 bg-[#1a1a1a] border border-[#d4af37] p-3 rounded-lg">
+                    <h3 class="text-sm font-title text-[#d4af37] mb-2">分类筛选</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="map-category-btn bg-[#d4af37] text-[#1a1a1a] px-3 py-1 text-sm hover:bg-[#e6c24b] transition rounded" data-category="all">全部</button>
+                        <button class="map-category-btn bg-[#333] text-white px-3 py-1 text-sm hover:bg-[#d4af37] hover:text-[#1a1a1a] transition rounded" data-category="food">餐饮美食</button>
+                        <button class="map-category-btn bg-[#333] text-white px-3 py-1 text-sm hover:bg-[#d4af37] hover:text-[#1a1a1a] transition rounded" data-category="retail">零售百货</button>
+                        <button class="map-category-btn bg-[#333] text-white px-3 py-1 text-sm hover:bg-[#d4af37] hover:text-[#1a1a1a] transition rounded" data-category="craft">手工艺</button>
+                    </div>
+                </div>
+                
+                <!-- 地图标记点将动态生成 -->
+                <div id="map-markers" class="absolute inset-0"></div>
+                
+                <!-- 老字号信息面板 -->
+                <div id="map-info-panel" class="hidden absolute top-4 left-4 bg-[#e8e0d0] text-[#2c2c2c] p-4 rounded-lg shadow-lg w-80 border-2 border-[#5c4033]">
+                    <h3 id="info-name" class="text-2xl font-title text-[#8a1c1c] mb-2"></h3>
+                    <p id="info-category" class="text-sm text-gray-600 italic mb-3"></p>
+                    <div id="info-content" class="text-sm space-y-2 font-body"></div>
+                    <div id="info-footer" class="mt-4 pt-3 border-t-2 border-[#5c4033] flex justify-between items-center">
+                        <p id="info-address" class="text-xs text-gray-500"></p>
+                        <button id="info-close" class="text-xs bg-[#8a1c1c] text-[#e8e0d0] px-3 py-1 hover:bg-[#a62828] transition rounded">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 地图底部信息 -->
+        <div class="absolute bottom-0 left-0 right-0 bg-[#1a1a1a] border-t-2 border-[#d4af37] p-3 z-50">
+            <p class="text-center text-xs text-[#d4af37] font-body">数据来源：天津市档案馆 | 1928年天津商业地图</p>
+        </div>
+    </div>
+
+    <!-- JS 逻辑 -->
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+
+        // 调试工具
+        const debugConsole = document.getElementById('debug-console');
+        function log(msg, isError = false) {
+            console.log(msg);
+            if (isError) {
+                debugConsole.innerHTML += `<div class="text-red-500">> ${msg}</div>`;
+                debugConsole.classList.remove('hidden');
+            }
+        }
+        window.onerror = (e) => log(e, true);
+
+        // 核心变量
+        let scene, camera, renderer, controls;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let clock = new THREE.Clock();
+        
+        // 交互对象列表
+        let interactables = [];
+        let hoverObject = null; // 当前鼠标悬停的对象
+
+        // 动画对象
+        let mahuaGroup;
+        let isMahuaAnimating = false;
+
+        init();
+        animate();
+
+        function init() {
+            try {
+                const container = document.getElementById('canvas-container');
+
+                // 1. 场景
+                scene = new THREE.Scene();
+                // 雾气：范围扩大，浓度略降
+                scene.fog = new THREE.FogExp2(0x0f1115, 0.015);
+
+                // 2. 相机
+                camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 400); // Far plane increased
+                camera.position.set(18, 8, 25); // 更远的初始视角
+                
+                // 3. 渲染器
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.physicallyCorrectLights = true;
+                renderer.toneMapping = THREE.ReinhardToneMapping;
+                renderer.toneMappingExposure = 2.5;
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                container.appendChild(renderer.domElement);
+
+                // 4. 灯光
+                setupLighting();
+
+                // 5. 建筑环境
+                createCornerBuilding(); // 主楼
+                createBackgroundBuildings(); // 背景楼
+                createStreetElements(); // 街道
+
+                // 6. 控制器
+                controls = new OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.minDistance = 10;
+                controls.maxDistance = 50;
+                controls.maxPolarAngle = Math.PI / 2 - 0.05;
+                controls.target.set(0, 4, 0);
+
+                // 7. 事件
+                window.addEventListener('resize', onWindowResize);
+                window.addEventListener('pointermove', onPointerMove);
+                window.addEventListener('click', onClick);
+
+                // 隐藏加载
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.opacity = '0';
+                    setTimeout(() => document.getElementById('loading-screen').remove(), 1000);
+                }, 1000);
+
+            } catch (err) {
+                log(`Init Error: ${err.message}`, true);
+            }
+        }
+
+        function setupLighting() {
+            // 月光（冷色，主光）
+            const moonLight = new THREE.DirectionalLight(0x4a6fa5, 1);
+            moonLight.position.set(-20, 30, -20);
+            moonLight.castShadow = true;
+            // 扩大阴影范围
+            moonLight.shadow.camera.left = -40;
+            moonLight.shadow.camera.right = 40;
+            moonLight.shadow.camera.top = 40;
+            moonLight.shadow.camera.bottom = -40;
+            moonLight.shadow.mapSize.width = 2048;
+            moonLight.shadow.mapSize.height = 2048;
+            scene.add(moonLight);
+
+            // 街道环境光
+            const ambient = new THREE.AmbientLight(0x222222, 0.4);
+            scene.add(ambient);
+            
+            // 批量创建暖色街灯
+            const lampPositions = [
+                {x: -15, z: 15}, {x: 15, z: 15},
+                {x: -10, z: -10}, {x: 10, z: -10},
+                {x: -25, z: 5}, {x: 25, z: 5},
+            ];
+
+            const lampMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, emissive: 0xffaa00 });
+
+            lampPositions.forEach(pos => {
+                const bulbLight = new THREE.PointLight(0xffaa55, 8, 15, 2); // 强度增加
+                bulbLight.position.set(pos.x, 7, pos.z);
+                bulbLight.castShadow = true;
+                scene.add(bulbLight);
+
+                // 简单的灯泡模型
+                const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2), lampMat);
+                bulb.position.set(pos.x, 7, pos.z);
+                scene.add(bulb);
+            });
+        }
+
+        // 创建转角建筑 (劝业场)
+        function createCornerBuilding() {
+            const buildingGroup = new THREE.Group();
+
+            // 材质
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x8c8c8c, roughness: 0.7 });
+            const trimMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.4, metalness: 0.6 });
+            
+            // --- 1. 转角圆塔 (Corner Tower) ---
+            const towerGeo = new THREE.CylinderGeometry(2.5, 2.5, 15, 16, 1, true, 0, Math.PI/2);
+            const tower = new THREE.Mesh(towerGeo, wallMat);
+            tower.position.set(0, 7.5, 0);
+            tower.rotation.y = Math.PI / 4;
+            tower.castShadow = true;
+            buildingGroup.add(tower);
+
+            // 塔顶穹顶
+            const domeGeo = new THREE.SphereGeometry(2.5, 16, 16, 0, Math.PI * 2, 0, Math.PI/2);
+            const dome = new THREE.Mesh(domeGeo, new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.5 }));
+            dome.position.set(0, 15, 0);
+            dome.castShadow = true;
+            buildingGroup.add(dome);
+            
+            // 塔尖
+            const spire = new THREE.Mesh(new THREE.ConeGeometry(0.3, 4, 8), trimMat);
+            spire.position.set(0, 17, 0);
+            buildingGroup.add(spire);
+
+            // --- 2. 两侧翼楼 (Wings) ---
+            const leftWing = createWing(10, 12, 0);
+            leftWing.position.set(-6, 6, -1.5);
+            leftWing.rotation.y = -Math.PI / 6;
+            buildingGroup.add(leftWing);
+
+            const rightWing = createWing(10, 12, 0);
+            rightWing.position.set(6, 6, -1.5);
+            rightWing.rotation.y = Math.PI / 6;
+            buildingGroup.add(rightWing);
+            
+            // --- 3. 招牌与交互物 ---
+            createSignage(buildingGroup);
+            scene.add(buildingGroup);
+        }
+
+        // 辅助函数：创建侧翼楼 (用于主楼)
+        function createWing(width, height, depth) {
+            const group = new THREE.Group();
+            
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d });
+            const wallGeo = new THREE.BoxGeometry(width, height, 3);
+            const wall = new THREE.Mesh(wallGeo, wallMat);
+            wall.castShadow = true;
+            wall.receiveShadow = true;
+            group.add(wall);
+
+            // 窗户阵列
+            const winGeo = new THREE.PlaneGeometry(1.2, 2);
+            // 窗户发光，模拟室内灯光
+            const winMat = new THREE.MeshStandardMaterial({ color: 0x000, emissive: 0xffeeaa, emissiveIntensity: 0.8 }); 
+            
+            for(let i=-3; i<=3; i+=2) {
+                // 一层
+                const w1 = new THREE.Mesh(winGeo, winMat); w1.position.set(i * 1.5, -3, 1.51); group.add(w1);
+                // 二层
+                const w2 = new THREE.Mesh(winGeo, winMat); w2.position.set(i * 1.5, 0, 1.51); group.add(w2);
+                // 三层
+                const w3 = new THREE.Mesh(winGeo, winMat); w3.position.set(i * 1.5, 3, 1.51); group.add(w3);
+            }
+
+            return group;
+        }
+        
+        // 创建背景建筑群 (扩大场景)
+        function createBackgroundBuildings() {
+            const backMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.9 });
+            const darkWinMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a });
+            const lightWinMat = new THREE.MeshBasicMaterial({ color: 0x555500, emissive: 0x555500, emissiveIntensity: 0.5 });
+
+            // 远处背景建筑
+            const positions = [
+                {x: -30, z: -15, h: 18, w: 10, d: 8},
+                {x: -40, z: 10, h: 14, w: 15, d: 5},
+                {x: 35, z: -20, h: 22, w: 12, d: 7},
+                {x: 45, z: 15, h: 16, w: 18, d: 6}
+            ];
+
+            positions.forEach(({x, z, h, w, d}, index) => {
+                const geo = new THREE.BoxGeometry(w, h, d);
+                const building = new THREE.Mesh(geo, backMat);
+                building.position.set(x, h/2, z);
+                building.receiveShadow = true;
+                building.castShadow = true;
+                scene.add(building);
+                
+                // 添加窗户细节 (随机点亮)
+                for(let i = -w/2 + 1; i < w/2 - 1; i += 2) {
+                    for(let j = -h/2 + 2; j < h/2 - 1; j += 3) {
+                        const win = new THREE.Mesh(
+                            new THREE.BoxGeometry(1.5, 2, 0.1),
+                            Math.random() > 0.3 ? lightWinMat : darkWinMat
+                        );
+                        win.position.set(i, j, d/2 + 0.05);
+                        building.add(win);
+                    }
+                }
+                
+                // 添加老边饺子招牌在左侧建筑上
+                if (index === 1) {
+                    const lbGeo = new THREE.BoxGeometry(6, 1.5, 0.3);
+                    const lbMat = new THREE.MeshStandardMaterial({ 
+                        color: 0x009900, // 绿色招牌
+                        emissive: 0x00ff00, 
+                        emissiveIntensity: 1.5 
+                    });
+                    const laobianSign = new THREE.Mesh(lbGeo, lbMat);
+                    laobianSign.position.set(x + w/2 + 0.15, 8, z); // 挂在侧面
+                    laobianSign.rotation.y = Math.PI/2;
+                    laobianSign.name = "LAOBIAN";
+                    laobianSign.castShadow = true;
+                    scene.add(laobianSign);
+                    interactables.push(laobianSign);
+                }
+            });
+        }
+
+        // 创建街道元素 (地面、灯柱、交互物)
+        function createStreetElements() {
+            // 地面 - 湿润反光路面 (尺寸加大)
+            const ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(200, 200),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0x050505, 
+                    roughness: 0.1, 
+                    metalness: 0.3 
+                })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+            
+            // 简单的路灯柱
+            const lampMat = new THREE.MeshStandardMaterial({ color: 0x1c1c1c });
+            
+            const streetLampPositions = [
+                {x: -8, z: 8}, {x: 8, z: 8},
+                {x: -20, z: 20}, {x: 20, z: 20}
+            ];
+            
+            streetLampPositions.forEach(pos => {
+                const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.15, 6, 8), lampMat);
+                lamp.position.set(pos.x, 3, pos.z);
+                scene.add(lamp);
+                
+                const bracket = new THREE.Mesh(new THREE.BoxGeometry(2, 0.1, 0.1), lampMat);
+                bracket.position.set(pos.x + 1, 6.5, pos.z);
+                scene.add(bracket);
+                
+                // 仅创建模型，灯光已在 setupLighting 中创建
+            });
+        }
+
+        // 创建招牌与交互物
+        function createSignage(parent) {
+            // 1. 狗不理 (竖向霓虹灯牌)
+            const signGroup = new THREE.Group();
+            signGroup.position.set(-6, 7.5, 4.5);
+            signGroup.rotation.y = -Math.PI / 8;
+            
+            const board = new THREE.Mesh(
+                new THREE.BoxGeometry(1.2, 5, 0.2),
+                new THREE.MeshStandardMaterial({ color: 0x330000 })
+            );
+            signGroup.add(board);
+
+            const glowMat = new THREE.MeshStandardMaterial({ 
+                color: 0xff3300, 
+                emissive: 0xff0000, 
+                emissiveIntensity: 2 
+            });
+            const textBlock = new THREE.Mesh(new THREE.BoxGeometry(0.8, 4.5, 0.05), glowMat);
+            textBlock.position.z = 0.1;
+            textBlock.name = "GOUBULI";
+            signGroup.add(textBlock);
+            scene.add(signGroup);
+            interactables.push(textBlock);
+
+            // 2. 桂发祥 (横幅幌子)
+            const bannerGroup = new THREE.Group();
+            bannerGroup.position.set(5.5, 6, 4.5);
+            bannerGroup.rotation.y = Math.PI / 8;
+
+            const clothGeo = new THREE.BoxGeometry(3, 4, 0.1);
+            const clothMat = new THREE.MeshStandardMaterial({ color: 0xb8860b });
+            const banner = new THREE.Mesh(clothGeo, clothMat);
+            banner.name = "GUIFAXIAN";
+            bannerGroup.add(banner);
+            
+            scene.add(bannerGroup);
+            interactables.push(banner);
+
+            // 3. 麻花模型 (隐藏)
+            mahuaGroup = new THREE.Group();
+            const twistGeo = new THREE.TorusKnotGeometry(0.6, 0.2, 100, 16);
+            const pastryMat = new THREE.MeshStandardMaterial({ 
+                color: 0xd4af37, 
+                roughness: 0.4, 
+                emissive: 0xaa6600,
+                emissiveIntensity: 0.2
+            });
+            const twist = new THREE.Mesh(twistGeo, pastryMat);
+            mahuaGroup.add(twist);
+            
+            const particleGeo = new THREE.BufferGeometry();
+            const count = 50;
+            const positions = new Float32Array(count * 3);
+            for(let i=0; i<count*3; i++) positions[i] = (Math.random() - 0.5) * 3;
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({color: 0xffd700, size: 0.1}));
+            mahuaGroup.add(particles);
+
+            mahuaGroup.position.set(4, 3, 4);
+            mahuaGroup.scale.set(0, 0, 0);
+            scene.add(mahuaGroup);
+        }
+
+        // 交互逻辑
+        function onPointerMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(interactables, true);
+
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                if (hoverObject !== obj) {
+                    document.body.style.cursor = 'pointer';
+                    hoverObject = obj;
+                }
+            } else {
+                if (hoverObject) {
+                    document.body.style.cursor = 'default';
+                    hoverObject = null;
+                }
+            }
+        }
+
+        function onClick() {
+            if (hoverObject) {
+                const name = hoverObject.name;
+                if (name === "GOUBULI") {
+                    openModal();
+                } else if (name === "GUIFAXIAN") {
+                    triggerMahuaEffect();
+                } else if (name === "LAOBIAN") {
+                    showFloatingMessage("老边饺子：百年传承，皮薄馅大！");
+                }
+            }
+        }
+
+        // 模态框逻辑
+        const modal = document.getElementById('modal-goubuli');
+        const closeBtn = document.getElementById('btn-close');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('modal-open'), 10);
+        }
+        function closeModal() {
+            modal.classList.remove('modal-open');
+            setTimeout(() => modal.classList.add('hidden'), 500);
+        }
+        closeBtn.onclick = closeModal;
+        modal.onclick = (e) => { if(e.target === modal) closeModal(); }
+        
+        // 浮动消息逻辑
+        const floatMsg = document.getElementById('floating-message');
+        function showFloatingMessage(message) {
+            floatMsg.textContent = message;
+            floatMsg.classList.remove('hidden');
+            floatMsg.style.opacity = '1';
+            floatMsg.style.transform = 'translate(-50%, -60%)'; // 向上微移
+
+            setTimeout(() => {
+                floatMsg.style.opacity = '0';
+                floatMsg.style.transform = 'translate(-50%, -50%)';
+                setTimeout(() => floatMsg.classList.add('hidden'), 300);
+            }, 2000);
+        }
+
+        // 麻花特效
+        function triggerMahuaEffect() {
+            if (isMahuaAnimating) return;
+            isMahuaAnimating = true;
+            showFloatingMessage("桂发祥：十八街麻花，酥脆香甜！"); // 触发时显示提示
+
+            const start = performance.now();
+            const duration = 3000;
+
+            function loop(now) {
+                const elapsed = now - start;
+                const p = Math.min(elapsed / duration, 1);
+
+                // 弹跳放大旋转
+                const scale = Math.sin(p * Math.PI) * 2;
+                mahuaGroup.scale.setScalar(scale);
+                mahuaGroup.rotation.y = p * Math.PI * 6;
+                mahuaGroup.rotation.z = Math.sin(p * Math.PI * 2) * 0.5;
+
+                if (p < 1) requestAnimationFrame(loop);
+                else {
+                    isMahuaAnimating = false;
+                    mahuaGroup.scale.set(0, 0, 0);
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = clock.getElapsedTime();
+
+            // 招牌浮动动画
+            scene.traverse(obj => {
+                if (obj.name === 'GOUBULI') {
+                    // 霓虹灯闪烁
+                    obj.material.emissiveIntensity = 1.5 + Math.sin(t * 10) * 0.5;
+                } else if (obj.name === 'LAOBIAN') {
+                     // 绿色霓虹灯呼吸效果
+                    obj.material.emissiveIntensity = 1.2 + Math.sin(t * 3) * 0.3;
+                }
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+    </script>
+
+    <!-- 天津老字号历史地图功能 -->
+    <script>
+        // 地图数据
+        const oldBrands = [
+            {
+                id: 1,
+                name: "狗不理包子",
+                category: "food",
+                description: "创建于1858年，天津传统美食代表，以皮薄馅大、十八褶著称。",
+                address: "劝业场西街",
+                position: { x: 50, y: 50 },
+                year: 1858
+            },
+            {
+                id: 2,
+                name: "老边饺子",
+                category: "food",
+                description: "百年传承，皮薄馅大，汤汁浓郁，是天津著名的饺子品牌。",
+                address: "劝业场东街",
+                position: { x: 30, y: 60 },
+                year: 1829
+            },
+            {
+                id: 3,
+                name: "桂发祥",
+                category: "food",
+                description: "十八街麻花，酥脆香甜，是天津传统小吃的代表之一。",
+                address: "劝业场南街",
+                position: { x: 60, y: 40 },
+                year: 1927
+            },
+            {
+                id: 4,
+                name: "劝业场",
+                category: "retail",
+                description: "天津商业地标，创建于1928年，是华北地区最大的综合性商场。",
+                address: "和平路与滨江道交口",
+                position: { x: 50, y: 50 },
+                year: 1928
+            },
+            {
+                id: 5,
+                name: "耳朵眼炸糕",
+                category: "food",
+                description: "创建于1900年，外酥里嫩，香甜可口，是天津三绝之一。",
+                address: "大胡同",
+                position: { x: 40, y: 70 },
+                year: 1900
+            },
+            {
+                id: 6,
+                name: "泥人张",
+                category: "craft",
+                description: "创建于1850年，以彩塑艺术闻名，是天津民间艺术的代表。",
+                address: "古文化街",
+                position: { x: 20, y: 50 },
+                year: 1850
+            }
+        ];
+
+        // 地图状态
+        let mapState = {
+            zoom: 1,
+            selectedCategory: 'all',
+            markers: []
+        };
+
+        // DOM元素
+        const mapToggleBtn = document.getElementById('map-toggle-btn');
+        const mapContainer = document.getElementById('map-container');
+        const mapCloseBtn = document.getElementById('map-close-btn');
+        const mapZoomIn = document.getElementById('map-zoom-in');
+        const mapZoomOut = document.getElementById('map-zoom-out');
+        const mapInfoPanel = document.getElementById('map-info-panel');
+        const infoCloseBtn = document.getElementById('info-close');
+        const markersContainer = document.getElementById('map-markers');
+
+        // 初始化地图
+        function initMap() {
+            renderMap();
+            bindEvents();
+        }
+
+        // 渲染地图
+        function renderMap() {
+            markersContainer.innerHTML = '';
+            mapState.markers = [];
+            
+            // 筛选数据
+            const filteredBrands = oldBrands.filter(brand => {
+                return mapState.selectedCategory === 'all' || brand.category === mapState.selectedCategory;
+            });
+            
+            // 创建标记
+            filteredBrands.forEach(brand => {
+                const marker = createMarker(brand);
+                markersContainer.appendChild(marker);
+                mapState.markers.push(marker);
+            });
+        }
+
+        // 创建标记
+        function createMarker(brand) {
+            const marker = document.createElement('div');
+            marker.className = 'absolute cursor-pointer transition-all duration-300 hover:scale-125';
+            marker.style.left = `${brand.position.x}%`;
+            marker.style.top = `${brand.position.y}%`;
+            marker.style.transform = `translate(-50%, -50%) scale(${mapState.zoom})`;
+            
+            // 标记样式
+            marker.innerHTML = `
+                <div class="relative">
+                    <div class="w-6 h-6 rounded-full bg-[#d4af37] border-2 border-[#8a1c1c] shadow-lg flex items-center justify-center text-[#1a1a1a] font-bold text-xs">
+                        ${brand.category === 'food' ? '🍜' : brand.category === 'retail' ? '🏪' : '🎨'}
+                    </div>
+                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-[#1a1a1a] text-[#d4af37] text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity duration-300">
+                        ${brand.name}
+                    </div>
+                </div>
+            `;
+            
+            // 点击事件
+            marker.addEventListener('click', () => {
+                showBrandInfo(brand);
+            });
+            
+            return marker;
+        }
+
+        // 显示品牌信息
+        function showBrandInfo(brand) {
+            document.getElementById('info-name').textContent = brand.name;
+            document.getElementById('info-category').textContent = `${brand.category === 'food' ? '餐饮美食' : brand.category === 'retail' ? '零售百货' : '手工艺'} · 创立于 ${brand.year} 年`;
+            document.getElementById('info-content').innerHTML = `<p><strong>历史沿革：</strong>${brand.description}</p>`;
+            document.getElementById('info-address').textContent = `地址：${brand.address}`;
+            
+            mapInfoPanel.classList.remove('hidden');
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 地图切换
+            mapToggleBtn.addEventListener('click', () => {
+                mapContainer.classList.remove('hidden');
+            });
+            
+            mapCloseBtn.addEventListener('click', () => {
+                mapContainer.classList.add('hidden');
+                mapInfoPanel.classList.add('hidden');
+            });
+            
+            // 缩放控制
+            mapZoomIn.addEventListener('click', () => {
+                mapState.zoom = Math.min(mapState.zoom + 0.2, 2);
+                updateMarkersScale();
+            });
+            
+            mapZoomOut.addEventListener('click', () => {
+                mapState.zoom = Math.max(mapState.zoom - 0.2, 0.5);
+                updateMarkersScale();
+            });
+            
+            // 关闭信息面板
+            infoCloseBtn.addEventListener('click', () => {
+                mapInfoPanel.classList.add('hidden');
+            });
+            
+            // 分类筛选
+            document.querySelectorAll('.map-category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 移除所有激活状态
+                    document.querySelectorAll('.map-category-btn').forEach(b => {
+                        b.className = 'map-category-btn bg-[#333] text-white px-3 py-1 text-sm hover:bg-[#d4af37] hover:text-[#1a1a1a] transition rounded';
+                    });
+                    
+                    // 添加当前激活状态
+                    btn.className = 'map-category-btn bg-[#d4af37] text-[#1a1a1a] px-3 py-1 text-sm hover:bg-[#e6c24b] transition rounded';
+                    
+                    // 更新筛选
+                    mapState.selectedCategory = btn.dataset.category;
+                    renderMap();
+                });
+            });
+        }
+
+        // 更新标记缩放
+        function updateMarkersScale() {
+            mapState.markers.forEach(marker => {
+                marker.style.transform = `translate(-50%, -50%) scale(${mapState.zoom})`;
+            });
+        }
+
+        // 初始化地图
+        initMap();
+    </script>
+</body>
+</html>

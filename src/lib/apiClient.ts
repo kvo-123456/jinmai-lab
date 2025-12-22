@@ -1,3 +1,6 @@
+// 导入错误服务
+import errorService from '../services/errorService';
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 interface RequestOptions<TBody> {
@@ -403,9 +406,6 @@ const throttleRequest = <T>(
     }
   })
 }
-
-// 导入错误服务
-import errorService from '../services/errorService';
 
 export async function apiRequest<TResp, TBody = unknown>(
   path: string,

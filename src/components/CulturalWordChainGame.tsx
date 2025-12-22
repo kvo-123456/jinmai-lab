@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
 import { toast } from 'sonner';
-import culturalWordChainGameService, { Level, Word, GameProgress } from '@/services/culturalWordChainGameService';
+import culturalWordChainGameService, { GameProgress, Level } from '@/services/culturalWordChainGameService';
+import LazyImage from './LazyImage';
 
 interface CulturalWordChainGameProps {
   isOpen: boolean;
@@ -158,8 +159,8 @@ const CulturalWordChainGame: React.FC<CulturalWordChainGameProps> = ({ isOpen, o
     if (success) {
       // 找到合适的提示词汇
       const availableWords = selectedLevel.words
-        .filter(word => !wordChain.includes(word.word))
-        .filter(word => word.word.startsWith(lastWord.slice(-1)));
+        .filter((word: { word: string }) => !wordChain.includes(word.word))
+        .filter((word: { word: string }) => word.word.startsWith(lastWord.slice(-1)));
       
       if (availableWords.length > 0) {
         const hint = availableWords[Math.floor(Math.random() * availableWords.length)].word;
@@ -341,10 +342,12 @@ const CulturalWordChainGame: React.FC<CulturalWordChainGameProps> = ({ isOpen, o
                       >
                         {level.imageUrl && (
                           <div className="relative aspect-video overflow-hidden rounded-lg mb-3">
-                            <img
+                            <LazyImage
                               src={level.imageUrl}
                               alt={level.name}
                               className="w-full h-full object-cover transition-transform hover:scale-105"
+                              ratio="landscape"
+                              fit="cover"
                             />
                             {isCompleted && (
                               <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">

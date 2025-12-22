@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
 import { toast } from 'sonner';
-import culturalSpotTheDifferenceGameService, { Level, Difference, GameProgress } from '@/services/culturalSpotTheDifferenceGameService';
+import culturalSpotTheDifferenceGameService, { SpotTheDifferenceLevel, Difference, GameProgress } from '@/services/culturalSpotTheDifferenceGameService';
+import LazyImage from './LazyImage';
 
 interface CulturalSpotTheDifferenceGameProps {
   isOpen: boolean;
@@ -319,10 +320,12 @@ const CulturalSpotTheDifferenceGame: React.FC<CulturalSpotTheDifferenceGameProps
                       >
                         {level.imageUrl && (
                           <div className="relative aspect-video overflow-hidden rounded-lg mb-3">
-                            <img
+                            <LazyImage
                               src={level.imageUrl}
                               alt={level.name}
                               className="w-full h-full object-cover transition-transform hover:scale-105"
+                              ratio="landscape"
+                              fit="cover"
                             />
                             {isCompleted && (
                               <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
@@ -421,12 +424,13 @@ const CulturalSpotTheDifferenceGame: React.FC<CulturalSpotTheDifferenceGameProps
                   <div className="relative">
                     <h4 className="text-center font-medium mb-2">原始图片</h4>
                     <div className={`relative overflow-hidden rounded-lg border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <img
+                      <LazyImage
                         src={selectedLevel.originalImageUrl}
                         alt="原始图片"
                         className="w-full h-auto cursor-pointer transition-transform hover:scale-105"
                         onClick={handleImageClick}
-                        loading="lazy"
+                        priority
+                        fit="contain"
                       />
                       {/* 标记已找到的差异点 */}
                       {selectedLevel.differences.map((difference) => {
@@ -460,12 +464,13 @@ const CulturalSpotTheDifferenceGame: React.FC<CulturalSpotTheDifferenceGameProps
                   <div className="relative">
                     <h4 className="text-center font-medium mb-2">修改后的图片</h4>
                     <div className={`relative overflow-hidden rounded-lg border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <img
+                      <LazyImage
                         src={selectedLevel.modifiedImageUrl}
                         alt="修改后的图片"
                         className="w-full h-auto cursor-pointer transition-transform hover:scale-105"
                         onClick={handleImageClick}
-                        loading="lazy"
+                        priority
+                        fit="contain"
                       />
                       {/* 标记已找到的差异点 */}
                       {selectedLevel.differences.map((difference) => {

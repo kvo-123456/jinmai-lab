@@ -3,10 +3,10 @@ import { useTheme } from '@/hooks/useTheme'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { mockWorks } from '@/mock/works'
-const ARPreview = lazy(() => import('@/components/ARPreview'))
+const ARPreview = lazy(() => import('@/components/SimplifiedARPreview'))
 import postsApi from '@/services/postService'
 import exportService, { ExportOptions, ExportFormat } from '@/services/exportService'
-import type { ARPreviewConfig } from '@/components/ARPreview'
+import type { SimplifiedARPreviewConfig as ARPreviewConfig } from '@/components/SimplifiedARPreview'
 import LazyImage from '@/components/LazyImage'
 
 export default function WorkDetail() {

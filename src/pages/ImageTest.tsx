@@ -171,6 +171,25 @@ const ImageTest: React.FC = () => {
         </div>
       </div>
 
+      {/* 代理URL测试 */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4">API代理URL测试</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-lg font-medium mb-2">TRA API代理图片</h3>
+            <LazyImage
+              src="/api/proxy/trae-api/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=China%20traditional%20craft%20revitalization%20plan%20implementation%20achievements"
+              alt="TRA API代理图片"
+              className="rounded-lg"
+              ratio="landscape"
+            />
+            <div className="mt-2 text-xs text-gray-500">
+              URL: /api/proxy/trae-api/api/ide/v1/text_to_image
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 错误处理测试 */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">错误处理测试</h2>

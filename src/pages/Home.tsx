@@ -222,11 +222,7 @@ export default function Home() {
   // 为每个作品添加唯一参数，确保图片API返回不同的图片
   const latestWorks = [...mockWorks]
     .sort((a, b) => b.id - a.id)
-    .slice(0, 8)
-    .map(work => ({
-      ...work,
-      thumbnail: `${work.thumbnail}&unique=${work.id}`
-    }));
+    .slice(0, 8);
   
   // 热门标签 - 统计标签出现次数并排序
   const tagCounts = mockWorks
@@ -392,7 +388,7 @@ export default function Home() {
       }>
         <div className="max-w-7xl mx-auto mb-8">
           {/* 首页主标题：采用渐变文字与阴影效果，提升视觉吸引力 */}
-          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-4 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent text-center drop-shadow-md animate-gradient-text">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-4 text-black text-center drop-shadow-md animate-gradient-text">
             创作者，您好
           </h1>
           {/* 首页副标题：提升可读性，限制最大宽度，并根据主题切换不同灰度 */}
@@ -435,7 +431,7 @@ export default function Home() {
                 <i className="fas fa-bolt mr-1 transition-transform duration-300 hover:scale-110"></i>
                 灵感
               </button>
-              <button onClick={handleGenerateClick} className={`px-4 py-2.5 rounded-lg text-sm sm:text-base font-semibold ${isDark ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20' : 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/10'} ring-2 ${isDark ? 'ring-primary/50 hover:ring-primary' : 'ring-primary/50 hover:ring-primary'} transition-all duration-300 flex items-center justify-center gap-1.5 hover:shadow-xl hover:-translate-y-0.5 flex-1 sm:flex-none`}>
+              <button onClick={handleGenerateClick} className={`px-4 py-2.5 rounded-lg text-sm sm:text-base font-semibold ${isDark ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20' : 'bg-black hover:bg-gray-800 text-white shadow-lg shadow-black/10'} ring-2 ${isDark ? 'ring-primary/50 hover:ring-primary' : 'ring-black/50 hover:ring-black'} transition-all duration-300 flex items-center justify-center gap-1.5 hover:shadow-xl hover:-translate-y-0.5 flex-1 sm:flex-none`}>
                 <i className="fas fa-wand-magic-sparkles mr-1 transition-transform duration-300 hover:scale-110"></i>
                 生成
               </button>
@@ -492,7 +488,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
               <button
                 onClick={handleGenerateClick}
-                className={`px-8 py-3.5 rounded-full font-semibold ${isDark ? 'bg-primary hover:bg-primary/90 text-white ring-2 ring-primary/50 shadow-xl shadow-primary/20' : 'bg-primary hover:bg-primary/90 text-white ring-2 ring-primary/20 shadow-xl shadow-primary/10'} transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex-1 justify-center text-center`}
+                className={`px-8 py-3.5 rounded-full font-semibold ${isDark ? 'bg-primary hover:bg-primary/90 text-white ring-2 ring-primary/50 shadow-xl shadow-primary/20' : 'bg-black hover:bg-gray-800 text-white ring-2 ring-black/20 shadow-xl shadow-black/10'} transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex-1 justify-center text-center`}
               >
                 立即开始创作
               </button>
@@ -615,7 +611,7 @@ export default function Home() {
               }}
             >
               <div className="relative aspect-video overflow-hidden rounded-t-2xl">
-                <TianjinImage src={item.thumbnail} alt={item.title} ratio="landscape" rounded="2xl" className="transition-transform duration-500 hover:scale-105" />
+                <TianjinImage src={item.thumbnail} alt={item.title} ratio="landscape" rounded="2xl" className="transition-transform duration-500 hover:scale-105" disableFallback={true} />
                 <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full backdrop-blur ${isDark ? 'bg-gray-800/70 ring-1 ring-gray-700 text-gray-200' : 'bg-white/80 ring-1 ring-gray-200 text-gray-700'} transition-all duration-200 hover:shadow-sm`}>
                   <i className="far fa-heart mr-1"></i>{item.likes}
                 </span>
@@ -669,6 +665,7 @@ export default function Home() {
                 ratio="landscape"
                 fit="cover"
                 className="transition-transform duration-500 hover:scale-105"
+                disableFallback={true}
               />
              <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent transition-opacity duration-300 hover:opacity-80"></div>
            </div>
@@ -697,6 +694,7 @@ export default function Home() {
                 ratio="landscape"
                 fit="cover"
                 className="transition-transform duration-500 hover:scale-105"
+                disableFallback={true}
               />
              <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent transition-opacity duration-300 hover:opacity-80"></div>
            </div>
@@ -725,6 +723,7 @@ export default function Home() {
                 ratio="landscape"
                 fit="cover"
                 className="transition-transform duration-500 hover:scale-105"
+                disableFallback={true}
               />
              <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent transition-opacity duration-300 hover:opacity-80"></div>
            </div>
@@ -764,10 +763,12 @@ export default function Home() {
             >
               <div className="relative w-20 h-20 mb-3">
                 <TianjinImage 
+                        disableFallback={true}
                   src={creator.avatar} 
                   alt={creator.name} 
                   rounded="full" 
                   className="w-full h-full object-cover"
+                  disableFallback={true}
                 />
               </div>
               <h3 className={`font-medium text-sm text-center ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{creator.name}</h3>
@@ -812,6 +813,7 @@ export default function Home() {
                   alt={work.title} 
                   ratio="landscape" 
                   className="transition-transform duration-500 hover:scale-105"
+                  disableFallback={true}
                 />
                 <span className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full backdrop-blur ${isDark ? 'bg-gray-800/70 ring-1 ring-gray-700 text-gray-200' : 'bg-white/80 ring-1 ring-gray-200 text-gray-700'} transition-all duration-200 hover:shadow-sm`}>
                   <i className="far fa-heart mr-1"></i>{work.likes}

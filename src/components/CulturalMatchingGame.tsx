@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { AuthContext } from '@/contexts/authContext';
 import { toast } from 'sonner';
-import culturalMatchingGameService, { Level, Card, GameProgress } from '@/services/culturalMatchingGameService';
+import culturalMatchingGameService, { MatchingLevel, MatchingCard, GameProgress } from '@/services/culturalMatchingGameService';
+import LazyImage from './LazyImage';
 
 interface CulturalMatchingGameProps {
   isOpen: boolean;
@@ -420,10 +421,12 @@ const CulturalMatchingGame: React.FC<CulturalMatchingGameProps> = ({ isOpen, onC
                       >
                         {level.imageUrl && (
                           <div className="relative aspect-video overflow-hidden rounded-lg mb-3">
-                            <img
+                            <LazyImage
                               src={level.imageUrl}
                               alt={level.name}
                               className="w-full h-full object-cover transition-transform hover:scale-105"
+                              ratio="landscape"
+                              fit="cover"
                             />
                             {isCompleted && (
                               <div className="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
@@ -569,10 +572,13 @@ const CulturalMatchingGame: React.FC<CulturalMatchingGameProps> = ({ isOpen, onC
                                 transform: 'rotateY(180deg)'
                               }}
                             >
-                              <img
+                              <LazyImage
                                 src={cardState.card.imageUrl}
                                 alt={cardState.card.name}
                                 className="w-full h-24 object-cover rounded mb-2"
+                                ratio="auto"
+                                fit="cover"
+                                priority
                               />
                               <span className="text-xs font-medium text-center">{cardState.card.name}</span>
                             </div>

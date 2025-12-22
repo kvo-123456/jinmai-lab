@@ -16,6 +16,7 @@ import Square from "@/pages/Square";
 import Community from "@/pages/Community";
 import Neo from "@/pages/Neo";
 import NewsDetail from "@/pages/NewsDetail";
+import EventDetail from "@/pages/EventDetail";
 
 // 大型组件和低频访问页面使用懒加载
 // 对于大型组件和低频访问的页面，使用懒加载可以减少初始加载时间
@@ -50,6 +51,7 @@ const UserCollection = lazy(() => import("@/pages/UserCollection"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const CulturalKnowledge = lazy(() => import("@/pages/CulturalKnowledge"));
 const Tianjin = lazy(() => import("@/pages/Tianjin"));
+const TianjinMap = lazy(() => import("@/pages/TianjinMap"));
 const CulturalEvents = lazy(() => import("@/pages/CulturalEvents"));
 const DailyCheckin = lazy(() => import("@/components/DailyCheckin"));
 const CreativeMatchmaking = lazy(() => import("@/components/CreativeMatchmaking"));
@@ -64,42 +66,13 @@ const Games = lazy(() => import("@/pages/Games"));
 const CollaborationDemo = lazy(() => import("@/pages/CollaborationDemo"));
 const ImageTest = lazy(() => import("@/pages/ImageTest"));
 const CulturalNewsPage = lazy(() => import("@/pages/CulturalNewsPage"));
+const GitHubImageTestPage = lazy(() => import("@/pages/GitHubImageTestPage"));
 // 会员相关页面
 const Membership = lazy(() => import("@/pages/Membership"));
 const MembershipPayment = lazy(() => import("@/pages/MembershipPayment"));
 const MembershipBenefits = lazy(() => import("@/pages/MembershipBenefits"));
 
-// 路由预加载组件
-const RoutePreloader = () => {
-  const location = useLocation();
-  const navigationType = useNavigationType();
-  
-  // 核心页面预加载列表
-  const corePages = [
-    { path: '/dashboard', component: () => import('@/pages/Dashboard') },
-    { path: '/explore', component: () => import('@/pages/Explore') },
-    { path: '/create', component: () => import('@/pages/Create') },
-    { path: '/tools', component: () => import('@/pages/Tools') },
-  ];
-  
-  // 预加载逻辑
-  useEffect(() => {
-    // 仅在用户浏览时预加载，避免初始加载时过度消耗资源
-    if (navigationType === 'POP') return;
-    
-    // 预加载核心页面
-    corePages.forEach(({ path, component }) => {
-      if (location.pathname !== path) {
-        // 使用低优先级预加载
-        component().catch(() => {
-          // 预加载失败不影响用户体验，静默处理
-        });
-      }
-    });
-  }, [location.pathname, navigationType]);
-  
-  return null;
-};
+
 
 // 路由缓存组件
 const RouteCache = ({ children }: { children: React.ReactNode }) => {
@@ -170,29 +143,78 @@ export default function App() {
 
   // 全局console日志过滤，用于过滤WebAssembly内存地址日志
   useEffect(() => {
-    // 保存原始console.log
+    // 保存原始console方法
     const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    const originalInfo = console.info;
+    
+    // 过滤内存地址日志的通用函数
+    const filterMemoryAddressLog = (args: any[]) => {
+      // 检查每个参数
+      for (const arg of args) {
+        // 如果参数是数组，检查是否包含多个内存地址
+        if (Array.isArray(arg)) {
+          // 检查数组中是否包含多个内存地址
+          const memoryAddresses = arg.filter(item => {
+            const str = String(item);
+            return /0x[0-9a-fA-F]{8,}/i.test(str);
+          });
+          if (memoryAddresses.length >= 2) {
+            return true;
+          }
+        } 
+        // 如果参数是字符串，检查是否是内存地址数组
+        else if (typeof arg === 'string') {
+          // 检查是否包含多个内存地址
+          const memoryAddressCount = (arg.match(/0x[0-9a-fA-F]{8,}/gi) || []).length;
+          if (memoryAddressCount >= 2) {
+            return true;
+          }
+          // 检查是否是括号包裹的内存地址数组
+          if (/\[(\s*0x[0-9a-fA-F]{8,}\s*[,\s]*)+\]/i.test(arg)) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    };
     
     // 替换全局console.log
     console.log = function(...args) {
-      // 过滤掉看起来像内存地址数组的日志
-      const allArgsString = args.map(arg => String(arg)).join(' ');
-      
-      // 仅过滤格式为 [0xc00c46d8b0 0xc00c46d8e0 0xc00c46d910] 的内存地址数组
-      const bracketedMemoryAddressRegex = /^\[(\s*0x[0-9a-fA-F]{8,}\s*)+\]$/i;
-      
-      // 如果匹配到内存地址数组格式，不输出
-      if (bracketedMemoryAddressRegex.test(allArgsString)) {
-        return;
+      if (!filterMemoryAddressLog(args)) {
+        originalLog.apply(console, args);
       }
-      
-      // 其他情况正常输出
-      originalLog.apply(console, args);
     };
     
-    // 清理函数，恢复原始console.log
+    // 替换全局console.warn
+    console.warn = function(...args) {
+      if (!filterMemoryAddressLog(args)) {
+        originalWarn.apply(console, args);
+      }
+    };
+    
+    // 替换全局console.error
+    console.error = function(...args) {
+      if (!filterMemoryAddressLog(args)) {
+        originalError.apply(console, args);
+      }
+    };
+    
+    // 替换全局console.info
+    console.info = function(...args) {
+      if (!filterMemoryAddressLog(args)) {
+        originalInfo.apply(console, args);
+      }
+    };
+    
+    // 清理函数，恢复原始console方法
     return () => {
       console.log = originalLog;
+      console.warn = originalWarn;
+      console.error = originalError;
+      console.info = originalInfo;
     };
   }, []);
 
@@ -315,9 +337,6 @@ export default function App() {
   
   return (
     <div className="relative">
-      {/* 添加路由预加载组件 */}
-      <RoutePreloader />
-      
       <Routes>
         {/* 不需要布局的页面 */}
         <Route path="/login" element={<AnimatedPage><Login /></AnimatedPage>} />
@@ -357,6 +376,7 @@ export default function App() {
           <Route path="/games" element={<AnimatedPage><LazyComponent><Games /></LazyComponent></AnimatedPage>} />
           <Route path="/lab" element={<AnimatedPage><LazyComponent><PrivateRoute component={Lab} /></LazyComponent></AnimatedPage>} />
           <Route path="/image-test" element={<AnimatedPage><LazyComponent><ImageTest /></LazyComponent></AnimatedPage>} />
+          <Route path="/github-image-test" element={<AnimatedPage><LazyComponent><GitHubImageTestPage /></LazyComponent></AnimatedPage>} />
           <Route path="/wizard" element={<AnimatedPage><LazyComponent><PrivateRoute component={Wizard} /></LazyComponent></AnimatedPage>} />
           <Route path="/brand" element={<AnimatedPage><LazyComponent><PrivateRoute component={BrandGuide} /></LazyComponent></AnimatedPage>} />
           <Route path="/input" element={<AnimatedPage><LazyComponent><PrivateRoute component={InputHub} /></LazyComponent></AnimatedPage>} />
@@ -371,7 +391,9 @@ export default function App() {
           <Route path="/news" element={<AnimatedPage><LazyComponent><CulturalNewsPage /></LazyComponent></AnimatedPage>} />
           <Route path="/news/:id" element={<AnimatedPage><NewsDetail /></AnimatedPage>} />
           <Route path="/tianjin" element={<AnimatedPage><LazyComponent><Tianjin /></LazyComponent></AnimatedPage>} />
+          <Route path="/tianjin/map" element={<AnimatedPage><LazyComponent><TianjinMap /></LazyComponent></AnimatedPage>} />
           <Route path="/events" element={<AnimatedPage><LazyComponent><CulturalEvents /></LazyComponent></AnimatedPage>} />
+          <Route path="/events/:id" element={<AnimatedPage><EventDetail /></AnimatedPage>} />
           <Route path="/knowledge/:type/:id" element={<AnimatedPage><LazyComponent><PrivateRoute component={CulturalKnowledge} /></LazyComponent></AnimatedPage>} />
           
           {/* 创新功能路由 - 懒加载，添加动画 */}

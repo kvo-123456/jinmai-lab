@@ -25,8 +25,7 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
   // 优化：设备性能检测
   const devicePerformanceRef = useRef<'low' | 'medium' | 'high'>('medium');
   
-  // 保存原始console.log，用于过滤WebAssembly内存地址日志
-  const originalConsoleLogRef = useRef<typeof console.log | null>(null);
+  // 全局console日志过滤已在App.tsx中实现，此处不再需要本地保存
   
   // 加载外部脚本 - 优化：添加超时处理和重试机制
   const loadScript = useCallback((src: string, retryCount: number = 2, timeout: number = 5000) => {
@@ -105,11 +104,7 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
     setIsEnabled(false);
     updateStatus('手势控制已禁用', 'text-yellow-400');
     
-    // 恢复原始console.log
-    if (originalConsoleLogRef.current) {
-      console.log = originalConsoleLogRef.current;
-      originalConsoleLogRef.current = null;
-    }
+    // 全局console.log已由App.tsx管理，此处无需恢复
     
     // 停止相机
     if (cameraUtilsRef.current) {
@@ -203,119 +198,8 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
     setIsLoading(true);
     updateStatus('正在初始化手势控制...', 'text-blue-400');
     
-    // 保存原始console.log并拦截，过滤WebAssembly内存地址日志
-      if (!originalConsoleLogRef.current) {
-        originalConsoleLogRef.current = console.log;
-        
-        // 临时拦截console.log，过滤WebAssembly内存地址日志
-        console.log = function(...args) {
-          // 过滤掉看起来像内存地址的日志
-          let isMemoryAddressLog = false;
-          
-          // 辅助函数：检查值是否为内存地址
-          const isMemoryAddress = (value: any): boolean => {
-            if (typeof value === 'string') {
-              // 检查字符串类型的内存地址
-              // 更精确的内存地址模式：0x前缀，后跟至少8个十六进制字符，可能带有空格或逗号
-              return /^0x[0-9a-fA-F]{8,}$/.test(value.trim()) || 
-                     /^0x[0-9a-fA-F]{8,},?$/.test(value.trim());
-            } else if (typeof value === 'number') {
-              // 检查数字类型的内存地址（大整数，转换为十六进制后长度足够）
-              if (value <= 0) return false;
-              // 内存地址通常是较大的正整数
-              const hexString = value.toString(16);
-              // 内存地址通常至少8个十六进制字符
-              return hexString.length >= 8 && value > 0x100000; // 大于1MB的地址更可能是内存地址
-            }
-            return false;
-          };
-          
-          // 辅助函数：检查数组是否主要包含内存地址
-          const isMemoryAddressArray = (arr: any[]): boolean => {
-            if (arr.length === 0) return false;
-            let memoryAddressCount = 0;
-            
-            for (const item of arr) {
-              if (isMemoryAddress(item)) {
-                memoryAddressCount++;
-              } else if (typeof item === 'string' && item.trim() === '') {
-                // 跳过空字符串
-                continue;
-              } else {
-                // 如果包含非内存地址元素且不是空字符串，降低内存地址比例阈值
-                return memoryAddressCount >= arr.length * 0.7; // 70%以上是内存地址才认为是内存地址数组
-              }
-            }
-            // 如果数组中超过1个内存地址，认为是内存地址数组
-            return memoryAddressCount >= 2;
-          };
-          
-          // 将所有参数转换为字符串，便于统一检查
-          const allArgsString = args.map(arg => String(arg)).join(' ');
-          
-          // 优化的正则表达式，匹配各种格式的内存地址日志
-          const memoryAddressRegex = /0x[0-9a-fA-F]{8,}/gi;
-          // 修复：匹配用空格或逗号分隔的内存地址数组
-          const bracketedMemoryAddressRegex = /^\[(\s*(0x[0-9a-fA-F]{8,}|\d+)\s*[,\s]?\s*)+\]$/i;
-          const wasmLogRegex = /(WebAssembly|wasm|memory|address|0x[0-9a-fA-F]{8,})/gi;
-          
-          // 检查每个参数
-          for (const arg of args) {
-            // 检查实际的数组参数，可能包含多个内存地址
-            if (Array.isArray(arg)) {
-              if (isMemoryAddressArray(arg)) {
-                isMemoryAddressLog = true;
-                break;
-              }
-            } 
-            // 检查对象参数，可能包含内存地址属性
-            else if (typeof arg === 'object' && arg !== null) {
-              // 简单检查对象是否包含内存地址属性
-              const objString = JSON.stringify(arg);
-              const objMemoryCount = (objString.match(memoryAddressRegex) || []).length;
-              if (objMemoryCount >= 3) {
-                isMemoryAddressLog = true;
-                break;
-              }
-            }
-            // 检查单个内存地址参数
-            else if (isMemoryAddress(arg)) {
-              // 如果只有一个内存地址参数，不认为是内存地址日志
-              // 只有多个内存地址或包含WebAssembly相关关键字时才过滤
-              continue;
-            }
-          }
-          
-          // 检查字符串中是否包含多个内存地址
-          const memoryAddressCount = (allArgsString.match(memoryAddressRegex) || []).length;
-          if (memoryAddressCount >= 3) {
-            isMemoryAddressLog = true;
-          }
-          
-          // 检查是否是括号包裹的内存地址数组
-          if (bracketedMemoryAddressRegex.test(allArgsString)) {
-            isMemoryAddressLog = true;
-          }
-          
-          // 检查是否包含WebAssembly相关关键字且包含内存地址
-          const hasWasmKeywords = (allArgsString.match(wasmLogRegex) || []).length > 0;
-          if (hasWasmKeywords && memoryAddressCount >= 2) {
-            isMemoryAddressLog = true;
-          }
-          
-          // 检查是否是多个独立的内存地址参数
-          const memoryArgCount = args.filter(arg => isMemoryAddress(arg)).length;
-          if (memoryArgCount >= 3 || (memoryArgCount >= 2 && hasWasmKeywords)) {
-            isMemoryAddressLog = true;
-          }
-          
-          // 确保正常日志能正常输出
-          if (!isMemoryAddressLog && originalConsoleLogRef.current) {
-            // 使用原始console.log输出
-            originalConsoleLogRef.current.apply(console, args);
-          }
-        };
-      }
+    // 全局console日志过滤已在App.tsx中实现，此处不再重复拦截
+    // 直接使用全局过滤后的console.log
     
     try {
       // 加载MediaPipe依赖 - 优化：添加CDN降级方案
@@ -541,10 +425,7 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
       updateStatus('手势控制初始化失败', 'text-gray-400');
       
       // 清理资源
-      if (originalConsoleLogRef.current) {
-        console.log = originalConsoleLogRef.current;
-        originalConsoleLogRef.current = null;
-      }
+      // 全局console.log已由App.tsx管理，此处无需恢复
     } finally {
       setIsLoading(false);
     }
@@ -566,10 +447,7 @@ export default memo(function GestureControl({ videoElement, previewCanvas, onGes
       stopGestureControl();
       
       // 确保原始console.log被恢复
-      if (originalConsoleLogRef.current) {
-        console.log = originalConsoleLogRef.current;
-        originalConsoleLogRef.current = null;
-      }
+      // 全局console.log已由App.tsx管理，此处无需恢复
       
       // 清理canvas资源
       if (previewCtxRef.current) {

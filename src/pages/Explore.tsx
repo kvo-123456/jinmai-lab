@@ -30,7 +30,7 @@ export default function Explore() {
   const [filteredWorks, setFilteredWorks] = useState(mockWorks);
   const [selectedCategory, setSelectedCategory] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('popularity');
+  const [sortBy, setSortBy] = useState<'popularity' | 'newest' | 'mostViewed' | 'mostCommented' | 'originalOrder'>('originalOrder');
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
@@ -168,7 +168,7 @@ export default function Explore() {
   const prevCoreFiltersRef = useRef({ 
     category: '全部', 
     search: '', 
-    sortBy: 'popularity' 
+    sortBy: 'originalOrder' 
   });
 
   // 筛选和排序作品
@@ -211,6 +211,9 @@ export default function Explore() {
       case 'mostCommented':
         result.sort((a, b) => b.comments - a.comments);
         break;
+      case 'originalOrder':
+        // 不排序，保持作品在文件中的原始顺序
+        break;
       default:
         break;
     }
@@ -235,20 +238,13 @@ export default function Explore() {
     }
   }, [selectedCategory, searchQuery, sortBy, selectedTags]);
 
-  // 获取热门作品（展示在推荐区）- 添加唯一参数确保图片API返回不同图片
+  // 获取热门作品（展示在推荐区）
   const featuredWorks = mockWorks
-    .filter(work => work.featured)
-    .map(work => ({
-      ...work,
-      thumbnail: `${work.thumbnail}&unique=${work.id}`
-    }));
+    .filter(work => work.featured);
   
-  // 分页作品 - 添加唯一参数确保图片API返回不同图片
+  // 分页作品
   const pagedWorks = useMemo(() => {
-    return filteredWorks.slice(0, page * pageSize).map(work => ({
-      ...work,
-      thumbnail: `${work.thumbnail}&unique=${work.id}`
-    }));
+    return filteredWorks.slice(0, page * pageSize);
   }, [filteredWorks, page]);
 
   // 处理分类选择
@@ -275,15 +271,22 @@ export default function Explore() {
   
   // 实现无限滚动，优化阈值和根边距，让加载更及时
   useEffect(() => {
+    // 添加防抖机制，避免频繁触发加载
+    let timeoutId: NodeJS.Timeout;
+    
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && pagedWorks.length < filteredWorks.length) {
-          setPage(prev => prev + 1);
+          // 使用防抖，避免快速滚动时频繁触发
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            setPage(prev => prev + 1);
+          }, 200);
         }
       },
       { 
-        threshold: 0.1, 
-        rootMargin: '0px 0px 200px 0px' // 提前200px触发加载，避免用户看到空白
+        threshold: 0.05, // 降低阈值，更灵敏地检测
+        rootMargin: '0px 0px 300px 0px' // 增大根边距，提前更多触发加载
       }
     );
     
@@ -295,6 +298,7 @@ export default function Explore() {
       if (sentinelRef.current) {
         observer.unobserve(sentinelRef.current);
       }
+      clearTimeout(timeoutId);
     };
   }, [pagedWorks.length, filteredWorks.length]);
   
@@ -462,8 +466,9 @@ export default function Explore() {
             <select
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => setSortBy(e.target.value as any)}
             >
+              <option value="originalOrder">原始顺序</option>
               <option value="popularity">热门作品</option>
               <option value="newest">最新发布</option>
               <option value="mostViewed">最多浏览</option>
@@ -508,7 +513,7 @@ export default function Explore() {
           {/* 轮播容器 */}
           <div className="relative overflow-hidden">
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-              {featuredWorks.map((work) => (
+              {featuredWorks.map((work, index) => (
                 <div
                 key={work.id}
                 className="flex-shrink-0 w-full sm:w-96 bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md dark:shadow-gray-700 hover:shadow-lg dark:hover:shadow-gray-600 transition-all cursor-pointer"
@@ -522,6 +527,10 @@ export default function Explore() {
                           alt={work.title}
                           className="w-full h-48 object-cover"
                           imageTag={work.imageTag}
+                          priority={index < 3}
+                          quality={index < 6 ? 'high' : 'medium'}
+                          loading="lazy"
+                          disableFallback={true}
                         />
                         {/* 视频播放按钮 */}
                         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
@@ -539,6 +548,10 @@ export default function Explore() {
                         alt={work.title}
                         className="w-full h-48 object-cover"
                         imageTag={work.imageTag}
+                        priority={index < 3}
+                        quality={index < 6 ? 'high' : 'medium'}
+                        loading="lazy"
+                        disableFallback={true}
                       />
                     )}
                     
@@ -547,10 +560,11 @@ export default function Explore() {
                       <div className="flex items-center gap-2">
                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white">
                           <TianjinImage
-                            src={work.creatorAvatar}
-                            alt={work.creator}
-                            className="w-full h-full object-cover"
-                          />
+                          src={work.creatorAvatar}
+                          alt={work.creator}
+                          className="w-full h-full object-cover"
+                          disableFallback={true}
+                        />
                         </div>
                         <div>
                           <p className="text-white font-medium text-sm">{work.creator}</p>
@@ -605,17 +619,17 @@ export default function Explore() {
         <div className="mb-8 overflow-x-auto">
           <div className="flex gap-3 min-w-max pb-2">
             {categories.map((category) => (
-              <button
+              <motion.button
                 key={category}
                 onClick={() => handleCategorySelect(category)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
-                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 font-medium ${selectedCategory === category
+                    ? 'bg-blue-600 text-white shadow-lg dark:shadow-blue-900/50'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'}`}
               >
                 {category}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -810,7 +824,7 @@ export default function Explore() {
           </div>
 
         {/* 作品网格 */}
-        <div id="works-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="works-grid" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {isLoading ? (
             // 加载状态
             Array.from({ length: 8 }).map((_, index) => (
@@ -854,9 +868,13 @@ export default function Explore() {
           ) : (
             // 作品列表
             pagedWorks.map((work, index) => (
-              <div
+              <motion.div
                 key={work.id}
-                className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md dark:shadow-gray-700 hover:shadow-lg dark:hover:shadow-gray-600 transition-all duration-300 cursor-pointer"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.02, duration: 0.3 }}
+                whileHover={{ scale: 1.02 }}
+                className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md dark:shadow-gray-700 hover:shadow-xl dark:hover:shadow-gray-500 transition-all duration-300 cursor-pointer"
                 onClick={() => navigate(`/explore/${work.id}`)}
               >
                 <div className="relative group">
@@ -869,6 +887,7 @@ export default function Explore() {
                         alt={work.title}
                         className="w-full h-48 object-cover"
                         imageTag={work.imageTag}
+                        disableFallback={true}
                       />
                       {/* 视频播放按钮 */}
                       <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -893,6 +912,9 @@ export default function Explore() {
                       alt={work.title}
                       className="w-full h-48 object-cover"
                       imageTag={work.imageTag}
+                      priority={index < 3}
+                      quality={index < 6 ? 'high' : 'medium'}
+                      loading="lazy"
                     />
                   )}
                   
@@ -906,21 +928,28 @@ export default function Explore() {
                   )}
                   
                   {/* 悬停时显示的操作按钮 */}
-                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setLiked(prev => ({ ...prev, [work.id]: !prev[work.id] })); }}
-                      className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${liked[work.id] ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </button>
-                    <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors" onClick={(e) => e.stopPropagation()}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
-                      </svg>
-                    </button>
-                  </div>
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                      <motion.button 
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => { e.stopPropagation(); setLiked(prev => ({ ...prev, [work.id]: !prev[work.id] })); }}
+                        className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors shadow-md hover:shadow-lg"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-all duration-300 ${liked[work.id] ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </motion.button>
+                      <motion.button 
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-colors shadow-md hover:shadow-lg"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
+                        </svg>
+                      </motion.button>
+                    </div>
                 </div>
 
                 {/* 作品信息 */}
@@ -932,6 +961,7 @@ export default function Explore() {
                         src={work.creatorAvatar}
                         alt={work.creator}
                         className="w-full h-full object-cover"
+                        disableFallback={true}
                       />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1007,7 +1037,7 @@ export default function Explore() {
                     应用到创作中心
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
         </div>

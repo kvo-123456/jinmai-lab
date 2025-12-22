@@ -1,15 +1,20 @@
-import * as React from 'react';
+import React from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLoader, useThree } from '@react-three/fiber';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import { XR, ARButton, createXRStore } from '@react-three/xr';
 
 
 import * as THREE from 'three';
 import ParticleSystem from './ParticleSystem';
 import LazyImage from './LazyImage';
+import { processImageUrl } from '../utils/imageUrlUtils';
+
+// 创建XRStore实例
+const xrStore = createXRStore();
 
 // 动态导入3D模型加载器的工具函数
 const loadModelLoader = async (type: 'gltf' | 'fbx' | 'obj' | 'collada') => {
@@ -142,7 +147,15 @@ const ARModelPlacer: React.FC<{
     // 错误处理函数
     const handleSessionError = (error: any, context: string) => {
       console.error(`[AR Session] Error in ${context}:`, error);
+      
+      // 向用户显示友好的错误提示
+      toast.error(`AR会话错误: ${context}`, {
+        description: error.message || '请检查设备AR功能是否正常',
+        duration: 5000
+      });
+      
       // 可以在这里添加错误上报逻辑
+      // 例如：errorReportingService.report(error, { context, sessionId: session?.id });
     };
     
     // 请求hit-test源
@@ -259,7 +272,14 @@ const ARModelPlacer: React.FC<{
         .then((referenceSpace: any) => {
           if (isCleanedUp) return;
           
-          const hitTestResults = frame.getHitTestResults(hitTestSource);
+          // 安全获取hit-test结果
+          let hitTestResults;
+          try {
+            hitTestResults = frame.getHitTestResults(hitTestSource);
+          } catch (error) {
+            handleSessionError(error, 'frame.getHitTestResults');
+            return;
+          }
           
           if (hitTestResults.length > 0) {
             setIsPlaneDetected(true);
@@ -267,10 +287,15 @@ const ARModelPlacer: React.FC<{
             // 处理所有hit-test结果
             const results: THREE.Matrix4[] = [];
             for (const result of hitTestResults) {
-              const pose = result.getPose(referenceSpace);
-              if (pose) {
-                const matrix = new THREE.Matrix4().fromArray(pose.transform.matrix);
-                results.push(matrix);
+              try {
+                const pose = result.getPose(referenceSpace);
+                if (pose) {
+                  const matrix = new THREE.Matrix4().fromArray(pose.transform.matrix);
+                  results.push(matrix);
+                }
+              } catch (error) {
+                handleSessionError(error, 'result.getPose');
+                continue;
               }
             }
             
@@ -281,13 +306,17 @@ const ARModelPlacer: React.FC<{
               setHitPose(results[0]);
               
               // 提取位置信息
-              const position = new THREE.Vector3();
-              results[0].decompose(position, new THREE.Quaternion(), new THREE.Vector3());
-              onPositionChange({
-                x: position.x,
-                y: position.y,
-                z: position.z
-              });
+              try {
+                const position = new THREE.Vector3();
+                results[0].decompose(position, new THREE.Quaternion(), new THREE.Vector3());
+                onPositionChange({
+                  x: position.x,
+                  y: position.y,
+                  z: position.z
+                });
+              } catch (error) {
+                handleSessionError(error, 'matrix.decompose');
+              }
             }
           } else {
             setIsPlaneDetected(false);
@@ -836,7 +865,7 @@ const CanvasContent: React.FC<{
         }
         
         // 根据设备性能调整环境光强度
-        const ambientLight = scene.children.find(child => child instanceof THREE.AmbientLight) as THREE.AmbientLight;
+        const ambientLight = scene.children.find(child => child instanceof THREE.AmbientLight) as unknown as THREE.AmbientLight;
         if (ambientLight) {
           ambientLight.intensity = isHighEndDevice ? 1.2 : isMediumEndDevice ? 1.0 : 0.8;
         }
@@ -1145,9 +1174,19 @@ const CanvasContent: React.FC<{
     </>
   );
 };
+// 设备性能检测结果缓存，避免重复计算
+let devicePerformanceCache: ReturnType<typeof getDevicePerformance> | null = null;
+const cacheExpiryTime = 10 * 60 * 1000; // 缓存10分钟，延长缓存时间减少重复计算
+let cacheTimestamp = 0;
 
 // 设备性能检测工具 - 增强版，支持设备类型和AR能力检测
 const getDevicePerformance = () => {
+  // 检查缓存是否有效
+  const now = Date.now();
+  if (devicePerformanceCache && (now - cacheTimestamp) < cacheExpiryTime) {
+    return devicePerformanceCache;
+  }
+  
   // 检测设备性能的多种指标
   let isLowEndDevice = false;
   let isMediumEndDevice = false;
@@ -1166,172 +1205,249 @@ const getDevicePerformance = () => {
   const isDesktop = !isMobile && !isTablet;
   const deviceType = isDesktop ? 'desktop' : isTablet ? 'tablet' : 'mobile';
   
-  // 4. 浏览器性能检测 - 更全面的检测
-  const isLowPerformanceBrowser = /Edge\/|MSIE|Trident|Opera Mini|Chrome\/[0-9]+\./i.test(userAgent) && 
-                                 parseInt(userAgent.match(/Chrome\/([0-9]+)/)?.[1] || '0') < 80;
+  // 4. 增强的浏览器性能检测
+  const browserInfo = {
+    name: 'unknown',
+    version: '0',
+    isChrome: /Chrome\//i.test(userAgent) && !/Edg\//i.test(userAgent),
+    isEdge: /Edg\//i.test(userAgent),
+    isSafari: /Safari/i.test(userAgent) && !/Chrome\//i.test(userAgent),
+    isFirefox: /Firefox\//i.test(userAgent),
+    isOpera: /Opera|OPR\//i.test(userAgent),
+    isIE: /MSIE|Trident/i.test(userAgent),
+    versionNumber: parseInt(userAgent.match(/Chrome\/(\d+)/)?.[1] || 
+                     userAgent.match(/Edg\/(\d+)/)?.[1] || 
+                     userAgent.match(/Firefox\/(\d+)/)?.[1] || 
+                     userAgent.match(/Version\/(\d+)/)?.[1] || '0')
+  };
   
-  // 5. WebGL特性检测（更全面的GPU性能检测）
+  // 检测低性能浏览器 - 优化版本，支持更新的浏览器版本
+  const isLowPerformanceBrowser = browserInfo.isIE || 
+                                   browserInfo.isOpera && browserInfo.versionNumber < 80 ||
+                                   browserInfo.isChrome && browserInfo.versionNumber < 90 ||
+                                   browserInfo.isEdge && browserInfo.versionNumber < 90 ||
+                                   browserInfo.isFirefox && browserInfo.versionNumber < 85;
+  
+  // 5. 更全面的GPU性能检测
   let gpuPerformanceScore = 0;
   let webGLVersion = 0;
   let hasWebGL = false;
+  let gpuVendor = 'unknown';
+  let gpuRenderer = 'unknown';
+  let maxTextureSize = 2048;
+  let maxVertexAttribs = 8;
+  let shaderPrecision = 0;
+  let gpuMemoryMB = 0;
   
-  // 6. 增强的WebXR支持检测
-  let isWebXRSupported = false;
-  let isARWebXRSupported = false;
-  let webXRFeatures: string[] = [];
-  
-  // 7. ARCore/ARKit支持检测
-  let hasARCore = false;
-  let hasARKit = false;
-  let arPlatform = '';
-  
-  // 8. AR会话模式支持检测
-  let supportedARSessionModes: string[] = [];
-  
-  // 9. 设备性能API检测
-  const hasPerformanceAPI = 'performance' in window && 'getEntriesByType' in window.performance;
-  
-  // 10. 检测设备刷新率
-  const maxRefreshRate = (window.screen as any).refreshRate || 60;
-  
+  // 6. WebGL特性检测（更全面的GPU性能检测）
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
     
     if (gl) {
       hasWebGL = true;
-      // 检测WebGL版本
       webGLVersion = gl instanceof WebGL2RenderingContext ? 2 : 1;
       
-      // 检测GPU扩展支持
-      const extensions = gl.getSupportedExtensions();
-      if (extensions) {
-        // 基础扩展支持（每个基础扩展+1分）
-        const basicExtensions = ['WEBGL_compressed_textures', 'OES_texture_float', 'OES_standard_derivatives'];
-        basicExtensions.forEach(ext => {
-          if (extensions.includes(ext)) {
-            gpuPerformanceScore += 1;
-          }
-        });
-        
-        // 高级扩展支持（每个高级扩展+2分）
-        const advancedExtensions = ['EXT_shader_texture_lod', 'OES_vertex_array_object', 'WEBGL_draw_buffers', 
-                                   'WEBGL_color_buffer_float', 'WEBGL_depth_texture'];
-        advancedExtensions.forEach(ext => {
-          if (extensions.includes(ext)) {
-            gpuPerformanceScore += 2;
-          }
-        });
-        
-        // 检测GPU最大纹理尺寸
-        const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-        if (maxTextureSize >= 16384) {
-          gpuPerformanceScore += 4;
-        } else if (maxTextureSize >= 8192) {
-          gpuPerformanceScore += 3;
-        } else if (maxTextureSize >= 4096) {
-          gpuPerformanceScore += 2;
-        } else if (maxTextureSize >= 2048) {
-          gpuPerformanceScore += 1;
-        }
-        
-        // 检测最大顶点属性数量
-        const maxVertexAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
-        if (maxVertexAttribs >= 16) {
-          gpuPerformanceScore += 2;
-        } else if (maxVertexAttribs >= 8) {
-          gpuPerformanceScore += 1;
-        }
-        
-        // 检测最大绘制缓冲区大小
-        const maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-        if (maxRenderBufferSize >= 8192) {
-          gpuPerformanceScore += 2;
-        } else if (maxRenderBufferSize >= 4096) {
-          gpuPerformanceScore += 1;
-        }
+      // 检测GPU信息
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        gpuVendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) as string;
+        gpuRenderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) as string;
       }
+      
+      // 检测GPU扩展支持
+      const extensions = gl.getSupportedExtensions() || [];
+      
+      // 基础扩展支持（每个基础扩展+1分）
+      const basicExtensions = ['WEBGL_compressed_textures', 'OES_texture_float', 'OES_standard_derivatives', 'OES_vertex_array_object'];
+      basicExtensions.forEach(ext => {
+        if (extensions.includes(ext)) {
+          gpuPerformanceScore += 1;
+        }
+      });
+      
+      // 高级扩展支持（每个高级扩展+2分）
+      const advancedExtensions = ['EXT_shader_texture_lod', 'WEBGL_draw_buffers', 'WEBGL_color_buffer_float', 
+                                 'WEBGL_depth_texture', 'WEBGL_multisampled_render_to_texture', 
+                                 'EXT_color_buffer_float', 'WEBGL_color_buffer_half_float'];
+      advancedExtensions.forEach(ext => {
+        if (extensions.includes(ext)) {
+          gpuPerformanceScore += 2;
+        }
+      });
+      
+      // 检测GPU最大纹理尺寸
+      maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
+      if (maxTextureSize >= 32768) {
+        gpuPerformanceScore += 5;
+      } else if (maxTextureSize >= 16384) {
+        gpuPerformanceScore += 4;
+      } else if (maxTextureSize >= 8192) {
+        gpuPerformanceScore += 3;
+      } else if (maxTextureSize >= 4096) {
+        gpuPerformanceScore += 2;
+      } else if (maxTextureSize >= 2048) {
+        gpuPerformanceScore += 1;
+      }
+      
+      // 检测最大顶点属性数量
+      maxVertexAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS) as number;
+      if (maxVertexAttribs >= 32) {
+        gpuPerformanceScore += 3;
+      } else if (maxVertexAttribs >= 16) {
+        gpuPerformanceScore += 2;
+      } else if (maxVertexAttribs >= 8) {
+        gpuPerformanceScore += 1;
+      }
+      
+      // 检测着色器精度
+      const shaderPrecisionFormat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+      shaderPrecision = shaderPrecisionFormat.precision;
+      if (shaderPrecision >= 23) {
+        gpuPerformanceScore += 2;
+      } else if (shaderPrecision >= 16) {
+        gpuPerformanceScore += 1;
+      }
+      
+      // 检测最大统一变量数量
+      const maxUniforms = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) as number;
+      if (maxUniforms >= 1024) {
+        gpuPerformanceScore += 2;
+      } else if (maxUniforms >= 512) {
+        gpuPerformanceScore += 1;
+      }
+      
+      // 估算GPU内存（MB）
+      gpuMemoryMB = Math.min(4096, Math.max(256, Math.pow(2, Math.floor(Math.log2(maxTextureSize * maxTextureSize * 4 / (1024 * 1024))))));
     }
   } catch (e) {
     // WebGL检测失败，继续执行
     hasWebGL = false;
   }
   
-  // 增强的AR支持检测
-  try {
-    // 检测WebXR支持
-    if ('xr' in navigator) {
-      isWebXRSupported = true;
-      
-      // 检测AR WebXR支持
-      (navigator.xr as any).isSessionSupported('immersive-ar').then((supported: boolean) => {
-        isARWebXRSupported = supported;
-      }).catch(() => {
-        isARWebXRSupported = false;
-      });
-      
-      // 检测其他AR会话模式支持
-      const sessionModes = ['immersive-ar', 'inline-ar', 'viewer-ar'];
-      sessionModes.forEach(mode => {
-        (navigator.xr as any).isSessionSupported(mode).then((supported: boolean) => {
-          if (supported) {
-            supportedARSessionModes.push(mode);
-          }
-        }).catch(() => {
-          // 忽略不支持的模式
-        });
-      });
+  // 7. WebXR支持检测 - 增强版
+  let isWebXRSupported = 'xr' in navigator;
+  let isARWebXRSupported = false;
+  let webXRFeatures: string[] = [];
+  let supportedARSessionModes: string[] = [];
+  
+  // 8. ARCore/ARKit支持检测 - 增强版
+  let hasARCore = false;
+  let hasARKit = false;
+  let arPlatform = '';
+  
+  // 检测ARCore（Android）
+  if (isMobile && /Android/i.test(userAgent)) {
+    hasARCore = isWebXRSupported && 
+               (navigator.userAgent.includes('ARCore') || 
+                /Google Play Services for AR/i.test(userAgent) ||
+                navigator.userAgent.includes('ARCore/'));
+    if (hasARCore) {
+      arPlatform = 'arcore';
     }
-  } catch (e) {
-    // WebXR检测失败，继续执行
-    isWebXRSupported = false;
-    isARWebXRSupported = false;
   }
   
-  // ARCore/ARKit支持检测
-  try {
-    if (isMobile) {
-      // 检测ARCore（Android）
-      if (/Android/i.test(userAgent)) {
-        hasARCore = typeof (navigator as any).xr !== 'undefined' && 
-                   navigator.userAgent.includes('ARCore') || 
-                   (navigator as any).isARCoreSupported === true;
-        if (hasARCore) {
-          arPlatform = 'arcore';
-        }
-      }
-      
-      // 检测ARKit（iOS）
-      if (/iPhone|iPad/i.test(userAgent)) {
-        hasARKit = typeof (navigator as any).xr !== 'undefined' && 
-                  (navigator as any).webkit !== undefined && 
-                  (navigator as any).webkit.messageHandlers !== undefined;
-        if (hasARKit) {
-          arPlatform = 'arkit';
-        }
-      }
+  // 检测ARKit（iOS）
+  if (isMobile && /iPhone|iPad/i.test(userAgent)) {
+    hasARKit = isWebXRSupported && 
+              navigator.vendor.includes('Apple');
+    if (hasARKit) {
+      arPlatform = 'arkit';
     }
-  } catch (e) {
-    // ARCore/ARKit检测失败，继续执行
-    hasARCore = false;
-    hasARKit = false;
   }
+  
+  // 9. 设备性能API检测
+  const hasPerformanceAPI = 'performance' in window && 'getEntriesByType' in window.performance;
+  const hasPerformanceMemory = hasPerformanceAPI && typeof (window.performance as any).memory !== 'undefined';
+  const memoryInfo = hasPerformanceMemory ? (window.performance as any).memory : null;
+  
+  // 10. 检测设备刷新率
+  const maxRefreshRate = (window.screen as any).refreshRate || 60;
+  
+  // 11. 检测屏幕分辨率
+  const screenWidth = window.screen.width;
+  const screenHeight = window.screen.height;
+  const screenArea = screenWidth * screenHeight;
+  const devicePixelRatio = window.devicePixelRatio || 1;
   
   // 综合AR支持检测
-  const isARSupported = isARWebXRSupported && (hasARCore || hasARKit || isMobile);
+  const isARSupported = isWebXRSupported && (hasARCore || hasARKit || isMobile);
   
-  // 综合性能评估 - 优化版算法，增强AR模式下的性能评估准确性
+  // 异步检测AR WebXR支持，不影响同步返回结果
+  if (isWebXRSupported) {
+    try {
+      (navigator.xr as any).isSessionSupported('immersive-ar')
+        .then((supported: boolean) => {
+          // 更新缓存中的值，下次调用时生效
+          if (devicePerformanceCache) {
+            devicePerformanceCache.isARWebXRSupported = supported;
+          }
+        })
+        .catch(() => {
+          // 忽略错误
+        });
+    } catch (error) {
+      // 忽略错误
+    }
+  }
+  
+  // 12. 检测设备电池状态，低电量设备可能性能受限
+  let batteryLevel = 1;
+  let batteryCharging = true;
+  try {
+    if ('battery' in navigator || 'getBattery' in navigator) {
+      const batteryPromise = ('getBattery' in navigator) ? (navigator as any).getBattery() : Promise.resolve((navigator as any).battery);
+      batteryPromise.then((battery: any) => {
+        batteryLevel = battery.level;
+        batteryCharging = battery.charging;
+      }).catch(() => {
+        // 忽略电池检测错误
+      });
+    }
+  } catch (e) {
+    // 忽略电池检测错误
+  }
+  
+  // 13. 检测设备CPU性能（使用Performance API）
+  let cpuPerformanceScore = 0;
+  if (hasPerformanceAPI) {
+    try {
+      // 使用navigation timing API获取页面加载性能
+      const navigationEntries = performance.getEntriesByType('navigation');
+      if (navigationEntries.length > 0) {
+        const navEntry = navigationEntries[0] as PerformanceNavigationTiming;
+        if (navEntry.loadEventEnd > 0) {
+          // 页面加载时间越短，CPU性能越好
+          const loadTime = navEntry.loadEventEnd - navEntry.navigationStart;
+          if (loadTime < 1000) {
+            cpuPerformanceScore += 3;
+          } else if (loadTime < 2000) {
+            cpuPerformanceScore += 2;
+          } else if (loadTime < 3000) {
+            cpuPerformanceScore += 1;
+          }
+        }
+      }
+    } catch (e) {
+      // 忽略性能API错误
+    }
+  }
+  
+  // 综合性能评估 - 增强版算法
   // 计算综合性能得分
   let totalScore = 0;
   
   // CPU核心数得分（1-8分）
   totalScore += Math.min(8, cpuCores);
   
+  // CPU性能得分（0-3分）
+  totalScore += cpuPerformanceScore;
+  
   // 内存得分（1-16分）
   totalScore += Math.min(16, deviceMemory * 2);
   
-  // GPU性能得分（0-25分）
-  totalScore += Math.min(25, gpuPerformanceScore);
+  // GPU性能得分（0-40分，增加权重）
+  totalScore += Math.min(40, gpuPerformanceScore * 1.2);
   
   // WebGL版本得分（1-2分）
   totalScore += webGLVersion;
@@ -1339,8 +1455,16 @@ const getDevicePerformance = () => {
   // WebXR支持得分（0-5分）
   if (isWebXRSupported) {
     totalScore += 2;
-    if (isARWebXRSupported) {
-      totalScore += 3;
+    // 异步检测AR WebXR支持，但不影响同步返回结果
+    if ('xr' in navigator) {
+      (navigator.xr as any).isSessionSupported('immersive-ar').then((supported: boolean) => {
+        // 更新缓存中的值，下次调用时生效
+        if (devicePerformanceCache) {
+          devicePerformanceCache.isARWebXRSupported = supported;
+        }
+      }).catch(() => {
+        // 忽略错误
+      });
     }
   }
   
@@ -1351,11 +1475,11 @@ const getDevicePerformance = () => {
   
   // 设备类型调整（不同设备类型有不同的性能基准）
   if (isDesktop) {
-    totalScore += 5; // 桌面设备性能基准较高
+    totalScore += 8; // 提高桌面设备性能基准
   } else if (isTablet) {
-    totalScore += 2; // 平板设备性能基准中等
+    totalScore += 4; // 提高平板设备性能基准
   } else {
-    totalScore -= 1; // 移动设备性能基准较低
+    totalScore += 0; // 移动设备保持原有基准
   }
   
   // 浏览器性能扣分（低性能浏览器-3分）
@@ -1364,32 +1488,63 @@ const getDevicePerformance = () => {
   }
   
   // 设备刷新率加分（高刷新率设备+2分）
-  if (maxRefreshRate >= 120) {
+  if (maxRefreshRate >= 144) {
+    totalScore += 3;
+  } else if (maxRefreshRate >= 120) {
     totalScore += 2;
   } else if (maxRefreshRate >= 90) {
     totalScore += 1;
   }
   
-  // WebGL支持加分（支持WebGL+2分）
+  // WebGL支持加分（支持WebGL+3分）
   if (hasWebGL) {
-    totalScore += 2;
+    totalScore += 3;
   } else {
     // 不支持WebGL，直接判定为低性能设备
     isLowEndDevice = true;
   }
   
-  // 针对AR设备的特殊优化：移动设备默认降低性能得分，确保更保守的渲染设置
-  if (!isDesktop && isARSupported) {
-    totalScore -= 3; // AR设备默认降低性能得分，确保更稳定的AR体验
+  // 屏幕尺寸和像素密度加分
+  const effectiveResolution = screenArea * devicePixelRatio;
+  if (effectiveResolution > 2560 * 1440 * 2) {
+    totalScore += 3;
+  } else if (effectiveResolution > 1920 * 1080 * 2) {
+    totalScore += 2;
+  } else if (effectiveResolution > 1366 * 768 * 1.5) {
+    totalScore += 1;
   }
   
-  // 根据综合得分判断设备性能 - 更合理的得分区间
+  // 电池状态加分（电量充足且充电中设备+2分）
+  if (batteryLevel > 0.75) {
+    totalScore += 1;
+    if (batteryCharging) {
+      totalScore += 1;
+    }
+  }
+  
+  // 内存使用率加分（如果支持Performance Memory API）
+  if (memoryInfo && memoryInfo.usedJSHeapSize && memoryInfo.totalJSHeapSize) {
+    const memoryUsageRatio = memoryInfo.usedJSHeapSize / memoryInfo.totalJSHeapSize;
+    if (memoryUsageRatio < 0.5) {
+      totalScore += 1;
+    }
+  }
+  
+  // 针对AR设备的特殊优化：移动设备根据实际性能调整，不再默认降低
+  if (!isDesktop && isARSupported) {
+    // 仅在实际性能较低时降低得分
+    if (totalScore < 25) {
+      totalScore -= 2; // 适度降低性能得分，确保稳定的AR体验
+    }
+  }
+  
+  // 根据综合得分判断设备性能 - 优化得分区间
   if (!isLowEndDevice) {
-    if (totalScore < 15) {
+    if (totalScore < 22) {
       isLowEndDevice = true;
       isMediumEndDevice = false;
       isHighEndDevice = false;
-    } else if (totalScore < 28) {
+    } else if (totalScore < 38) {
       isLowEndDevice = false;
       isMediumEndDevice = true;
       isHighEndDevice = false;
@@ -1407,7 +1562,8 @@ const getDevicePerformance = () => {
     isHighEndDevice = false;
   }
   
-  return {
+  // 构建结果对象
+  const result = {
     isLowEndDevice,
     isMediumEndDevice,
     isHighEndDevice,
@@ -1416,6 +1572,12 @@ const getDevicePerformance = () => {
     deviceMemory,
     webGLVersion,
     gpuPerformanceScore,
+    gpuVendor,
+    gpuRenderer,
+    maxTextureSize,
+    maxVertexAttribs,
+    shaderPrecision,
+    gpuMemoryMB,
     isMobile,
     isTablet,
     isDesktop,
@@ -1431,8 +1593,24 @@ const getDevicePerformance = () => {
     isLowPerformanceBrowser,
     hasWebGL,
     maxRefreshRate,
-    hasPerformanceAPI
+    hasPerformanceAPI,
+    hasPerformanceMemory,
+    memoryInfo,
+    screenWidth,
+    screenHeight,
+    screenArea,
+    devicePixelRatio,
+    browserInfo,
+    batteryLevel,
+    batteryCharging,
+    cpuPerformanceScore
   };
+  
+  // 更新缓存
+  devicePerformanceCache = result;
+  cacheTimestamp = now;
+  
+  return result;
 };
 
 // 增强的资源缓存机制
@@ -1442,30 +1620,43 @@ interface CachedResource<T> {
   size?: number;
   usageCount: number;
   lastUsed: number;
+  priority: number; // 资源优先级，用于智能清理
 }
 
 // 资源缓存配置
 const CACHE_CONFIG = {
-  maxTextures: 15, // 增加最大缓存纹理数量
-  maxModels: 8, // 增加最大缓存模型数量
-  cacheTTL: 30 * 60 * 1000, // 缓存过期时间：30分钟
-  cleanupInterval: 5 * 60 * 1000, // 清理间隔：5分钟
-  maxTextureSizeMB: 50, // 最大纹理缓存大小（MB）
-  maxModelSizeMB: 100, // 最大模型缓存大小（MB）
+  maxTextures: 20, // 增加最大缓存纹理数量
+  maxModels: 10, // 增加最大缓存模型数量
+  cacheTTL: 60 * 60 * 1000, // 缓存过期时间：1小时
+  cleanupInterval: 2 * 60 * 1000, // 清理间隔：2分钟
+  maxTextureSizeMB: 80, // 最大纹理缓存大小（MB）
+  maxModelSizeMB: 150, // 最大模型缓存大小（MB）
   minUsageCount: 2, // 最小使用次数，低于此值的资源优先被清理
+  priorityFactor: 0.5, // 优先级权重因子
+  batchCleanupSize: 3, // 每次批量清理的资源数量
+  preloadLimit: 5 // 预加载资源数量限制
 };
 
 // 资源大小计算工具
 const calculateResourceSize = {
   // 估算纹理大小（MB）
   texture(texture: THREE.Texture): number {
-    if (texture.image && typeof texture.image === 'object' && 'width' in texture.image && 'height' in texture.image) {
-      // 计算像素数量 * 4字节/像素（RGBA）
+    if (!texture.image || typeof texture.image !== 'object') {
+      return 0;
+    }
+    
+    // 检查image对象是否有width和height属性
+    if ('width' in texture.image && 'height' in texture.image) {
       const image = texture.image as { width: number; height: number };
       const width = image.width;
       const height = image.height;
-      const bytes = width * height * 4;
-      return bytes / (1024 * 1024); // 转换为MB
+      
+      // 确保width和height是有效数值
+      if (typeof width === 'number' && typeof height === 'number' && width > 0 && height > 0) {
+        // 计算像素数量 * 4字节/像素（RGBA）
+        const bytes = width * height * 4;
+        return bytes / (1024 * 1024); // 转换为MB
+      }
     }
     return 0;
   },
@@ -1479,14 +1670,23 @@ const calculateResourceSize = {
       if (object.geometry) {
         const geometry = object.geometry;
         // 计算顶点数据大小
-        if (geometry.attributes.position) {
+        if (geometry.attributes?.position?.array?.byteLength) {
           totalBytes += geometry.attributes.position.array.byteLength;
         }
-        if (geometry.attributes.normal) {
+        if (geometry.attributes?.normal?.array?.byteLength) {
           totalBytes += geometry.attributes.normal.array.byteLength;
         }
-        if (geometry.attributes.uv) {
+        if (geometry.attributes?.uv?.array?.byteLength) {
           totalBytes += geometry.attributes.uv.array.byteLength;
+        }
+        if (geometry.attributes?.uv2?.array?.byteLength) {
+          totalBytes += geometry.attributes.uv2.array.byteLength;
+        }
+        if (geometry.attributes?.color?.array?.byteLength) {
+          totalBytes += geometry.attributes.color.array.byteLength;
+        }
+        if (geometry.attributes?.tangent?.array?.byteLength) {
+          totalBytes += geometry.attributes.tangent.array.byteLength;
         }
       }
       
@@ -1504,64 +1704,72 @@ const calculateResourceSize = {
   }
 };
 
-const resourceCache = {
-  textures: new Map<string, CachedResource<THREE.Texture>>(),
-  models: new Map<string, CachedResource<THREE.Group>>(),
+// 资源缓存类
+class ResourceCache {
+  textures = new Map<string, CachedResource<THREE.Texture>>();
+  models = new Map<string, CachedResource<THREE.Group>>();
+  preloadQueue: Array<{ url: string; type: 'texture' | 'model'; priority: number }> = [];
+  isPreloading = false;
+  loadingQueue: Array<{ url: string; type: 'texture' | 'model' }> = [];
+  maxConcurrentLoads = 2; // 最大并发加载数
+  currentLoads = 0;
   
   // 计算当前缓存大小
   getCurrentCacheSize() {
     return {
-      textures: Array.from(resourceCache.textures.values())
+      textures: Array.from(this.textures.values())
         .reduce((total, cached) => total + (cached.size || 0), 0),
-      models: Array.from(resourceCache.models.values())
+      models: Array.from(this.models.values())
         .reduce((total, cached) => total + (cached.size || 0), 0),
     };
-  },
+  }
   
-  // 缓存配置
-  config: {
+  // 资源清理策略
+  config = {
     // 清理过期资源
-    cleanupExpired() {
+    cleanupExpired: () => {
       const now = Date.now();
+      let cleanedCount = 0;
       
       // 清理过期纹理
-      for (const [key, cached] of resourceCache.textures.entries()) {
+      for (const [key, cached] of this.textures.entries()) {
         if (now - cached.timestamp > CACHE_CONFIG.cacheTTL) {
-          cached.resource.dispose();
-          resourceCache.textures.delete(key);
+          this.safeDisposeTexture(cached.resource);
+          this.textures.delete(key);
+          cleanedCount++;
         }
       }
       
       // 清理过期模型
-      for (const [key, cached] of resourceCache.models.entries()) {
+      for (const [key, cached] of this.models.entries()) {
         if (now - cached.timestamp > CACHE_CONFIG.cacheTTL) {
-          // 递归清理模型资源
-          cached.resource.traverse((object: any) => {
-            if (object.geometry) object.geometry.dispose();
-            if (object.material) {
-              if (Array.isArray(object.material)) {
-                object.material.forEach((material: THREE.Material) => material.dispose());
-              } else {
-                object.material.dispose();
-              }
-            }
-          });
-          resourceCache.models.delete(key);
+          this.safeDisposeModel(cached.resource);
+          this.models.delete(key);
+          cleanedCount++;
         }
+      }
+      
+      if (cleanedCount > 0) {
+        console.log(`[ResourceCache] Cleaned up ${cleanedCount} expired resources`);
       }
     },
     
     // 清理超出限制的资源（使用智能清理策略）
-    cleanupExcess() {
-      const currentSize = resourceCache.getCurrentCacheSize();
+    cleanupExcess: () => {
+      const currentSize = this.getCurrentCacheSize();
+      let cleanedCount = 0;
       
       // 智能清理纹理缓存
-      if (resourceCache.textures.size > CACHE_CONFIG.maxTextures || 
+      if (this.textures.size > CACHE_CONFIG.maxTextures || 
           currentSize.textures > CACHE_CONFIG.maxTextureSizeMB) {
-        // 按优先级排序：使用次数 > 最近使用时间 > 大小
-        const sortedTextures = Array.from(resourceCache.textures.entries())
+        // 按优先级排序：优先级 > 使用次数 > 最近使用时间 > 大小
+        const sortedTextures = Array.from(this.textures.entries())
           .sort((a, b) => {
-            // 首先比较使用次数
+            // 首先比较优先级
+            if (a[1].priority !== b[1].priority) {
+              return b[1].priority - a[1].priority;
+            }
+            // 然后比较使用次数
             if (a[1].usageCount !== b[1].usageCount) {
               return b[1].usageCount - a[1].usageCount;
             }
@@ -1575,41 +1783,52 @@ const resourceCache = {
         
         // 清理直到满足条件
         let excessCount = Math.max(
-          resourceCache.textures.size - CACHE_CONFIG.maxTextures,
+          this.textures.size - CACHE_CONFIG.maxTextures,
           0
         );
         
-        for (let i = sortedTextures.length - 1; i >= 0 && excessCount > 0; i--) {
+        // 批量清理，避免一次性清理过多资源
+        let batchCount = 0;
+        for (let i = sortedTextures.length - 1; i >= 0 && excessCount > 0 && batchCount < CACHE_CONFIG.batchCleanupSize; i--) {
           const [key, cached] = sortedTextures[i];
           // 保留使用次数较高的资源
           if (cached.usageCount < CACHE_CONFIG.minUsageCount) {
-            cached.resource.dispose();
-            resourceCache.textures.delete(key);
+            this.safeDisposeTexture(cached.resource);
+            this.textures.delete(key);
             excessCount--;
+            cleanedCount++;
+            batchCount++;
           }
         }
         
         // 如果仍超出大小限制，继续清理
-        let currentTextureSize = resourceCache.getCurrentCacheSize().textures;
+        let currentTextureSize = this.getCurrentCacheSize().textures;
+        batchCount = 0;
         let i = sortedTextures.length - 1;
-        while (currentTextureSize > CACHE_CONFIG.maxTextureSizeMB && i >= 0) {
+        while (currentTextureSize > CACHE_CONFIG.maxTextureSizeMB && i >= 0 && batchCount < CACHE_CONFIG.batchCleanupSize) {
           const [key, cached] = sortedTextures[i];
-          if (resourceCache.textures.has(key)) {
-            cached.resource.dispose();
-            resourceCache.textures.delete(key);
-            currentTextureSize = resourceCache.getCurrentCacheSize().textures;
+          if (this.textures.has(key)) {
+            this.safeDisposeTexture(cached.resource);
+            this.textures.delete(key);
+            currentTextureSize = this.getCurrentCacheSize().textures;
+            cleanedCount++;
+            batchCount++;
           }
           i--;
         }
       }
       
       // 智能清理模型缓存
-      if (resourceCache.models.size > CACHE_CONFIG.maxModels || 
+      if (this.models.size > CACHE_CONFIG.maxModels || 
           currentSize.models > CACHE_CONFIG.maxModelSizeMB) {
-        // 按优先级排序：使用次数 > 最近使用时间 > 大小
-        const sortedModels = Array.from(resourceCache.models.entries())
+        // 按优先级排序：优先级 > 使用次数 > 最近使用时间 > 大小
+        const sortedModels = Array.from(this.models.entries())
           .sort((a, b) => {
-            // 首先比较使用次数
+            // 首先比较优先级
+            if (a[1].priority !== b[1].priority) {
+              return b[1].priority - a[1].priority;
+            }
+            // 然后比较使用次数
             if (a[1].usageCount !== b[1].usageCount) {
               return b[1].usageCount - a[1].usageCount;
             }
@@ -1623,81 +1842,437 @@ const resourceCache = {
         
         // 清理直到满足条件
         let excessCount = Math.max(
-          resourceCache.models.size - CACHE_CONFIG.maxModels,
+          this.models.size - CACHE_CONFIG.maxModels,
           0
         );
         
-        for (let i = sortedModels.length - 1; i >= 0 && excessCount > 0; i--) {
+        // 批量清理，避免一次性清理过多资源
+        let batchCount = 0;
+        for (let i = sortedModels.length - 1; i >= 0 && excessCount > 0 && batchCount < CACHE_CONFIG.batchCleanupSize; i--) {
           const [key, cached] = sortedModels[i];
           // 保留使用次数较高的资源
           if (cached.usageCount < CACHE_CONFIG.minUsageCount) {
-            // 递归清理模型资源
-            cached.resource.traverse((object: any) => {
-              if (object.geometry) object.geometry.dispose();
-              if (object.material) {
-                if (Array.isArray(object.material)) {
-                  object.material.forEach((material: THREE.Material) => material.dispose());
-                } else {
-                  object.material.dispose();
-                }
-              }
-            });
-            resourceCache.models.delete(key);
+            this.safeDisposeModel(cached.resource);
+            this.models.delete(key);
             excessCount--;
+            cleanedCount++;
+            batchCount++;
           }
         }
         
         // 如果仍超出大小限制，继续清理
-        let currentModelSize = resourceCache.getCurrentCacheSize().models;
+        let currentModelSize = this.getCurrentCacheSize().models;
+        batchCount = 0;
         let i = sortedModels.length - 1;
-        while (currentModelSize > CACHE_CONFIG.maxModelSizeMB && i >= 0) {
+        while (currentModelSize > CACHE_CONFIG.maxModelSizeMB && i >= 0 && batchCount < CACHE_CONFIG.batchCleanupSize) {
           const [key, cached] = sortedModels[i];
-          if (resourceCache.models.has(key)) {
-            // 递归清理模型资源
-            cached.resource.traverse((object: any) => {
-              if (object.geometry) object.geometry.dispose();
-              if (object.material) {
-                if (Array.isArray(object.material)) {
-                  object.material.forEach((material: THREE.Material) => material.dispose());
-                } else {
-                  object.material.dispose();
-                }
-              }
-            });
-            resourceCache.models.delete(key);
-            currentModelSize = resourceCache.getCurrentCacheSize().models;
+          if (this.models.has(key)) {
+            this.safeDisposeModel(cached.resource);
+            this.models.delete(key);
+            currentModelSize = this.getCurrentCacheSize().models;
+            cleanedCount++;
+            batchCount++;
           }
           i--;
         }
       }
+      
+      if (cleanedCount > 0) {
+        console.log(`[ResourceCache] Cleaned up ${cleanedCount} excess resources`);
+      }
     },
     
     // 清理所有资源
-    clearAll() {
+    clearAll: () => {
       // 清理所有纹理
-      for (const [key, cached] of resourceCache.textures.entries()) {
-        cached.resource.dispose();
-        resourceCache.textures.delete(key);
+      let textureCount = this.textures.size;
+      for (const [key, cached] of this.textures.entries()) {
+        this.safeDisposeTexture(cached.resource);
+        this.textures.delete(key);
       }
       
       // 清理所有模型
-      for (const [key, cached] of resourceCache.models.entries()) {
-        // 递归清理模型资源
-        cached.resource.traverse((object: any) => {
-          if (object.geometry) object.geometry.dispose();
-          if (object.material) {
-            if (Array.isArray(object.material)) {
-              object.material.forEach((material: THREE.Material) => material.dispose());
-            } else {
-              object.material.dispose();
-            }
-          }
-        });
-        resourceCache.models.delete(key);
+      let modelCount = this.models.size;
+      for (const [key, cached] of this.models.entries()) {
+        this.safeDisposeModel(cached.resource);
+        this.models.delete(key);
       }
+      
+      // 清空队列
+      this.preloadQueue = [];
+      this.loadingQueue = [];
+      this.isPreloading = false;
+      this.currentLoads = 0;
+      
+      console.log(`[ResourceCache] Cleared all resources: ${textureCount} textures, ${modelCount} models`);
+    }
+  };
+  
+  // 安全清理纹理资源
+  safeDisposeTexture(texture: THREE.Texture) {
+    try {
+      texture.dispose();
+    } catch (error) {
+      console.warn('[ResourceCache] Error disposing texture:', error);
     }
   }
-};
+  
+  // 安全清理模型资源
+  safeDisposeModel(model: THREE.Group) {
+    try {
+      model.traverse((object: any) => {
+        if (object.geometry) {
+          object.geometry.dispose();
+        }
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach((material: THREE.Material) => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+        // 清理其他资源
+        if (object.dispose && typeof object.dispose === 'function' && object !== model) {
+          try {
+            object.dispose();
+          } catch (error) {
+            console.warn('[ResourceCache] Error disposing object:', error);
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('[ResourceCache] Error disposing model:', error);
+    }
+  }
+  
+  // 添加纹理到缓存
+  addTexture(url: string, texture: THREE.Texture, priority: number = 1) {
+    const size = calculateResourceSize.texture(texture);
+    this.textures.set(url, {
+      resource: texture,
+      timestamp: Date.now(),
+      size,
+      usageCount: 1,
+      lastUsed: Date.now(),
+      priority
+    });
+    // 自动清理超出限制的资源
+    this.config.cleanupExcess();
+  }
+  
+  // 添加模型到缓存
+  addModel(url: string, model: THREE.Group, priority: number = 1) {
+    const size = calculateResourceSize.model(model);
+    this.models.set(url, {
+      resource: model,
+      timestamp: Date.now(),
+      size,
+      usageCount: 1,
+      lastUsed: Date.now(),
+      priority
+    });
+    // 自动清理超出限制的资源
+    this.config.cleanupExcess();
+  }
+  
+  // 获取纹理从缓存
+  getTexture(url: string): THREE.Texture | null {
+    const cached = this.textures.get(url);
+    if (cached) {
+      // 更新使用统计
+      cached.usageCount++;
+      cached.lastUsed = Date.now();
+      return cached.resource;
+    }
+    return null;
+  }
+  
+  // 获取模型从缓存
+  getModel(url: string): THREE.Group | null {
+    const cached = this.models.get(url);
+    if (cached) {
+      // 更新使用统计
+      cached.usageCount++;
+      cached.lastUsed = Date.now();
+      return cached.resource;
+    }
+    return null;
+  }
+  
+  // 检查纹理是否在缓存中
+  hasTexture(url: string): boolean {
+    return this.textures.has(url);
+  }
+  
+  // 检查模型是否在缓存中
+  hasModel(url: string): boolean {
+    return this.models.has(url);
+  }
+  
+  // 从缓存中删除纹理
+  removeTexture(url: string): boolean {
+    const cached = this.textures.get(url);
+    if (cached) {
+      this.safeDisposeTexture(cached.resource);
+      return this.textures.delete(url);
+    }
+    return false;
+  }
+  
+  // 从缓存中删除模型
+  removeModel(url: string): boolean {
+    const cached = this.models.get(url);
+    if (cached) {
+      this.safeDisposeModel(cached.resource);
+      return this.models.delete(url);
+    }
+    return false;
+  }
+  
+  // 添加资源到预加载队列
+  addToPreloadQueue(url: string, type: 'texture' | 'model', priority: number = 1) {
+    // 检查是否已经在队列中
+    const existsInPreload = this.preloadQueue.some(item => item.url === url && item.type === type);
+    const existsInLoading = this.loadingQueue.some(item => item.url === url && item.type === type);
+    const existsInCache = (type === 'texture' && this.textures.has(url)) || (type === 'model' && this.models.has(url));
+    
+    if (!existsInPreload && !existsInLoading && !existsInCache) {
+      this.preloadQueue.push({ url, type, priority });
+      // 按优先级排序预加载队列
+      this.preloadQueue.sort((a, b) => b.priority - a.priority);
+      // 限制预加载队列大小
+      if (this.preloadQueue.length > CACHE_CONFIG.preloadLimit) {
+        this.preloadQueue = this.preloadQueue.slice(0, CACHE_CONFIG.preloadLimit);
+      }
+      // 开始预加载
+      this.startPreloading();
+    }
+  }
+  
+  // 开始预加载资源
+  startPreloading() {
+    if (this.isPreloading) {
+      return;
+    }
+    
+    this.isPreloading = true;
+    console.log(`[ResourceCache] Starting preloading: ${this.preloadQueue.length} resources`);
+    
+    // 加载下一个资源
+    const loadNext = async () => {
+      // 检查是否可以开始新的加载
+      if (this.currentLoads >= this.maxConcurrentLoads || this.preloadQueue.length === 0) {
+        if (this.preloadQueue.length === 0 && this.currentLoads === 0) {
+          this.isPreloading = false;
+          console.log('[ResourceCache] Preloading complete');
+        }
+        return;
+      }
+      
+      // 获取下一个要加载的资源
+      const item = this.preloadQueue.shift();
+      if (!item) {
+        this.isPreloading = false;
+        return;
+      }
+      
+      // 添加到加载队列
+      this.loadingQueue.push(item);
+      this.currentLoads++;
+      
+      try {
+        if (item.type === 'texture') {
+          await this.preloadTexture(item.url);
+        } else {
+          await this.preloadModel(item.url);
+        }
+        console.log(`[ResourceCache] Preloaded ${item.type}: ${item.url}`);
+      } catch (error) {
+        console.warn(`[ResourceCache] Error preloading ${item.type}: ${item.url}`, error);
+      } finally {
+        // 从加载队列中移除
+        this.loadingQueue = this.loadingQueue.filter(loadItem => loadItem.url !== item.url || loadItem.type !== item.type);
+        this.currentLoads--;
+        // 继续加载下一个资源
+        loadNext();
+      }
+    };
+    
+    // 启动并发加载
+    for (let i = 0; i < this.maxConcurrentLoads; i++) {
+      loadNext();
+    }
+  }
+  
+  // 预加载纹理
+  async preloadTexture(url: string) {
+    return new Promise<void>((resolve, reject) => {
+      const loader = new THREE.TextureLoader();
+      loader.setCrossOrigin('anonymous');
+      
+      loader.load(
+        url,
+        (texture) => {
+          // 优化纹理设置
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = false;
+          
+          // 添加到缓存
+          const size = calculateResourceSize.texture(texture);
+          this.textures.set(url, {
+            resource: texture,
+            timestamp: Date.now(),
+            size,
+            usageCount: 0, // 预加载资源初始使用次数为0
+            lastUsed: Date.now(),
+            priority: 1
+          });
+          resolve();
+        },
+        undefined,
+        (error) => {
+          reject(error);
+        }
+      );
+    });
+  }
+  
+  // 预加载模型
+  async preloadModel(url: string) {
+    return new Promise<void>((resolve, reject) => {
+      // 检测模型格式
+      const modelFormat = url.toLowerCase().split('.').pop();
+      
+      // 动态导入模型加载器
+      const loadModelLoader = async (format: string) => {
+        switch (format) {
+          case 'gltf':
+          case 'glb':
+            const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+            return new GLTFLoader();
+          case 'fbx':
+            const { FBXLoader } = await import('three/examples/jsm/loaders/FBXLoader.js');
+            return new FBXLoader();
+          case 'obj':
+            const { OBJLoader } = await import('three/examples/jsm/loaders/OBJLoader.js');
+            return new OBJLoader();
+          case 'dae':
+            const { ColladaLoader } = await import('three/examples/jsm/loaders/ColladaLoader.js');
+            return new ColladaLoader();
+          default:
+            throw new Error(`Unsupported model format: ${format}`);
+        }
+      };
+      
+      loadModelLoader(modelFormat as string)
+        .then((loader) => {
+          loader.load(
+            url,
+            (result: any) => {
+              let model: THREE.Group;
+              
+              // 根据不同加载器的结果获取模型
+              if (result.scene) {
+                model = result.scene;
+              } else if (result instanceof THREE.Group) {
+                model = result;
+              } else {
+                reject(new Error('Invalid model result'));
+                return;
+              }
+              
+              // 优化模型
+              model.traverse((object: any) => {
+                if (object.geometry) {
+                  // 简化几何体
+                  object.geometry = object.geometry.toNonIndexed();
+                  if (object.geometry.attributes.uv2) {
+                    object.geometry.deleteAttribute('uv2');
+                  }
+                  if (object.geometry.attributes.tangent) {
+                    object.geometry.deleteAttribute('tangent');
+                  }
+                }
+                
+                if (object.material) {
+                  // 简化材质
+                  const materials = Array.isArray(object.material) ? object.material : [object.material];
+                  materials.forEach((material: any) => {
+                    if (material instanceof THREE.MeshStandardMaterial) {
+                      material.roughnessMap = null;
+                      material.metalnessMap = null;
+                      material.normalMap = null;
+                      material.displacementMap = null;
+                    }
+                  });
+                }
+              });
+              
+              // 添加到缓存
+              const size = calculateResourceSize.model(model);
+              this.models.set(url, {
+                resource: model,
+                timestamp: Date.now(),
+                size,
+                usageCount: 0, // 预加载资源初始使用次数为0
+                lastUsed: Date.now(),
+                priority: 1
+              });
+              resolve();
+            },
+            undefined,
+            (error: any) => {
+              reject(error);
+            }
+          );
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+  
+  // 获取缓存统计信息
+  getStats() {
+    const textureStats = {
+      count: this.textures.size,
+      totalSize: this.getCurrentCacheSize().textures,
+      avgSize: this.textures.size > 0 ? this.getCurrentCacheSize().textures / this.textures.size : 0,
+      maxSize: Math.max(...Array.from(this.textures.values()).map(t => t.size || 0), 0),
+      minSize: Math.min(...Array.from(this.textures.values()).map(t => t.size || 0), 0),
+      avgUsage: this.textures.size > 0 ? Array.from(this.textures.values()).reduce((sum, t) => sum + t.usageCount, 0) / this.textures.size : 0,
+      cachedUrls: Array.from(this.textures.keys())
+    };
+    
+    const modelStats = {
+      count: this.models.size,
+      totalSize: this.getCurrentCacheSize().models,
+      avgSize: this.models.size > 0 ? this.getCurrentCacheSize().models / this.models.size : 0,
+      maxSize: Math.max(...Array.from(this.models.values()).map(m => m.size || 0), 0),
+      minSize: Math.min(...Array.from(this.models.values()).map(m => m.size || 0), 0),
+      avgUsage: this.models.size > 0 ? Array.from(this.models.values()).reduce((sum, m) => sum + m.usageCount, 0) / this.models.size : 0,
+      cachedUrls: Array.from(this.models.keys())
+    };
+    
+    return {
+      textures: textureStats,
+      models: modelStats,
+      totalSize: textureStats.totalSize + modelStats.totalSize,
+      totalCount: textureStats.count + modelStats.count,
+      preloadQueueLength: this.preloadQueue.length,
+      preloadQueue: this.preloadQueue.map(item => ({ url: item.url, type: item.type, priority: item.priority })),
+      loadingQueueLength: this.loadingQueue.length,
+      loadingQueue: this.loadingQueue.map(item => ({ url: item.url, type: item.type })),
+      currentLoads: this.currentLoads,
+      isPreloading: this.isPreloading,
+      maxConcurrentLoads: this.maxConcurrentLoads
+    };
+  }
+}
+
+// 创建资源缓存实例
+const resourceCache = new ResourceCache();
 
 // 定期清理过期资源
 setInterval(() => {
@@ -1705,6 +2280,17 @@ setInterval(() => {
   resourceCache.config.cleanupExcess();
 }, CACHE_CONFIG.cleanupInterval);
 
+// 定期打印缓存统计信息（开发模式）
+// 使用Vite提供的环境变量检测开发环境
+const isDev = import.meta.env.MODE === 'development';
+if (isDev) {
+  setInterval(() => {
+    const stats = resourceCache.getStats();
+    console.log('[ResourceCache Stats]', stats);
+  }, 30000); // 每30秒打印一次
+}
+
+// 设备性能检测工具 - 增强版，支持设备类型和AR能力检测
 // 渲染设置类型定义
 interface RenderSettings {
   pixelRatio: number;
@@ -1733,6 +2319,7 @@ interface ARPreviewSceneProps {
   devicePerformance: ReturnType<typeof getDevicePerformance>;
 }
 
+// 设备性能检测工具 - 增强版，支持设备类型和AR能力检测
 // 分离渲染逻辑，避免React.memo导致的类型问题
 const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMode, particleEffect, clickInteraction, cameraView, isPlaced, onLoadingComplete, onProgress, onPositionChange, renderSettings, devicePerformance }: ARPreviewSceneProps) => {
   // 使用useState和useEffect手动加载纹理，避免useLoader的硬性错误
@@ -1912,8 +2499,11 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
         // 降低纹理加载优先级
         loader.setCrossOrigin('anonymous');
         
+        // 处理图片URL
+        const processedImageUrl = processImageUrl(config.imageUrl as string);
+        
         loader.load(
-          config.imageUrl as string,
+          processedImageUrl,
           (loadedTexture) => {
             // 优化纹理设置
             loadedTexture.minFilter = isARMode ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
@@ -1925,7 +2515,7 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
             // 缓存纹理
             const textureSize = calculateResourceSize.texture(loadedTexture);
             if (config.imageUrl) {
-              resourceCache.textures.set(config.imageUrl, {
+              resourceCache.textures.set(processedImageUrl, {
                 resource: loadedTexture,
                 timestamp: Date.now(),
                 size: textureSize,
@@ -2098,13 +2688,15 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
         ).reduce((sum, delay) => sum + delay, 0);
       
       // 显示重试信息
-      toast.info(
-        `正在尝试重新加载图像 (${nextAttempt}/${prev.maxAttempts})`,
-        {
-          description: `预计剩余时间: ${Math.round(estimatedTotalTime / 1000)}秒`,
-          duration: nextDelay - 500 // 确保提示在下次重试前消失
-        }
-      );
+      if (prev.currentAttempt < prev.maxAttempts) {
+        toast.info(
+          `正在尝试重新加载图像 (${nextAttempt}/${prev.maxAttempts})`,
+          {
+            description: `预计剩余时间: ${Math.round(estimatedTotalTime / 1000)}秒`,
+            duration: nextDelay - 500 // 确保提示在下次重试前消失
+          }
+        );
+      }
       
       return {
         isRetrying: true,
@@ -2248,6 +2840,37 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
   const [modelErrorMessage, setModelErrorMessage] = useState<string | null>(null);
   const [isModelRetrying, setIsModelRetrying] = useState(false);
   const maxModelRetries = 3;
+  
+  // 模型重试函数
+  const retryLoadModel = useCallback(() => {
+    if (modelRetryCount < maxModelRetries) {
+      // 计算重试延迟（指数退避算法）
+      const nextDelay = 1000 * Math.min(modelRetryCount + 1, 10);
+      
+      // 更新模型重试状态
+      setIsModelRetrying(true);
+      setModelRetryCount(prev => prev + 1);
+      setModelRetryDelay(nextDelay);
+      setModelError(false);
+      setModelLoading(true);
+      
+      // 显示重试信息
+      toast.info(
+        `正在尝试重新加载3D模型 (${modelRetryCount + 1}/${maxModelRetries})`,
+        {
+          description: `预计 ${Math.round(nextDelay / 1000)}秒后重试`,
+          duration: nextDelay - 500
+        }
+      );
+      
+      // 延迟重试
+      setTimeout(() => {
+        setIsModelRetrying(false);
+        // 触发模型重新加载
+        setModel(null);
+      }, nextDelay);
+    }
+  }, [modelRetryCount, maxModelRetries]);
   
   // 加载进度
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -2812,329 +3435,151 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
       };
       
       // 使用requestIdleCallback在空闲时加载模型，减少主线程阻塞
-      const loadModel = () => {
-        // 根据模型格式选择合适的加载器
+      const loadModel = async () => {
+        try {
+          // 根据模型格式选择合适的加载器类型
+          let loaderType: 'gltf' | 'fbx' | 'obj' | 'collada';
           switch (modelFormat) {
             case 'gltf':
             case 'glb':
-              // 使用any类型处理动态加载的加载器
-              loader = new (window as any).THREE.GLTFLoader ? new (window as any).THREE.GLTFLoader() : null;
-              if (loader) {
-                loader.load(
-                  config.modelUrl as string,
-                  (gltf: any) => {
-                if (!isMounted) return;
-                
-                const gltfScene = gltf.scene as THREE.Group;
-                loadedModel = gltfScene;
-                
-                // 优化模型
-                optimizeModel(gltfScene);
+              loaderType = 'gltf';
+              break;
+            case 'fbx':
+              loaderType = 'fbx';
+              break;
+            case 'obj':
+              loaderType = 'obj';
+              break;
+            case 'dae':
+              loaderType = 'collada';
+              break;
+            default:
+              console.error('Unsupported model format:', modelFormat);
+              if (isMounted) {
+                setModel(null);
+                setModelLoading(false);
+                setModelError(true);
+                setLoadingProgress(100);
+                toast.error(`不支持的模型格式: ${modelFormat}`);
+              }
+              return;
+          }
+
+          // 使用动态导入的加载器
+          const loadedLoader = await loadModelLoader(loaderType);
+          if (!loadedLoader) {
+            throw new Error(`Failed to load ${loaderType} loader`);
+          }
+
+          loader = loadedLoader;
+
+          // 根据加载器类型加载模型
+          loader.load(
+            config.modelUrl as string,
+            (result: any) => {
+              if (!isMounted) return;
+
+              let modelScene: THREE.Group;
+
+              // 处理不同加载器的返回结果
+              if (modelFormat === 'gltf' || modelFormat === 'glb') {
+                // GLTF/GLB加载器返回包含scene的对象
+                modelScene = result.scene as THREE.Group;
                 
                 // 处理动画（如果有）
-                if (gltf.animations && gltf.animations.length > 0 && config.animations) {
-                  console.log('Model has animations:', gltf.animations.length);
+                if (result.animations && result.animations.length > 0 && config.animations) {
+                  console.log('Model has animations:', result.animations.length);
                 }
-                
-                // 计算模型大小（MB）
-                const modelSizeMB = calculateResourceSize.model(gltfScene);
-                
-                // 添加到缓存
-                if (config.modelUrl) {
-                  const cacheEntry: CachedResource<THREE.Group> = {
-                    resource: gltfScene,
-                    timestamp: Date.now(),
-                    size: modelSizeMB,
-                    usageCount: 1,
-                    lastUsed: Date.now()
-                  };
-                  
-                  resourceCache.models.set(config.modelUrl, cacheEntry);
-                }
-                
-                // 清理超出限制的资源
-                resourceCache.config.cleanupExcess();
-                
-                if (isMounted) {
-                  setModel(gltfScene);
-                  setModelLoading(false);
-                  setModelError(false);
-                  setLoadingProgress(100);
-                  
-                  // 通知父组件加载完成
-                  if (onLoadingComplete) {
-                    onLoadingComplete();
-                  }
-                }
-              },
-              (progress: ProgressEvent) => {
-                if (!isMounted) return;
-                // 更新加载进度
-                if (progress.total > 0) {
-                  const progressPercent = 50 + Math.round((progress.loaded / progress.total) * 50);
-                  setLoadingProgress(progressPercent);
-                  
-                  // 通知父组件进度更新
-                  if (onProgress) {
-                    onProgress(progressPercent);
-                  }
-                }
-              },
-              (error: unknown) => {
-                console.error('Error loading GLTF/GLB model:', error);
-                if (isMounted) {
-                  setModel(null);
-                  setModelLoading(false);
-                  setModelError(true);
-                  setLoadingProgress(100);
-                }
+              } else if (modelFormat === 'dae') {
+                // Collada加载器返回包含scene的对象
+                modelScene = result.scene as THREE.Group;
+              } else {
+                // OBJ和FBX加载器直接返回Group对象
+                modelScene = result as THREE.Group;
               }
-            );
-              }
-            break;
-            
-            case 'fbx':
-              // 使用any类型处理动态加载的加载器
-              loader = new (window as any).THREE.FBXLoader ? new (window as any).THREE.FBXLoader() : null;
-              if (loader) {
-                loader.load(
-                  config.modelUrl as string,
-                  (fbxScene: THREE.Group) => {
-                    if (!isMounted) return;
-                
-                loadedModel = fbxScene;
-                
-                // 优化模型
-                optimizeModel(fbxScene);
-                
-                // 计算模型大小（MB）
-                const modelSizeMB = calculateResourceSize.model(fbxScene);
-                
-                // 添加到缓存
-                if (config.modelUrl) {
-                  const cacheEntry: CachedResource<THREE.Group> = {
-                    resource: fbxScene,
-                    timestamp: Date.now(),
-                    size: modelSizeMB,
-                    usageCount: 1,
-                    lastUsed: Date.now()
-                  };
-                  
-                  resourceCache.models.set(config.modelUrl, cacheEntry);
-                }
-                
-                // 清理超出限制的资源
-                resourceCache.config.cleanupExcess();
-                
-                if (isMounted) {
-                  setModel(fbxScene);
-                  setModelLoading(false);
-                  setModelError(false);
-                  setLoadingProgress(100);
-                  
-                  // 通知父组件加载完成
-                  if (onLoadingComplete) {
-                    onLoadingComplete();
-                  }
-                }
-              },
-              (progress: ProgressEvent) => {
-                if (!isMounted) return;
-                // 更新加载进度
-                if (progress.total > 0) {
-                  const progressPercent = 50 + Math.round((progress.loaded / progress.total) * 50);
-                  setLoadingProgress(progressPercent);
-                  
-                  // 通知父组件进度更新
-                  if (onProgress) {
-                    onProgress(progressPercent);
-                  }
-                }
-              },
-              (error: unknown) => {
-                console.error('Error loading FBX model:', error);
-                if (isMounted) {
-                  setModel(null);
-                  setModelLoading(false);
-                  setModelError(true);
-                  setLoadingProgress(100);
-                }
-              }
-            );
-              }
-            break;
-            
-            case 'obj':
-              // 使用any类型处理动态加载的加载器
-              loader = new (window as any).THREE.OBJLoader ? new (window as any).THREE.OBJLoader() : null;
-              if (loader) {
-                loader.load(
-                  config.modelUrl as string,
-                  (objScene: THREE.Group) => {
-                    if (!isMounted) return;
-                
-                loadedModel = objScene;
-                
-                // 为OBJ模型添加默认材质
-                objScene.traverse((object: any) => {
+
+              loadedModel = modelScene;
+
+              // 为OBJ模型添加默认材质
+              if (modelFormat === 'obj') {
+                modelScene.traverse((object: any) => {
                   if (object.isMesh && !object.material) {
                     object.material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
                   }
                 });
-                
-                // 优化模型
-                optimizeModel(objScene);
-                
-                // 计算模型大小（MB）
-                const modelSizeMB = calculateResourceSize.model(objScene);
-                
-                // 添加到缓存
-                if (config.modelUrl) {
-                  const cacheEntry: CachedResource<THREE.Group> = {
-                    resource: objScene,
-                    timestamp: Date.now(),
-                    size: modelSizeMB,
-                    usageCount: 1,
-                    lastUsed: Date.now()
-                  };
-                  
-                  resourceCache.models.set(config.modelUrl, cacheEntry);
-                }
-                
-                // 清理超出限制的资源
-                resourceCache.config.cleanupExcess();
-                
-                if (isMounted) {
-                  setModel(objScene);
-                  setModelLoading(false);
-                  setModelError(false);
-                  setLoadingProgress(100);
-                  
-                  // 通知父组件加载完成
-                  if (onLoadingComplete) {
-                    onLoadingComplete();
-                  }
-                }
-              },
-              (progress: ProgressEvent) => {
-                if (!isMounted) return;
-                // 更新加载进度
-                if (progress.total > 0) {
-                  const progressPercent = 50 + Math.round((progress.loaded / progress.total) * 50);
-                  setLoadingProgress(progressPercent);
-                  
-                  // 通知父组件进度更新
-                  if (onProgress) {
-                    onProgress(progressPercent);
-                  }
-                }
-              },
-              (error: unknown) => {
-                console.error('Error loading OBJ model:', error);
-                if (isMounted) {
-                  setModel(null);
-                  setModelLoading(false);
-                  setModelError(true);
-                  setLoadingProgress(100);
+              }
+
+              // 优化模型
+              optimizeModel(modelScene);
+
+              // 计算模型大小（MB）
+              const modelSizeMB = calculateResourceSize.model(modelScene);
+
+              // 添加到缓存
+              if (config.modelUrl) {
+                const cacheEntry: CachedResource<THREE.Group> = {
+                  resource: modelScene,
+                  timestamp: Date.now(),
+                  size: modelSizeMB,
+                  usageCount: 1,
+                  lastUsed: Date.now()
+                };
+
+                resourceCache.models.set(config.modelUrl, cacheEntry);
+              }
+
+              // 清理超出限制的资源
+              resourceCache.config.cleanupExcess();
+
+              if (isMounted) {
+                setModel(modelScene);
+                setModelLoading(false);
+                setModelError(false);
+                setLoadingProgress(100);
+
+                // 通知父组件加载完成
+                if (onLoadingComplete) {
+                  onLoadingComplete();
                 }
               }
-            );
-              }
-            break;
-            
-            case 'dae':
-              // 使用any类型处理动态加载的加载器
-              loader = new (window as any).THREE.ColladaLoader ? new (window as any).THREE.ColladaLoader() : null;
-              if (loader) {
-                loader.load(
-                  config.modelUrl as string,
-                  (collada: any) => {
-                    if (!isMounted) return;
-                
-                const colladaScene = collada.scene as THREE.Group;
-                loadedModel = colladaScene;
-                
-                // 优化模型
-                optimizeModel(colladaScene);
-                
-                // 计算模型大小（MB）
-                const modelSizeMB = calculateResourceSize.model(colladaScene);
-                
-                // 添加到缓存
-                if (config.modelUrl) {
-                  const cacheEntry: CachedResource<THREE.Group> = {
-                    resource: colladaScene,
-                    timestamp: Date.now(),
-                    size: modelSizeMB,
-                    usageCount: 1,
-                    lastUsed: Date.now()
-                  };
-                  
-                  resourceCache.models.set(config.modelUrl, cacheEntry);
-                }
-                
-                // 清理超出限制的资源
-                resourceCache.config.cleanupExcess();
-                
-                if (isMounted) {
-                  setModel(colladaScene);
-                  setModelLoading(false);
-                  setModelError(false);
-                  setLoadingProgress(100);
-                  
-                  // 通知父组件加载完成
-                  if (onLoadingComplete) {
-                    onLoadingComplete();
-                  }
-                }
-              },
-              (progress: ProgressEvent) => {
-                if (!isMounted) return;
-                // 更新加载进度
-                if (progress.total > 0) {
-                  const progressPercent = 50 + Math.round((progress.loaded / progress.total) * 50);
-                  setLoadingProgress(progressPercent);
-                  
-                  // 通知父组件进度更新
-                  if (onProgress) {
-                    onProgress(progressPercent);
-                  }
-                }
-              },
-              (error: unknown) => {
-                console.error('Error loading Collada model:', error);
-                if (isMounted) {
-                  setModel(null);
-                  setModelLoading(false);
-                  setModelError(true);
-                  setLoadingProgress(100);
+            },
+            (progress: ProgressEvent) => {
+              if (!isMounted) return;
+              // 更新加载进度
+              if (progress.total > 0) {
+                const progressPercent = 50 + Math.round((progress.loaded / progress.total) * 50);
+                setLoadingProgress(progressPercent);
+
+                // 通知父组件进度更新
+                if (onProgress) {
+                  onProgress(progressPercent);
                 }
               }
-            );
+            },
+            (error: unknown) => {
+              console.error(`Error loading ${modelFormat} model:`, error);
+              if (isMounted) {
+                setModel(null);
+                setModelLoading(false);
+                setModelError(true);
+                setLoadingProgress(100);
               }
-            break;
-            
-            default:
-            console.error('Unsupported model format:', modelFormat);
-            if (isMounted) {
-              setModel(null);
-              setModelLoading(false);
-              setModelError(true);
-              setLoadingProgress(100);
-              toast.error(`不支持的模型格式: ${modelFormat}`);
             }
-            return;
+          );
+        } catch (error) {
+          console.error('Error in model loading process:', error);
+          if (isMounted) {
+            setModel(null);
+            setModelLoading(false);
+            setModelError(true);
+            setLoadingProgress(100);
+          }
         }
       };
       
-      // 使用requestIdleCallback在浏览器空闲时加载模型
-      if ('requestIdleCallback' in window) {
-        idleCallbackId = window.requestIdleCallback(loadModel, { timeout: 3000 });
-      } else {
-        // 不支持requestIdleCallback时使用setTimeout，延迟100ms执行
-        const timeoutId = setTimeout(loadModel, 100);
-        idleCallbackId = timeoutId as any;
-      }
+      // 直接调用异步的loadModel函数，不使用requestIdleCallback
+      // 因为requestIdleCallback不支持异步函数，会导致Promise被忽略
+      loadModel();
     }
     
     return () => {
@@ -3321,65 +3766,56 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
         <>
           <Canvas
             camera={{ 
-              position: devicePerformance.isDesktop ? [10, 10, 10] : [8, 8, 8], // 桌面设备使用更远的视角
-              fov: devicePerformance.isDesktop ? 50 : 60 // 桌面设备使用更小的视野，增强3D效果
+              position: devicePerformance.isDesktop ? [10, 10, 10] : [8, 8, 8],
+              fov: devicePerformance.isDesktop ? 50 : 60
             }}
             gl={{ 
-              // 优化渲染设置，确保3D模型能清晰可见
-              antialias: true, // 始终启用抗锯齿，提升视觉效果
+              antialias: true,
               powerPreference: 'high-performance',
-              preserveDrawingBuffer: true, // 保留绘制缓冲区，确保渲染稳定
-              alpha: true, // 始终启用alpha通道，确保模型能正常显示
-              stencil: true, // 启用stencil，确保模型能正常渲染
-              // 优化WebGL配置，提升性能并减少闪烁
+              preserveDrawingBuffer: true,
+              alpha: true,
+              stencil: true,
               premultipliedAlpha: true,
-              depth: true,
-              // 使用mediump精度，确保模型清晰可见
-              precision: 'mediump',
-              // 确保所有模式下配置一致，避免黑屏
-              ...(isARMode && {
-                alpha: true, // AR模式下启用透明背景
-                antialias: true, // AR模式下启用抗锯齿
-                preserveDrawingBuffer: true, // 确保AR模式下渲染缓冲区稳定
-                depth: true, // 确保深度测试启用
-                stencil: true // 确保模板测试启用
-              })
+              depth: true
             }}
-            shadows={false} // AR模式下完全禁用阴影，减少渲染计算
+            shadows={false}
             performance={{ 
-              min: 0.01, // 降低性能阈值，减少性能监控的影响
-              debounce: 1000, // 增加防抖时间，减少性能波动
-              // 禁用自动帧率调节，减少不必要的计算
+              min: 0.01,
+              debounce: 1000
             }}
-            style={{ flex: 1, width: '100%', height: '100%' }} // 优化图像渲染
-            // 只有在AR模式下才需要sessionInit配置
-            {...(isARMode && {
-              sessionInit: {
-                requiredFeatures: ['hit-test', 'anchors'],
-                optionalFeatures: ['dom-overlay', 'dom-overlay-for-handheld-ar'],
-                domOverlay: { root: document.body }
-              } as any // 添加类型断言，确保配置正确
-            })}
+            style={{ flex: 1, width: '100%', height: '100%' }}
           >
+            {/* 添加XR组件以启用AR功能 */}
+            {isARMode && (
+              <XR 
+                store={xrStore}
+                sessionInit={{
+                  requiredFeatures: ['hit-test', 'anchors'],
+                  optionalFeatures: ['dom-overlay', 'dom-overlay-for-handheld-ar'],
+                  domOverlay: { root: document.body }
+                }} 
+              />
+            )}
+            
             {/* Canvas内部内容 */}
             <CanvasContent
-                  config={config}
-                  scale={scale}
-                  rotation={rotation}
-                  position={position}
-                  isARMode={isARMode}
-                  particleEffect={optimizedParticleEffect}
-                  texture={texture}
-                  textureError={textureError}
-                  model={model}
-                  modelLoading={modelLoading}
-                  modelError={modelError}
-                  cameraView={cameraView}
-                  isPlaced={isPlaced}
-                  onPositionChange={onPositionChange}
-                  renderSettings={dynamicRenderSettings}
-                  devicePerformance={devicePerformance}
-                />
+              config={config}
+              scale={scale}
+              rotation={rotation}
+              position={position}
+              isARMode={isARMode}
+              particleEffect={optimizedParticleEffect}
+              texture={texture}
+              textureError={textureError}
+              model={model}
+              modelLoading={modelLoading}
+              modelError={modelError}
+              cameraView={cameraView}
+              isPlaced={isPlaced}
+              onPositionChange={onPositionChange}
+              renderSettings={dynamicRenderSettings}
+              devicePerformance={devicePerformance}
+            />
           </Canvas>
           
           {/* AR模式引导界面 */}
@@ -3687,11 +4123,12 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
             </ul>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                onClick={retryLoadModel}
+                disabled={modelRetryCount >= maxModelRetries}
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${modelRetryCount >= maxModelRetries ? 'bg-gray-500 cursor-not-allowed opacity-70' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
               >
                 <i className="fas fa-redo"></i>
-                重新加载
+                {modelRetryCount >= maxModelRetries ? `已尝试${maxModelRetries}次` : '重新加载模型'}
               </button>
               <button
                 onClick={() => window.location.reload()}
@@ -3701,12 +4138,27 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
                 刷新页面
               </button>
             </div>
+            {/* 重试状态信息 */}
+            {isModelRetrying && (
+              <div className="mt-4 text-xs text-gray-400 flex items-center gap-1 animate-pulse">
+                <span>正在重试加载...</span>
+                <i className="fas fa-spinner fa-spin"></i>
+              </div>
+            )}
+            {modelRetryCount > 0 && (
+              <div className="mt-4 text-xs text-gray-400 flex items-center gap-1">
+                <span>已尝试 {modelRetryCount}/{maxModelRetries} 次</span>
+                <i className="fas fa-info-circle" title="采用智能重试策略，每次重试延迟递增"></i>
+              </div>
+            )}
             {/* 错误日志记录 - 开发模式下可见 */}
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.MODE === 'development' && (
               <div className="mt-4 text-xs text-gray-400 bg-gray-800/50 p-3 rounded-lg">
                 <p className="font-semibold mb-1">错误详情：</p>
                 <p>模型URL: {config.modelUrl}</p>
                 <p>错误类型: 3D资源加载失败</p>
+                <p>重试次数: {modelRetryCount}</p>
+                {modelErrorMessage && <p>错误信息: {modelErrorMessage}</p>}
               </div>
             )}
           </div>
@@ -3717,7 +4169,7 @@ const renderThreeDPreviewContent = ({ config, scale, rotation, position, isARMod
 }
 
 // 3D预览内容组件 - 使用React.memo优化性能
-const ThreeDPreviewContent: React.FC<ARPreviewSceneProps> = React.memo ? React.memo(renderThreeDPreviewContent) : renderThreeDPreviewContent;
+const ThreeDPreviewContent: React.FC<ARPreviewSceneProps> = renderThreeDPreviewContent;
 
 // 添加自定义比较函数，优化React.memo的比较逻辑
 ThreeDPreviewContent.displayName = 'ThreeDPreviewContent';
@@ -3796,6 +4248,10 @@ const ARPreviewErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ child
         type = 'WebGL错误';
       } else if (message.includes('resource') || message.includes('Resource') || message.includes('加载')) {
         type = '资源加载错误';
+      } else if (message.includes('process') || message.includes('Process')) {
+        type = '环境变量错误';
+      } else if (message.includes('React') || message.includes('react')) {
+        type = '组件错误';
       } else {
         type = '运行时错误';
       }
@@ -4009,7 +4465,7 @@ const usePerformanceMonitoring = ({
   // 后台监控性能指标，但不渲染UI
   useEffect(() => {
     // 可以添加性能日志记录，仅在开发模式下输出
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.MODE === 'development') {
       console.log('AR Preview Performance:', {
         fps,
         particleCount,
