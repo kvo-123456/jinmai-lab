@@ -210,16 +210,6 @@ CORS_ALLOW_ORIGIN="*" # 允许的来源
 5. 查看数据分析报告
 6. 发布平台公告和活动
 
-## 🔑 模拟账号
-
-### 普通用户
-- 邮箱：user@example.com
-- 密码：User123
-
-### 管理员
-- 邮箱：admin@example.com
-- 密码：Admin123
-
 ## 📁 项目结构
 
 ```
