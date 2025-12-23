@@ -1,14 +1,20 @@
 {
   "version": 2,
   "installCommand": "pnpm install",
-  "builds": [
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "staticAssets": {
+    "route": "/",
+    "dir": "dist"
+  },
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist",
-        "buildCommand": "pnpm build"
-      }
+      "source": "/(.*)",
+      "destination": "/$1"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
     }
   ],
   "headers": [
