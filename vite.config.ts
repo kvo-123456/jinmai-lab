@@ -149,6 +149,20 @@ export default defineConfig({
     charset: 'utf8',
     minifySyntax: true
   },
+  // 确保构建输出正确，便于Vercel处理
+  build: {
+    // 优化构建输出
+    outDir: 'dist',
+    // 确保资源文件命名稳定
+    rollupOptions: {
+      output: {
+        // 资源文件命名规则，便于缓存
+        assetFileNames: 'assets/[name]-[hash:8][extname]',
+        chunkFileNames: 'chunks/[name]-[hash:8].js',
+        entryFileNames: 'entries/[name]-[hash:8].js'
+      }
+    }
+  },
   resolve: {
     // 为数据库相关的 Node.js 原生模块创建别名，避免在浏览器环境中打包
     alias: {
