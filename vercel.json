@@ -3,18 +3,10 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "staticAssets": {
-    "route": "/",
-    "dir": "dist"
-  },
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/$1"
-    },
-    {
-      "source": "/",
-      "destination": "/index.html"
     }
   ],
   "headers": [
