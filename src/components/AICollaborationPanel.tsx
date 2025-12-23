@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '@/hooks/useTheme'
-import llmService, { Message, ConversationSession } from '@/services/llmService'
+import { llmService, Message, ConversationSession } from '@/services/llmService'
 import { toast } from 'sonner'
 import SpeechInput from './SpeechInput'
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { useNavigate, useLocation } from 'react-router-dom';
-import llmService, { Message } from '@/services/llmService';
+import { llmService, Message } from '@/services/llmService';
 
 interface FloatingAIAssistantProps {
   // 可以添加一些自定义配置属性

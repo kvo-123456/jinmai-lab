@@ -4,7 +4,7 @@ import { useTheme } from '@/hooks/useTheme';
 
 import { isPrefetched } from '@/services/prefetch';
 import { toast } from 'sonner';
-import { TianjinImage, TianjinButton } from './TianjinStyleComponents';
+import { TianjinImage, TianjinButton, YangliuqingCard } from './TianjinStyleComponents';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/contexts/authContext';
 import { BRANDS } from '@/lib/brands';
@@ -967,20 +967,20 @@ export default memo(function TianjinCreativeActivities() {
                 />
                 <div className="absolute top-3 left-3">
                   <span className={`text-xs px-2 py-1 rounded-full ${
-                    activity.status === 'active' 
+                    activity.status === 'ongoing' 
                       ? 'bg-green-600 text-white' 
                       : activity.status === 'upcoming'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-600 text-white'
                   }`}>
-                    {activity.status === 'active' ? '进行中' : 
+                    {activity.status === 'ongoing' ? '进行中' : 
                      activity.status === 'upcoming' ? '即将开始' : '已结束'}
                   </span>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
                   <div className="flex items-center">
                     <i className="fas fa-user-friends text-white mr-1"></i>
-                    <span className="text-white text-xs">{activity.participants + (joinedActivities.includes(activity.id) ? 1 : 0)}人参与</span>
+                    <span className="text-white text-xs">{activity.participantCount + (joinedActivities.includes(activity.id) ? 1 : 0)}人参与</span>
                   </div>
                 </div>
               </div>
@@ -1005,25 +1005,23 @@ export default memo(function TianjinCreativeActivities() {
                     </span>
                   </div>
                 </div>
-                <button
+                <TianjinButton
                   onClick={() => handleParticipate(activity)}
-                  className={`w-full py-2 rounded-lg transition-colors ${
-                    activity.status !== 'active'
-                      ? (isDark ? 'bg-gray-600 cursor-not-allowed' : 'bg-gray-300 cursor-not-allowed')
-                      : joinedActivities.includes(activity.id)
-                        ? 'bg-green-600 text-white cursor-default'
-                        : 'bg-red-600 hover:bg-red-700 text-white'
-                  }`}
-                  disabled={activity.status !== 'active' || joinedActivities.includes(activity.id)}
+                  variant="primary"
+                  fullWidth
+                  disabled={activity.status !== 'ongoing' || joinedActivities.includes(activity.id)}
+                  loading={false}
                 >
-                  {activity.status !== 'active' ? '活动已结束' : joinedActivities.includes(activity.id) ? '已参与' : '立即参与'}
-                </button>
-                <button 
-                  className={`mt-2 w-full py-2 rounded-lg transition-colors ${isDark ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}
+                  {activity.status !== 'ongoing' ? '活动已结束' : joinedActivities.includes(activity.id) ? '已参与' : '立即参与'}
+                </TianjinButton>
+                <TianjinButton 
                   onClick={() => openActivityDetail(activity)}
+                  variant="secondary"
+                  fullWidth
+                  className="mt-2"
                 >
                   查看详情
-                </button>
+                </TianjinButton>
               </div>
             </motion.div>
           ))}
@@ -1263,13 +1261,13 @@ export default memo(function TianjinCreativeActivities() {
                     {activity.startDate}
                   </p>
                   <span className={`inline-block mt-1 px-1.5 py-0.5 rounded-full text-xs ${
-                    activity.status === 'active' 
+                    activity.status === 'ongoing' 
                       ? 'bg-green-600 text-white' 
                       : activity.status === 'upcoming'
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-600 text-white'
                   }`}>
-                    {activity.status === 'active' ? '进行中' : 
+                    {activity.status === 'ongoing' ? '进行中' : 
                      activity.status === 'upcoming' ? '即将开始' : '已结束'}
                   </span>
                 </div>
@@ -1342,8 +1340,10 @@ export default memo(function TianjinCreativeActivities() {
                 <div>
                   <TianjinImage src={selectedActivity.image} alt={selectedActivity.title} className="w-full" ratio="landscape" rounded="xl" />
                   <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    <span className={`px-2 py-1 rounded ${selectedActivity.status === 'active' ? 'bg-green-600 text-white' : selectedActivity.status === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'}`}>{selectedActivity.status === 'active' ? '进行中' : selectedActivity.status === 'upcoming' ? '即将开始' : '已结束'}</span>
-                    <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>参与 {selectedActivity.participants}</span>
+                    <span className={`px-2 py-1 rounded ${
+                      selectedActivity.status === 'ongoing' ? 'bg-green-600 text-white' : selectedActivity.status === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'}`}>
+                      {selectedActivity.status === 'ongoing' ? '进行中' : selectedActivity.status === 'upcoming' ? '即将开始' : '已结束'}</span>
+                    <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>参与 {selectedActivity.participantCount}</span>
                     <span className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} px-2 py-1 rounded`}>{selectedActivity.startDate} - {selectedActivity.endDate}</span>
                   </div>
                 </div>
@@ -1387,14 +1387,14 @@ export default memo(function TianjinCreativeActivities() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => selectedActivity && handleParticipate(selectedActivity)}
-                      className={`flex-1 py-2 rounded-lg ${selectedActivity.status !== 'active'
+                      className={`flex-1 py-2 rounded-lg ${selectedActivity.status !== 'ongoing'
                         ? (isDark ? 'bg-gray-600 text-white cursor-not-allowed' : 'bg-gray-300 text-gray-700 cursor-not-allowed')
                         : joinedActivities.includes(selectedActivity.id)
                           ? 'bg-green-600 text-white cursor-default'
                           : 'bg-red-600 hover:bg-red-700 text-white'}`}
-                      disabled={selectedActivity.status !== 'active' || joinedActivities.includes(selectedActivity.id)}
+                      disabled={selectedActivity.status !== 'ongoing' || joinedActivities.includes(selectedActivity.id)}
                     >
-                      {selectedActivity.status !== 'active' ? '活动已结束' : joinedActivities.includes(selectedActivity.id) ? '已参与' : '立即参与'}
+                      {selectedActivity.status !== 'ongoing' ? '活动已结束' : joinedActivities.includes(selectedActivity.id) ? '已参与' : '立即参与'}
                     </button>
                     <button 
                       className={`flex-1 py-2 rounded-lg ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}

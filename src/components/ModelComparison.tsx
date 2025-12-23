@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
-import llmService, { AVAILABLE_MODELS, LLMModel } from '../services/llmService';
+import { llmService, AVAILABLE_MODELS, LLMModel } from '../services/llmService';
 
 interface ModelPerformance {
   requestCount: number;

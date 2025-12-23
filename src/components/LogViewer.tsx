@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/useTheme';
 import { logger } from '../utils/logViewer';
@@ -20,7 +20,21 @@ const LogViewer: React.FC<LogViewerProps> = ({
   const [filter, setFilter] = useState<'all' | 'info' | 'warn' | 'error' | 'debug'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [stats, setStats] = useState(logger.getStats());
+  // 简化stats状态，只存储我们需要的字段
+  const [stats, setStats] = useState({
+    total: 0,
+    byLevel: {
+      info: 0,
+      warn: 0,
+      error: 0,
+      debug: 0
+    }
+  });
+
+  // 组件挂载时初始化日志数据
+  useEffect(() => {
+    refreshLogs();
+  }, []);
 
   // 定期刷新日志
   useEffect(() => {
@@ -31,10 +45,10 @@ const LogViewer: React.FC<LogViewerProps> = ({
 
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval, refreshLogs]);
 
   // 刷新日志
-  const refreshLogs = () => {
+  const refreshLogs = useCallback(() => {
     setRefreshing(true);
     // 模拟延迟
     setTimeout(() => {
@@ -55,10 +69,38 @@ const LogViewer: React.FC<LogViewerProps> = ({
       }
       
       setLogs(updatedLogs);
-      setStats(logger.getStats());
+      
+      // 计算当前筛选和搜索后的日志统计
+      const allLogs = logger.getLogs();
+      let filteredLogs = allLogs;
+      
+      if (filter !== 'all') {
+        filteredLogs = filteredLogs.filter(log => log.level === filter);
+      }
+      
+      if (searchQuery) {
+        filteredLogs = filteredLogs.filter(log => 
+          log.message.includes(searchQuery) ||
+          (log.data && JSON.stringify(log.data).includes(searchQuery)) ||
+          (log.context && JSON.stringify(log.context).includes(searchQuery))
+        );
+      }
+      
+      // 计算统计信息
+      const currentStats = {
+        total: filteredLogs.length,
+        byLevel: {
+          info: filteredLogs.filter(log => log.level === 'info').length,
+          warn: filteredLogs.filter(log => log.level === 'warn').length,
+          error: filteredLogs.filter(log => log.level === 'error').length,
+          debug: filteredLogs.filter(log => log.level === 'debug').length
+        }
+      };
+      
+      setStats(currentStats);
       setRefreshing(false);
     }, 100);
-  };
+  }, [filter, searchQuery, maxVisibleLogs]);
 
   // 清除所有日志
   const clearAllLogs = () => {
@@ -149,16 +191,11 @@ const LogViewer: React.FC<LogViewerProps> = ({
       </div>
 
       {/* 日志查看器内容 */}
-      <AnimatePresence>
+      <div className="w-[400px] max-w-[95vw]">
         {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="w-[400px] max-w-[95vw]"
-          >
+          <>
             {/* 筛选和搜索 */}
-            <div className={`p-3 border-y ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className="p-3 border-y" style={{ borderColor: isDark ? '#374151' : '#e5e7eb' }}>
               <div className="flex flex-col gap-2">
                 {/* 搜索框 */}
                 <div className="relative">
@@ -256,9 +293,9 @@ const LogViewer: React.FC<LogViewerProps> = ({
                 </ul>
               )}
             </div>
-          </motion.div>
+          </>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 };

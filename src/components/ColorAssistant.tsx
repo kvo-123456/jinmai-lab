@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import llmService from '../services/llmService';
+import { llmService } from '../services/llmService';
 import { motion } from 'framer-motion';
 
 const ColorAssistant: React.FC = () => {

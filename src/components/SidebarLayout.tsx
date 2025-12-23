@@ -281,6 +281,7 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
     if (p.startsWith('/tools')) return '创作中心'
     if (p.startsWith('/about')) return '关于我们'
     if (p.startsWith('/knowledge')) return '文化知识库'
+    if (p.startsWith('/tianjin/map')) return '天津地图'
     if (p.startsWith('/tianjin')) return '天津特色专区'
     if (p.startsWith('/square')) return '共创广场'
     if (p.startsWith('/community')) {
@@ -416,7 +417,7 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
             <i className="fas fa-book mr-2"></i>
             {(!collapsed || hovered) && '文化知识库'}
           </NavLink>
-          <NavLink to="/tianjin" title={collapsed ? '天津特色专区' : undefined} onMouseEnter={() => debouncedPrefetch('/tianjin')} className={({ isActive }) => `${navItemClass} ${isActive ? activeClass : ''}`}> 
+          <NavLink to="/tianjin" end title={collapsed ? '天津特色专区' : undefined} onMouseEnter={() => debouncedPrefetch('/tianjin')} className={({ isActive }) => `${navItemClass} ${isActive ? activeClass : ''}`}> 
             <i className="fas fa-landmark mr-2"></i>
             {(!collapsed || hovered) && '天津特色专区'}
           </NavLink>

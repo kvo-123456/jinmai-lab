@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
-import llmService from '../services/llmService';
+import { llmService } from '../services/llmService';
 
 interface LLMCommandPanelProps {
   onCommandExecuted?: (response: string) => void;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
-import llmService from '../services/llmService';
+import { llmService } from '../services/llmService';
 
 interface CulturalKnowledge {
   id: string;

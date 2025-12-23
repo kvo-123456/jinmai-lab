@@ -2,7 +2,7 @@
 // 核心API测试文件
 
 import { describe, it, expect, beforeEach, afterAll } from '@jest/globals';
-import llmService, { AVAILABLE_MODELS } from '../services/llmService';
+import { llmService, AVAILABLE_MODELS } from '../services/llmService';
 import apiClient from '../lib/apiClient';
 import errorService from '../services/errorService';
 

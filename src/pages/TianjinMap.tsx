@@ -1,206 +1,54 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import GradientHero from '@/components/GradientHero';
+import { preloadImage, cleanupCache } from '@/utils/imageLoader';
+import poiData from '@/data/poiData.json';
 
-// 天津老字号数据
-const oldBrands = [
-  {
-    id: 1,
-    name: "狗不理包子",
-    category: "food",
-    description: "创建于1858年，天津传统美食代表，以皮薄馅大、十八褶著称。",
-    address: "劝业场西街",
-    position: { x: 50, y: 50 },
-    year: 1858,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Goubuli%20steamed%20buns%20local%20food"
-  },
-  {
-    id: 2,
-    name: "老边饺子",
-    category: "food",
-    description: "百年传承，皮薄馅大，汤汁浓郁，是天津著名的饺子品牌。",
-    address: "劝业场东街",
-    position: { x: 30, y: 60 },
-    year: 1829,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Laobian%20dumplings%20local%20food"
-  },
-  {
-    id: 3,
-    name: "桂发祥",
-    category: "food",
-    description: "十八街麻花，酥脆香甜，是天津传统小吃的代表之一。",
-    address: "劝业场南街",
-    position: { x: 60, y: 40 },
-    year: 1927,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Guifaxiang%20fried%20dough%20twists%20local%20food"
-  },
-  {
-    id: 4,
-    name: "劝业场",
-    category: "retail",
-    description: "天津商业地标，创建于1928年，是华北地区最大的综合性商场。",
-    address: "和平路与滨江道交口",
-    position: { x: 50, y: 50 },
-    year: 1928,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Quanye%20Department%20Store%20historical%20building"
-  },
-  {
-    id: 5,
-    name: "耳朵眼炸糕",
-    category: "food",
-    description: "创建于1900年，外酥里嫩，香甜可口，是天津三绝之一。",
-    address: "大胡同",
-    position: { x: 40, y: 70 },
-    year: 1900,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Erduoyan%20fried%20cake%20local%20food"
-  },
-  {
-    id: 6,
-    name: "泥人张",
-    category: "craft",
-    description: "创建于1850年，以彩塑艺术闻名，是天津民间艺术的代表。",
-    address: "古文化街",
-    position: { x: 20, y: 50 },
-    year: 1850,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Nirenzhang%20traditional%20clay%20sculpture%20art"
-  },
-  {
-    id: 7,
-    name: "杨柳青年画",
-    category: "craft",
-    description: "始于明代崇祯年间，与苏州桃花坞年画并称'南桃北柳'。",
-    address: "杨柳青镇",
-    position: { x: 30, y: 20 },
-    year: 1644,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Yangliuqing%20New%20Year%20Painting%20traditional%20Chinese%20folk%20art"
-  },
-  {
-    id: 8,
-    name: "风筝魏",
-    category: "craft",
-    description: "天津特色风筝制作技艺，创始于清代光绪年间，以其精巧的工艺和精美的画工著称。",
-    address: "古文化街",
-    position: { x: 25, y: 55 },
-    year: 1892,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Weifeng%20traditional%20kite%20making%20art"
-  },
-  {
-    id: 9,
-    name: "天津刻砖刘",
-    category: "craft",
-    description: "天津传统砖雕技艺，创始于清代光绪年间，以其精湛的雕刻技艺和独特的艺术风格著称。",
-    address: "西青区",
-    position: { x: 35, y: 25 },
-    year: 1876,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Kezuanliu%20traditional%20brick%20carving%20art"
-  }
-];
+// 定义POI类型
+interface POI {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  address: string;
+  position: { x: number; y: number; lat?: number; lng?: number };
+  year: number;
+  image: string;
+  openingHours?: string;
+  phone?: string;
+  importance?: number;
+}
 
-// 天津文化资产数据
-const culturalAssets = [
-  {
-    id: 101,
-    name: "五大道建筑",
-    category: "landmark",
-    description: "天津著名历史文化街区，保留了大量欧洲风格建筑，被誉为'万国建筑博览馆'。",
-    address: "和平区",
-    position: { x: 55, y: 45 },
-    year: 1900,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Five%20Avenues%20historical%20buildings"
-  },
-  {
-    id: 102,
-    name: "海河桥梁",
-    category: "landmark",
-    description: "海河上的桥梁是天津城市景观的重要组成部分，每座桥都有其独特的设计和历史。",
-    address: "海河流域",
-    position: { x: 50, y: 60 },
-    year: 1404,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Haihe%20River%20bridges%20scenery"
-  },
-  {
-    id: 103,
-    name: "天津解放桥",
-    category: "landmark",
-    description: "天津标志性桥梁，原名万国桥，建于1927年，是天津历史的重要见证。",
-    address: "和平区",
-    position: { x: 55, y: 55 },
-    year: 1927,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Jiefang%20Bridge%20historical%20bridge"
-  },
-  {
-    id: 104,
-    name: "天津古文化街",
-    category: "landmark",
-    description: "天津著名文化旅游景点，以传统民俗文化为特色，展现天津文化魅力。",
-    address: "南开区",
-    position: { x: 20, y: 50 },
-    year: 1985,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Ancient%20Culture%20Street%20tourist%20spot"
-  },
-  {
-    id: 105,
-    name: "天津之眼摩天轮",
-    category: "landmark",
-    description: "天津标志性建筑，世界上唯一建在桥上的摩天轮，是天津的'城市名片'。",
-    address: "红桥区",
-    position: { x: 40, y: 65 },
-    year: 2008,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Eye%20Ferris%20Wheel%20landmark"
-  },
-  {
-    id: 106,
-    name: "天津意式风情区",
-    category: "landmark",
-    description: "天津著名历史文化街区，保留了大量意大利风格建筑。",
-    address: "河北区",
-    position: { x: 60, y: 50 },
-    year: 1902,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Italian%20Style%20Street%20historical%20buildings"
-  },
-  {
-    id: 107,
-    name: "天津博物馆",
-    category: "landmark",
-    description: "天津最大的综合性博物馆，展示天津历史文化的重要窗口。",
-    address: "河西区",
-    position: { x: 45, y: 35 },
-    year: 1918,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Museum%20modern%20architecture"
-  },
-  {
-    id: 108,
-    name: "天津鼓楼",
-    category: "landmark",
-    description: "天津历史文化名城的重要标志，展现天津历史文化的重要窗口。",
-    address: "南开区",
-    position: { x: 30, y: 55 },
-    year: 1404,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Drum%20Tower%20historical%20building"
-  },
-  {
-    id: 109,
-    name: "天津天塔",
-    category: "landmark",
-    description: "天津广播电视塔，是天津标志性建筑之一。",
-    address: "河西区",
-    position: { x: 45, y: 30 },
-    year: 1991,
-    image: "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=square&prompt=Tianjin%20Tower%20landmark%20building"
-  }
-];
+interface Category {
+  name: string;
+  icon: string;
+  color: string;
+}
 
-// 合并所有数据
-const mapData = [...oldBrands, ...culturalAssets];
+interface POIData {
+  version: string;
+  lastUpdated: string;
+  categories: Record<string, Category>;
+  poi: POI[];
+}
+
+// 获取所有POI数据
+const mapData = poiData.poi;
+
+// 获取分类数据
+const categories = poiData.categories;
 
 export default function TianjinMap() {
   const { isDark, theme } = useTheme();
   const [zoom, setZoom] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedBrand, setSelectedBrand] = useState<any>(null);
+  const [selectedBrand, setSelectedBrand] = useState<POI | null>(null);
   const [showInfo, setShowInfo] = useState(false);
   const [imageLoaded, setImageLoaded] = useState<{[key: number]: boolean}>({});
+  const [mapImageLoaded, setMapImageLoaded] = useState(false);
+  const [mapImageUrl, setMapImageUrl] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
   
   // 搜索状态
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,6 +57,82 @@ export default function TianjinMap() {
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  
+  // 地图容器引用
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  
+  // 地图背景图片URL
+  const mapBackgroundUrl = "https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Tianjin%20historical%20map%20with%20traditional%20Chinese%20style%20detailed%20city%20layout%20accurate%20districts";
+  
+  // 预加载地图背景图片
+  useEffect(() => {
+    const loadMapImage = async () => {
+      try {
+        setIsLoading(true);
+        const cachedImageUrl = await preloadImage(mapBackgroundUrl);
+        setMapImageUrl(cachedImageUrl);
+        setMapImageLoaded(true);
+      } catch (error) {
+        console.error('Failed to load map image:', error);
+        // 使用默认地图图片
+        setMapImageUrl(mapBackgroundUrl);
+        setMapImageLoaded(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadMapImage();
+  }, []);
+  
+  // 预加载POI图片
+  useEffect(() => {
+    const preloadPOIImages = async () => {
+      const imagePromises = mapData.map(poi => {
+        return preloadImage(poi.image)
+          .then(() => {
+            setImageLoaded(prev => ({ ...prev, [poi.id]: true }));
+          })
+          .catch(error => {
+            console.error(`Failed to preload image for ${poi.name}:`, error);
+            setImageLoaded(prev => ({ ...prev, [poi.id]: true }));
+          });
+      });
+      
+      await Promise.all(imagePromises);
+    };
+    
+    preloadPOIImages();
+  }, []);
+  
+  // 检查标记点是否在视口中
+  const isMarkerInViewport = useCallback((marker: POI) => {
+    if (!mapContainerRef.current) return true;
+    
+    const container = mapContainerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    
+    // 计算标记点在屏幕上的位置
+    const markerX = (marker.position.x / 100) * containerRect.width * zoom + offset.x;
+    const markerY = (marker.position.y / 100) * containerRect.height * zoom + offset.y;
+    
+    // 检查标记点是否在视口内（添加一些缓冲区域）
+    const buffer = 100;
+    return (
+      markerX > -buffer &&
+      markerX < containerRect.width + buffer &&
+      markerY > -buffer &&
+      markerY < containerRect.height + buffer
+    );
+  }, [zoom, offset]);
+  
+  // 计算标记点大小（根据重要性和缩放级别）
+  const getMarkerSize = useCallback((importance: number = 3) => {
+    const baseSize = 8;
+    const scaleByImportance = importance / 3;
+    const scaleByZoom = Math.min(zoom, 2);
+    return baseSize * scaleByImportance * scaleByZoom;
+  }, [zoom]);
 
   // 处理鼠标按下事件
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -260,33 +184,27 @@ export default function TianjinMap() {
                          brand.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+  
+  // 根据视口可见性过滤标记点
+  const visibleMarkers = filteredBrands.filter(isMarkerInViewport);
 
-  // 分类颜色映射
-  const categoryColors = {
-    food: 'bg-yellow-500',
-    retail: 'bg-blue-500',
-    craft: 'bg-purple-500',
-    landmark: 'bg-green-500'
+  // 获取分类颜色
+  const getCategoryColor = (category: string) => {
+    return categories[category]?.color || 'bg-gray-500';
   };
 
-  // 分类图标映射
-  const categoryIcons = {
-    food: '🍜',
-    retail: '🏪',
-    craft: '🎨',
-    landmark: '🏛️'
+  // 获取分类图标
+  const getCategoryIcon = (category: string) => {
+    return categories[category]?.icon || '📍';
   };
 
-  // 分类名称映射
-  const categoryNames = {
-    food: '餐饮美食',
-    retail: '零售百货',
-    craft: '手工艺',
-    landmark: '地标建筑'
+  // 获取分类名称
+  const getCategoryName = (category: string) => {
+    return categories[category]?.name || '其他';
   };
 
   // 处理标记点击
-  const handleMarkerClick = (brand: any) => {
+  const handleMarkerClick = (brand: POI) => {
     setSelectedBrand(brand);
     setShowInfo(true);
   };
@@ -321,13 +239,13 @@ export default function TianjinMap() {
               >
                 全部
               </button>
-              {Object.entries(categoryNames).map(([key, name]) => (
+              {Object.entries(categories).map(([key, category]) => (
                 <button 
                   key={key}
                   className={`px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 ${selectedCategory === key ? (isDark ? 'bg-red-600 text-white' : 'bg-red-500 text-white') : (isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')}`}
                   onClick={() => setSelectedCategory(key)}
                 >
-                  {categoryIcons[key as keyof typeof categoryIcons]} {name}
+                  {category.icon} {category.name}
                 </button>
               ))}
             </div>
@@ -377,6 +295,7 @@ export default function TianjinMap() {
 
         {/* 地图展示区 */}
         <div 
+          ref={mapContainerRef}
           className={`relative w-full h-[600px] rounded-2xl shadow-lg overflow-hidden ${isDark ? 'bg-gray-800/80 backdrop-blur-sm border border-gray-700' : 'bg-white/80 backdrop-blur-sm border border-gray-200'} ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -384,13 +303,23 @@ export default function TianjinMap() {
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
         >
+          {/* 地图加载状态 */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-50 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-16 h-16 border-4 border-t-red-500 border-white rounded-full animate-spin"></div>
+                <p className="text-white text-lg font-medium">加载地图中...</p>
+              </div>
+            </div>
+          )}
+          
           {/* 地图背景 */}
           <div className="absolute inset-0 bg-cover bg-center opacity-20 relative">
-            {/* 使用img标签替代背景图，以便添加错误处理 */}
+            {/* 使用预加载的图片 */}
             <img
-              src="https://trae-api-sg.mchost.guru/api/ide/v1/text_to_image?image_size=landscape_4_3&prompt=Tianjin%20historical%20map%20with%20traditional%20Chinese%20style%20detailed%20city%20layout%20accurate%20districts"
+              src={mapImageUrl}
               alt="天津历史地图"
-              className="absolute inset-0 w-full h-full object-cover opacity-100"
+              className={`absolute inset-0 w-full h-full object-cover opacity-100 transition-opacity duration-500 ${mapImageLoaded ? 'opacity-100' : 'opacity-0'}`}
               style={{ 
                 transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
                 transformOrigin: 'center center',
@@ -400,63 +329,73 @@ export default function TianjinMap() {
                 const target = e.target as HTMLImageElement;
                 // 使用内置SVG作为地图背景占位
                 target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'%3E%3Crect width='1200' height='800' fill='%23${isDark ? '1f2937' : 'f3f4f6'}'/%3E%3Ctext x='600' y='400' font-family='Arial' font-size='48' fill='%23${isDark ? '9ca3af' : '6b7280'}' text-anchor='middle' dy='0.3em'%3ETianjin Historical Map%3C/text%3E%3C/svg%3E`;
+                setMapImageLoaded(true);
+                setIsLoading(false);
+              }}
+              onLoad={() => {
+                setMapImageLoaded(true);
+                setIsLoading(false);
               }}
             />
           </div>
 
           {/* 标记点 */}
-          {filteredBrands.map(brand => (
-            <motion.div
-              key={brand.id}
-              className="absolute cursor-pointer"
-              style={{ 
-                left: `${brand.position.x}%`, 
-                top: `${brand.position.y}%`,
-                transform: `translate(${offset.x}px, ${offset.y}px) translate(-50%, -50%) scale(${zoom})`,
-                transition: isDragging ? 'none' : 'transform 0.3s ease-out'
-              }}
-              onClick={() => handleMarkerClick(brand)}
-              initial={{ opacity: 0, scale: 0, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ 
-                duration: 0.6, 
-                ease: "easeOut",
-                delay: Math.random() * 0.3 // 随机延迟，使动画更自然
-              }}
-              whileHover={{ scale: 1.3 }}
-            >
-              <div className="relative">
-                {/* 脉冲动画背景 */}
-                <motion.div
-                  className={`absolute inset-0 rounded-full ${categoryColors[brand.category as keyof typeof categoryColors]} opacity-30`}
-                  animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.3, 0, 0.3]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-                
-                {/* 主标记点 */}
-                <div className={`w-8 h-8 rounded-full ${categoryColors[brand.category as keyof typeof categoryColors]} border-2 border-white shadow-lg flex items-center justify-center text-white font-bold text-sm`}>
-                  {categoryIcons[brand.category as keyof typeof categoryIcons]}
+          {visibleMarkers.map(brand => {
+            const markerSize = getMarkerSize(brand.importance);
+            return (
+              <motion.div
+                key={brand.id}
+                className="absolute cursor-pointer"
+                style={{ 
+                  left: `${brand.position.x}%`, 
+                  top: `${brand.position.y}%`,
+                  transform: `translate(${offset.x}px, ${offset.y}px) translate(-50%, -50%) scale(${zoom})`,
+                  transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+                }}
+                onClick={() => handleMarkerClick(brand)}
+                initial={{ opacity: 0, scale: 0, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.6, 
+                  ease: "easeOut",
+                  delay: Math.random() * 0.3 // 随机延迟，使动画更自然
+                }}
+                whileHover={{ scale: 1.3 }}
+              >
+                <div className="relative">
+                  {/* 脉冲动画背景 */}
+                  <motion.div
+                    className={`absolute inset-0 rounded-full ${getCategoryColor(brand.category)} opacity-30`}
+                    animate={{
+                      scale: [1, 1.5, 1],
+                      opacity: [0.3, 0, 0.3]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  
+                  {/* 主标记点 */}
+                  <div className={`rounded-full ${getCategoryColor(brand.category)} border-2 border-white shadow-lg flex items-center justify-center text-white font-bold`}
+                       style={{ width: `${markerSize}px`, height: `${markerSize}px`, fontSize: `${markerSize / 2}px` }}>
+                    {getCategoryIcon(brand.category)}
+                  </div>
+                  
+                  {/* 品牌名称提示 */}
+                  <motion.div 
+                    className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none"
+                    initial={{ opacity: 0, y: 5 }}
+                    whileHover={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {brand.name}
+                  </motion.div>
                 </div>
-                
-                {/* 品牌名称提示 */}
-                <motion.div 
-                  className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none"
-                  initial={{ opacity: 0, y: 5 }}
-                  whileHover={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {brand.name}
-                </motion.div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
 
           {/* 信息面板 */}
           {showInfo && selectedBrand && (
@@ -506,13 +445,28 @@ export default function TianjinMap() {
                 {/* 分类和地址 */}
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'}`}>
-                    {categoryIcons[selectedBrand.category as keyof typeof categoryIcons]} {categoryNames[selectedBrand.category as keyof typeof categoryNames]}
+                    {getCategoryIcon(selectedBrand.category)} {getCategoryName(selectedBrand.category)}
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
                     <i className="fas fa-map-marker-alt text-xs"></i>
                     {selectedBrand.address}
                   </span>
                 </div>
+                
+                {/* 开放时间和联系电话 */}
+                {selectedBrand.openingHours && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <i className="fas fa-clock text-gray-500 dark:text-gray-400 text-sm"></i>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{selectedBrand.openingHours}</span>
+                  </div>
+                )}
+                
+                {selectedBrand.phone && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <i className="fas fa-phone text-gray-500 dark:text-gray-400 text-sm"></i>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">{selectedBrand.phone}</span>
+                  </div>
+                )}
                 
                 {/* 描述 */}
                 <p className="text-sm dark:text-gray-300 mb-5 leading-relaxed">{selectedBrand.description}</p>
