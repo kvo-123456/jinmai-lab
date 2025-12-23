@@ -12,7 +12,7 @@ import ModelSelector from '@/components/ModelSelector';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import { HaiheBoatTransition, TianjinImage } from '@/components/TianjinStyleComponents';
 
-import llmService from '../services/llmService';
+import { llmService } from '../services/llmService';
 import doubao, { createVideoTask, pollVideoTask } from '@/services/doubao'
 import { promptTemplates } from '@/data/promptTemplates';
 

@@ -5,9 +5,8 @@ import { AuthContext } from '@/contexts/authContext';
 import { useContext } from 'react';
 import { toast } from 'sonner';
 import { TianjinImage } from '@/components/TianjinStyleComponents';
-import llmService from '@/services/llmService'
+import { llmService } from '@/services/llmService'
 import voiceService from '@/services/voiceService'
-import { markPrefetched, isPrefetched } from '@/services/prefetch'
 import { mockWorks } from '@/mock/works'
 
 export default function Home() {
@@ -66,14 +65,12 @@ export default function Home() {
   const handleInspireClick = () => {
     const p = ensurePrompt();
     if (!p) return;
-    prefetchNeo();
     navigate(`/neo?from=home&query=${encodeURIComponent(p)}`);
   };
   
   const handleGenerateClick = () => {
     const p = ensurePrompt();
     if (!p) return;
-    prefetchTools();
     navigate(`/tools?from=home&query=${encodeURIComponent(p)}`);
   };
   
@@ -242,29 +239,17 @@ export default function Home() {
   // 预取首页常用页面的代码分片（在组件挂载后触发）
   useEffect(() => {
     const t = setTimeout(() => {
-      prefetchExplore();
-      prefetchTools();
-      prefetchNeo();
+      ;
+      ;
+      ;
     }, 800);
     return () => clearTimeout(t);
   }, []);
   
   // 预取函数：提前加载常用页面的代码分片
-  const prefetchExplore = () => {
-    if (!isPrefetched('Explore')) {
-      import('@/pages/Explore').then(() => markPrefetched('Explore', { ttlMs: 120000 })).catch(() => {});
-    }
-  };
-  const prefetchTools = () => {
-    if (!isPrefetched('Tools')) {
-      import('@/pages/Tools').then(() => markPrefetched('Tools', { ttlMs: 120000 })).catch(() => {});
-    }
-  };
-  const prefetchNeo = () => {
-    if (!isPrefetched('Neo')) {
-      import('@/pages/Neo').then(() => markPrefetched('Neo', { ttlMs: 120000 })).catch(() => {});
-    }
-  };
+  
+  
+  
   
   // 处理推荐问题点击
   const handleRecommendedClick = (text: string) => {
@@ -307,7 +292,6 @@ export default function Home() {
     if (cfg.tags && cfg.tags.length) params.set('tags', cfg.tags.join(','));
     if (cfg.tagMode) params.set('tagMode', cfg.tagMode);
     setSearch(cfg.q || text);
-    prefetchExplore();
     navigate(`/explore?${params.toString()}`);
   };
   
@@ -580,7 +564,7 @@ export default function Home() {
             <div className="mt-2 flex items-center gap-2 flex-wrap">
               <button onClick={speakOptimizations} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-accent hover:bg-accent/90 text-white' : 'bg-accent hover:bg-accent/90 text-white'} transition-all duration-300 hover:shadow-sm`}>朗读建议</button>
               <button onClick={copyOptimizations} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900 ring-1 ring-gray-300'} transition-all duration-300 hover:shadow-sm`}>复制建议</button>
-              <button onClick={() => { prefetchTools(); navigate(`/tools?from=home&query=${encodeURIComponent(optimizationSummary || search)}`) }} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-primary hover:bg-primary/90 text-white'} transition-all duration-300 hover:shadow-sm`}>应用到创作中心</button>
+              <button onClick={() => { navigate(`/tools?from=home&query=${encodeURIComponent(optimizationSummary || search)}`) }} className={`text-xs px-3 py-1 rounded ${isDark ? 'bg-primary hover:bg-primary/90 text-white' : 'bg-primary hover:bg-primary/90 text-white'} transition-all duration-300 hover:shadow-sm`}>应用到创作中心</button>
             </div>
             {optimizeAudioUrl && (<audio controls src={optimizeAudioUrl} className={`mt-2 w-full rounded-lg ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'}`} />)}
           </div>
@@ -591,7 +575,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center justify-between mb-6 animate-slide-up">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">为你推荐</h2>
-          <button onMouseEnter={prefetchExplore} onFocus={prefetchExplore} onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300">去作品集</button>
+          <button onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300">去作品集</button>
         </div>
         <div ref={galleryRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 scroll-mt-24">
           {gallery.map((item, idx) => (
@@ -601,14 +585,14 @@ export default function Home() {
               role="button"
               tabIndex={0}
               onClick={() => {
-                prefetchExplore();
+                ;
                 navigate(`/explore?q=${encodeURIComponent(item.title)}`)
               }}
-              onMouseEnter={prefetchExplore}
-              onFocus={prefetchExplore}
+              
+              
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  prefetchExplore();
+                  ;
                   navigate(`/explore?q=${encodeURIComponent(item.title)}`)
                 }
               }}
@@ -782,7 +766,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto mb-16 scroll-mt-24">
         <div className="flex items-center justify-between mb-8 animate-slide-up">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">热门创作者</h2>
-          <button onMouseEnter={prefetchExplore} onFocus={prefetchExplore} onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 hover:shadow-md">查看全部创作者</button>
+          <button   onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 hover:shadow-md">查看全部创作者</button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
           {popularCreators.map((creator, idx) => (
@@ -792,12 +776,12 @@ export default function Home() {
               role="button"
               tabIndex={0}
               onClick={() => {
-                prefetchExplore();
+                ;
                 navigate(`/explore?creator=${encodeURIComponent(creator.name)}`)
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  prefetchExplore();
+                  ;
                   navigate(`/explore?creator=${encodeURIComponent(creator.name)}`)
                 }
               }}
@@ -829,7 +813,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto mb-16 scroll-mt-24">
         <div className="flex items-center justify-between mb-8 animate-slide-up">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">最新作品</h2>
-          <button onMouseEnter={prefetchExplore} onFocus={prefetchExplore} onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 hover:shadow-md">查看全部作品</button>
+          <button   onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 hover:shadow-md">查看全部作品</button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
           {latestWorks.map((work, idx) => (
@@ -839,12 +823,12 @@ export default function Home() {
               role="button"
               tabIndex={0}
               onClick={() => {
-                prefetchExplore();
+                ;
                 navigate(`/explore?q=${encodeURIComponent(work.title)}`)
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  prefetchExplore();
+                  ;
                   navigate(`/explore?q=${encodeURIComponent(work.title)}`)
                 }
               }}
@@ -875,7 +859,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto mb-16 scroll-mt-24">
         <div className="flex items-center justify-between mb-8 animate-slide-up">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">热门标签</h2>
-          <button onMouseEnter={prefetchExplore} onFocus={prefetchExplore} onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 hover:shadow-md">查看全部标签</button>
+          <button   onClick={handleExplore} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-300 hover:shadow-md">查看全部标签</button>
         </div>
         <div className="flex flex-wrap gap-3 p-8 rounded-2xl ${isDark ? 'bg-gradient-to-br from-gray-800 to-gray-800/90 ring-1 ring-gray-700' : 'bg-gradient-to-br from-white to-gray-50 ring-1 ring-gray-200'}">
           {popularTags.map((tag, idx) => (
@@ -884,7 +868,7 @@ export default function Home() {
               type="button"
               className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 hover:shadow-lg hover:-translate-y-1 transform hover:scale-105 ${isDark ? 'bg-gray-700 text-gray-200 hover:bg-primary hover:text-white' : 'bg-gray-100 text-gray-800 hover:bg-primary hover:text-white'} animate-slide-up-${(idx % 6) + 1}`}
               onClick={() => {
-                prefetchExplore();
+                ;
                 navigate(`/explore?tags=${encodeURIComponent(tag)}`)
               }}
             >

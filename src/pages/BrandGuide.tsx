@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import BRANDS from '@/lib/brands'
 import ipService from '@/services/ipService'
 // 可选：如需调用大模型生成灵感，可引入llmService（无密钥则走本地规则）
-// import llmService from '@/services/llmService'
+// import { llmService } from '@/services/llmService'
 
 import { toast } from 'sonner'
 import GradientHero from '@/components/GradientHero'

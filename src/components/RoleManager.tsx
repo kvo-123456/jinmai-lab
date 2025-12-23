@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
-import llmService, { ModelRole } from '../services/llmService';
+import { llmService, ModelRole } from '../services/llmService';
 
 interface RoleManagerProps {
   isOpen: boolean;

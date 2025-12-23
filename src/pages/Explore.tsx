@@ -6,7 +6,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import GradientHero from '@/components/GradientHero'
 import { isPrefetched } from '@/services/prefetch'
 import { TianjinImage, TianjinButton } from '@/components/TianjinStyleComponents'
-import llmService from '@/services/llmService'
+import { llmService } from '@/services/llmService'
 import { BRANDS } from '@/lib/brands'
 import imageService from '@/services/imageService'
 import { Work, mockWorks } from '@/mock/works'

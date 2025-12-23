@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react'
 import GradientHero from '../components/GradientHero'
 import Footer from '@/components/Footer'
 import { TianjinTag, TianjinDivider, TianjinButton } from '@/components/TianjinStyleComponents'
-import llmService from '@/services/llmService'
+import { llmService } from '@/services/llmService'
 import voiceService from '@/services/voiceService'
 import { toast } from 'sonner'
 

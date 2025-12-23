@@ -1811,3 +1811,6 @@ class LLMService {
  * LLM服务实例
  */
 export const llmService = new LLMService();
+
+// 同时添加默认导出，兼容旧的导入方式
+export default llmService;

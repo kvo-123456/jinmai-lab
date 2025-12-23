@@ -4,7 +4,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 import LazyImage from './LazyImage';
-import llmService from '../services/llmService';
+import { llmService } from '../services/llmService';
 
 // 点评结果类型定义
 interface AID点评Result {

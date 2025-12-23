@@ -7,7 +7,7 @@ import { generateImage, pollVideoTask, createVideoTask } from '@/services/doubao
 import doubao from '@/services/doubao'
 import errorService from '@/services/errorService'
 import voiceService from '@/services/voiceService'
-import llmService from '@/services/llmService'
+import { llmService } from '@/services/llmService'
 
 import { TianjinImage } from '@/components/TianjinStyleComponents'
 // 中文注释：将页面包裹在统一的侧边栏布局组件中，获得顶部导航与搜索

@@ -9,7 +9,7 @@ import UploadBox from '@/components/UploadBox'
 import { scoreAuthenticity } from '@/services/authenticityService'
 import postService from '@/services/postService'
 import { useNavigate } from 'react-router-dom'
-import llmService from '@/services/llmService'
+import { llmService } from '@/services/llmService'
 import { TianjinImage } from '@/components/TianjinStyleComponents'
 import { toast } from 'sonner'
 
