@@ -149,20 +149,6 @@ export default defineConfig({
     charset: 'utf8',
     minifySyntax: true
   },
-  // 确保构建输出正确，便于Vercel处理
-  build: {
-    // 优化构建输出
-    outDir: 'dist',
-    // 确保资源文件命名稳定
-    rollupOptions: {
-      output: {
-        // 资源文件命名规则，便于缓存
-        assetFileNames: 'assets/[name]-[hash:8][extname]',
-        chunkFileNames: 'chunks/[name]-[hash:8].js',
-        entryFileNames: 'entries/[name]-[hash:8].js'
-      }
-    }
-  },
   resolve: {
     // 为数据库相关的 Node.js 原生模块创建别名，避免在浏览器环境中打包
     alias: {
@@ -174,6 +160,7 @@ export default defineConfig({
   },
   build: {
     // 优化构建输出
+    outDir: 'dist',
     minify: 'terser',
     // 启用更高效的压缩算法
     brotliSize: false, // 禁用brotli大小报告，减少构建时间
@@ -197,6 +184,15 @@ export default defineConfig({
     },
     // 启用更严格的 tree-shaking
     ssr: false,
+    // 确保资源文件命名稳定
+    rollupOptions: {
+      output: {
+        // 资源文件命名规则，便于缓存
+        assetFileNames: 'assets/[name]-[hash:8][extname]',
+        chunkFileNames: 'chunks/[name]-[hash:8].js',
+        entryFileNames: 'entries/[name]-[hash:8].js'
+      }
+    },
     // 优化构建目标，使用更现代的ES版本
     target: 'es2022',
     // 优化 terser 配置，减少压缩时间
