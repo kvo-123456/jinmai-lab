@@ -434,7 +434,7 @@ const MobileLayout = memo(function MobileLayout({ children }: MobileLayoutProps)
         />
         {/* 抽屉内容 */}
         <aside className={clsx(
-          'absolute left-0 top-0 bottom-0 w-64 overflow-y-auto transform transition-transform duration-300 ease-in-out',
+          'absolute left-0 top-0 bottom-0 w-[85.71%] overflow-y-auto transform transition-transform duration-300 ease-in-out',
           showSidebarDrawer ? 'translate-x-0' : '-translate-x-full',
           isDark ? 'bg-[#0b0e13] text-white' : 
           theme === 'pink' ? 'bg-pink-50 text-pink-900' : 
