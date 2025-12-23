@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import GradientHero from '@/components/GradientHero';
 import { preloadImage, cleanupCache } from '@/utils/imageLoader';
-import poiData from '@/data/poiData.json';
 
 // 定义POI类型
 interface POI {
@@ -33,11 +32,150 @@ interface POIData {
   poi: POI[];
 }
 
+// 本地定义POI数据，避免JSON导入错误
+const localPOIData: POIData = {
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-23",
+  "categories": {
+    "food": {
+      "name": "餐饮美食",
+      "icon": "🍜",
+      "color": "bg-yellow-500"
+    },
+    "retail": {
+      "name": "零售百货",
+      "icon": "🏪",
+      "color": "bg-blue-500"
+    },
+    "craft": {
+      "name": "手工艺",
+      "icon": "🎨",
+      "color": "bg-purple-500"
+    },
+    "landmark": {
+      "name": "地标建筑",
+      "icon": "🏰",
+      "color": "bg-red-500"
+    },
+    "culture": {
+      "name": "文化艺术",
+      "icon": "📚",
+      "color": "bg-green-500"
+    }
+  },
+  "poi": [
+    {
+      "id": 1,
+      "name": "狗不理包子",
+      "category": "food",
+      "description": "天津著名的传统小吃，以皮薄馅大、鲜香可口著称，有着悠久的历史和文化底蕴。",
+      "address": "天津市和平区山东路77号",
+      "position": { "x": 45, "y": 55 },
+      "year": 1858,
+      "image": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=600&fit=crop",
+      "openingHours": "08:00-22:00",
+      "phone": "022-27306590",
+      "importance": 5
+    },
+    {
+      "id": 2,
+      "name": "十八街麻花",
+      "category": "food",
+      "description": "天津传统名点，以酥脆香甜、久放不绵而闻名，是天津三绝之一。",
+      "address": "天津市河西区大沽南路566号",
+      "position": { "x": 50, "y": 60 },
+      "year": 1912,
+      "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&h=600&fit=crop",
+      "openingHours": "09:00-21:00",
+      "phone": "022-28326900",
+      "importance": 4
+    },
+    {
+      "id": 3,
+      "name": "耳朵眼炸糕",
+      "category": "food",
+      "description": "天津传统风味小吃，以皮酥脆、馅香甜、不腻口而著称，是天津三绝之一。",
+      "address": "天津市红桥区北门外大街12号",
+      "position": { "x": 48, "y": 52 },
+      "year": 1900,
+      "image": "https://images.unsplash.com/photo-1576827152400-24a02034b260?w=800&h=600&fit=crop",
+      "openingHours": "08:30-20:30",
+      "phone": "022-27275033",
+      "importance": 4
+    },
+    {
+      "id": 4,
+      "name": "劝业场",
+      "category": "retail",
+      "description": "天津著名的百年老商场，是天津商业的标志性建筑，融合了多种建筑风格。",
+      "address": "天津市和平区和平路290号",
+      "position": { "x": 47, "y": 56 },
+      "year": 1928,
+      "image": "https://images.unsplash.com/photo-1560448204-e02f11bad21b?w=800&h=600&fit=crop",
+      "openingHours": "10:00-22:00",
+      "phone": "022-27211818",
+      "importance": 5
+    },
+    {
+      "id": 5,
+      "name": "杨柳青年画",
+      "category": "craft",
+      "description": "中国四大木版年画之一，以色彩艳丽、题材丰富、构图饱满而著称，具有浓郁的民间艺术特色。",
+      "address": "天津市西青区杨柳青镇估衣街23号",
+      "position": { "x": 42, "y": 48 },
+      "year": 1600,
+      "image": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=600&fit=crop",
+      "openingHours": "09:00-17:00",
+      "phone": "022-27940617",
+      "importance": 5
+    },
+    {
+      "id": 6,
+      "name": "泥人张彩塑",
+      "category": "craft",
+      "description": "天津传统民间艺术，以形神兼备、色彩鲜明、做工精细而闻名，是中国泥塑艺术的代表。",
+      "address": "天津市南开区古文化街宫北大街通庆里4号",
+      "position": { "x": 46, "y": 54 },
+      "year": 1844,
+      "image": "https://images.unsplash.com/photo-1511104491606-aa6905b541e4?w=800&h=600&fit=crop",
+      "openingHours": "09:00-18:00",
+      "phone": "022-27353157",
+      "importance": 5
+    },
+    {
+      "id": 7,
+      "name": "天津之眼",
+      "category": "landmark",
+      "description": "世界上唯一建在桥上的摩天轮，是天津的标志性建筑之一，俯瞰天津市区全景。",
+      "address": "天津市红桥区李公祠大街与五马路交口",
+      "position": { "x": 44, "y": 50 },
+      "year": 2008,
+      "image": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&h=600&fit=crop",
+      "openingHours": "09:30-21:30",
+      "phone": "022-26288830",
+      "importance": 5
+    },
+    {
+      "id": 8,
+      "name": "天津大剧院",
+      "category": "culture",
+      "description": "现代化的大型综合剧场，是天津文化艺术的重要阵地，举办各类高水平演出。",
+      "address": "天津市河西区平江道58号",
+      "position": { "x": 49, "y": 58 },
+      "year": 2012,
+      "image": "https://images.unsplash.com/photo-1578473349177-3985528a3b9c?w=800&h=600&fit=crop",
+      "openingHours": "根据演出时间而定",
+      "phone": "022-83882000",
+      "importance": 4
+    }
+  ]
+};
+
 // 获取所有POI数据
-const mapData = poiData.poi;
+const mapData = localPOIData.poi;
 
 // 获取分类数据
-const categories = poiData.categories;
+const categories = localPOIData.categories;
 
 export default function TianjinMap() {
   const { isDark, theme } = useTheme();
