@@ -758,4 +758,4 @@ const MobileLayout = memo(function MobileLayout({ children }: MobileLayoutProps)
   )
 })
 
-export default MobileLayout
+export default MobileLayout;
