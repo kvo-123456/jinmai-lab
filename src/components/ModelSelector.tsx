@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
-import llmService, { AVAILABLE_MODELS, LLMModel, ModelConfig, ModelRole } from '../services/llmService';
+import llmService, { AVAILABLE_MODELS, LLMModel, ModelConfig, ModelRole, ConnectionStatus } from '../services/llmService';
 
 interface ModelSelectorProps {
   isOpen: boolean;
@@ -388,16 +388,37 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ isOpen, onClose }) => {
       setError(null);
       llmService.setCurrentModel(selectedModel.id);
       llmService.updateConfig({ stream: false });
-      const resp = await llmService.generateResponse('ping');
-      const text = String(resp || '');
-      const isFail = (selectedModel.id === 'kimi' && text.includes('Kimi接口不可用')) || (selectedModel.id === 'deepseek' && text.includes('DeepSeek接口不可用'));
-      if (isFail) {
-        toast.error('连接失败，请检查密钥或网络');
-      } else {
+      
+      // 监听连接状态变化事件，获取详细错误信息
+      let connectionError: string | undefined;
+      const handleConnectionStatusChange = (event: CustomEvent) => {
+        if (event.detail.modelId === selectedModel.id && event.detail.status === 'error') {
+          connectionError = event.detail.error;
+        }
+      };
+      
+      // 添加事件监听器
+      window.addEventListener('llm-connection-status-changed', handleConnectionStatusChange as EventListener);
+      
+      await llmService.generateResponse('ping');
+      
+      // 移除事件监听器
+      window.removeEventListener('llm-connection-status-changed', handleConnectionStatusChange as EventListener);
+      
+      // 获取当前模型的连接状态
+      const status = llmService.getConnectionStatus(selectedModel.id) as ConnectionStatus;
+      if (status === 'connected') {
         toast.success('连接正常');
+      } else {
+        toast.error(`连接失败: ${connectionError || '未知错误'}`);
       }
     } catch (e) {
-      toast.error('连接失败，请检查密钥或网络');
+      // 移除事件监听器
+      window.removeEventListener('llm-connection-status-changed', null);
+      
+      // 获取当前模型的连接状态和错误信息
+      const error = e instanceof Error ? e.message : String(e);
+      toast.error(`连接失败: ${error}`);
     } finally {
       setIsLoading(false);
     }
