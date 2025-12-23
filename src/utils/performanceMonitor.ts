@@ -740,63 +740,99 @@ class PerformanceMonitor {
    * 运行性能审计
    */
   async runAudit(): Promise<PerformanceAuditResult> {
-    // 等待所有资源加载完成
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 获取性能数据
-    const navigationEntry = performance.getEntriesByType('navigation')[0] as unknown as PerformanceNavigationTiming;
-    const resourceEntries = performance.getEntriesByType('resource') as unknown as PerformanceResourceTiming[];
-    const longTaskEntries = performance.getEntriesByType('longtask') as unknown as PerformanceLongTaskTiming[];
-    
-    // 计算审计结果
-    const auditResult: PerformanceAuditResult = {
-      timestamp: Date.now(),
-      metrics: {
-        // 核心 Web Vitals
-        LCP: this.getMetricValue('LCP') || 0,
-        FID: this.getMetricValue('FID') || 0,
-        CLS: this.getMetricValue('CLS') || 0,
-        TTFB: navigationEntry?.responseStart || 0,
-        INP: this.getMetricValue('INP') || 0,
-        // 导航性能
-        navigationStart: navigationEntry?.startTime || 0,
-        domContentLoaded: navigationEntry?.domContentLoadedEventEnd || 0,
-        loadEvent: navigationEntry?.loadEventEnd || 0,
-        // 资源统计
-        totalResources: resourceEntries.length,
-        totalResourceSize: resourceEntries.reduce((sum, entry) => sum + (entry.transferSize || 0), 0),
-        // 长任务统计
-        longTasks: longTaskEntries.length,
-        totalLongTaskDuration: longTaskEntries.reduce((sum, entry) => sum + entry.duration, 0),
-        // 网络请求统计
-        networkRequests: this.networkRequests.length,
-        averageRequestDuration: this.getNetworkRequestStats().averageDuration,
-        cacheHitRate: this.getNetworkRequestStats().cacheHitRate,
-        // 组件渲染统计
-        componentRenders: this.componentRenders.length,
-        averageComponentRenderTime: this.componentRenders.length > 0 
-          ? this.componentRenders.reduce((sum, entry) => sum + entry.renderTime, 0) / this.componentRenders.length 
-          : 0,
-        // 内存使用
-        memoryUsage: this.memoryUsage.length > 0 
-          ? this.memoryUsage[this.memoryUsage.length - 1].usedJSHeapSize 
-          : 0,
-        // 自定义指标
-        customMetrics: this.metrics,
-      },
-      // 性能评分（基于 Web Vitals）
-      score: this.calculatePerformanceScore(),
-      // 优化建议
-      suggestions: this.generateOptimizationSuggestions(),
-      // 新增：详细统计信息
-      detailedStats: {
-        network: this.getNetworkRequestStats(),
-        components: this.getComponentRenderStats(),
-        memory: this.memoryUsage.length > 0 ? this.memoryUsage[this.memoryUsage.length - 1] : undefined,
-      },
-    };
-    
-    return auditResult;
+    try {
+      // 等待所有资源加载完成
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 获取性能数据
+      const navigationEntry = performance.getEntriesByType('navigation')[0] as unknown as PerformanceNavigationTiming;
+      const resourceEntries = performance.getEntriesByType('resource') as unknown as PerformanceResourceTiming[];
+      const longTaskEntries = performance.getEntriesByType('longtask') as unknown as PerformanceLongTaskTiming[];
+      
+      // 计算审计结果
+      const auditResult: PerformanceAuditResult = {
+        timestamp: Date.now(),
+        metrics: {
+          // 核心 Web Vitals
+          LCP: this.getMetricValue('LCP') || 0,
+          FID: this.getMetricValue('FID') || 0,
+          CLS: this.getMetricValue('CLS') || 0,
+          TTFB: navigationEntry?.responseStart || 0,
+          INP: this.getMetricValue('INP') || 0,
+          // 导航性能
+          navigationStart: navigationEntry?.startTime || 0,
+          domContentLoaded: navigationEntry?.domContentLoadedEventEnd || 0,
+          loadEvent: navigationEntry?.loadEventEnd || 0,
+          // 资源统计
+          totalResources: resourceEntries.length,
+          totalResourceSize: resourceEntries.reduce((sum, entry) => sum + (entry.transferSize || 0), 0),
+          // 长任务统计
+          longTasks: longTaskEntries.length,
+          totalLongTaskDuration: longTaskEntries.reduce((sum, entry) => sum + entry.duration, 0),
+          // 网络请求统计
+          networkRequests: this.networkRequests.length,
+          averageRequestDuration: this.getNetworkRequestStats().averageDuration,
+          cacheHitRate: this.getNetworkRequestStats().cacheHitRate,
+          // 组件渲染统计
+          componentRenders: this.componentRenders.length,
+          averageComponentRenderTime: this.componentRenders.length > 0 
+            ? this.componentRenders.reduce((sum, entry) => sum + entry.renderTime, 0) / this.componentRenders.length 
+            : 0,
+          // 内存使用
+          memoryUsage: this.memoryUsage.length > 0 
+            ? this.memoryUsage[this.memoryUsage.length - 1].usedJSHeapSize 
+            : 0,
+          // 自定义指标
+          customMetrics: this.metrics,
+        },
+        // 性能评分（基于 Web Vitals）
+        score: this.calculatePerformanceScore(),
+        // 优化建议
+        suggestions: this.generateOptimizationSuggestions(),
+        // 新增：详细统计信息
+        detailedStats: {
+          network: this.getNetworkRequestStats(),
+          components: this.getComponentRenderStats(),
+          memory: this.memoryUsage.length > 0 ? this.memoryUsage[this.memoryUsage.length - 1] : undefined,
+        },
+      };
+      
+      return auditResult;
+    } catch (error) {
+      console.error('Failed to run performance audit:', error);
+      // 返回默认结果
+      return {
+        timestamp: Date.now(),
+        metrics: {
+          LCP: 0,
+          FID: 0,
+          CLS: 0,
+          TTFB: 0,
+          INP: 0,
+          navigationStart: 0,
+          domContentLoaded: 0,
+          loadEvent: 0,
+          totalResources: 0,
+          totalResourceSize: 0,
+          longTasks: 0,
+          totalLongTaskDuration: 0,
+          networkRequests: 0,
+          averageRequestDuration: 0,
+          cacheHitRate: 0,
+          componentRenders: 0,
+          averageComponentRenderTime: 0,
+          memoryUsage: 0,
+          customMetrics: [],
+        },
+        score: 0,
+        suggestions: [],
+        detailedStats: {
+          network: this.getNetworkRequestStats(),
+          components: this.getComponentRenderStats(),
+          memory: undefined,
+        },
+      };
+    }
   }
 
   /**
