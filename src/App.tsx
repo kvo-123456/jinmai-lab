@@ -1,8 +1,6 @@
 import { Routes, Route, Outlet, useLocation, useNavigationType, Link, Navigate } from "react-router-dom";
 import { useState, useEffect, Suspense, lazy, useRef, useMemo } from 'react'
-// Vercel 分析和速度洞察
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
+
 
 // 核心页面保持同步加载，减少导航延迟
 // 对于高频访问的页面，使用同步加载可以减少导航跳转时间
@@ -49,7 +47,7 @@ const Incentives = lazy(() => import("@/pages/Incentives"));
 const AdminAnalytics = lazy(() => import("@/pages/AdminAnalytics"));
 const Wizard = lazy(() => import("@/pages/Wizard"));
 const Settings = lazy(() => import("@/pages/Settings"));
-const Analytics = lazy(() => import("@/pages/Analytics"));
+const AnalyticsPage = lazy(() => import("@/pages/Analytics"));
 const UserCollection = lazy(() => import("@/pages/UserCollection"));
 const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
 const CulturalKnowledge = lazy(() => import("@/pages/CulturalKnowledge"));
@@ -340,10 +338,6 @@ export default function App() {
   
   return (
     <div className="relative">
-      {/* Vercel 分析和速度洞察 */}
-      <Analytics />
-      <SpeedInsights />
-      
       <Routes>
         {/* 不需要布局的页面 */}
         <Route path="/login" element={<AnimatedPage><Login /></AnimatedPage>} />
@@ -392,7 +386,7 @@ export default function App() {
           <Route path="/incentives" element={<AnimatedPage><LazyComponent><PrivateRoute component={Incentives} /></LazyComponent></AnimatedPage>} />
           <Route path="/drafts" element={<AnimatedPage><LazyComponent><PrivateRoute component={Drafts} /></LazyComponent></AnimatedPage>} />
           <Route path="/settings" element={<AnimatedPage><LazyComponent><PrivateRoute component={Settings} /></LazyComponent></AnimatedPage>} />
-          <Route path="/analytics" element={<AnimatedPage><LazyComponent><PrivateRoute component={Analytics} /></LazyComponent></AnimatedPage>} />
+          <Route path="/analytics" element={<AnimatedPage><LazyComponent><PrivateRoute component={AnalyticsPage} /></LazyComponent></AnimatedPage>} />
           <Route path="/collection" element={<AnimatedPage><LazyComponent><PrivateRoute component={UserCollection} /></LazyComponent></AnimatedPage>} />
           <Route path="/knowledge" element={<AnimatedPage><LazyComponent><PrivateRoute component={CulturalKnowledge} /></LazyComponent></AnimatedPage>} />
           <Route path="/news" element={<AnimatedPage><LazyComponent><CulturalNewsPage /></LazyComponent></AnimatedPage>} />
