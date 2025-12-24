@@ -28,10 +28,6 @@ initPerformanceMonitor();
 import { registerServiceWorker } from './utils/serviceWorker';
 registerServiceWorker();
 
-// Vercel 分析和速度洞察 - 确保正确导入和初始化
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
