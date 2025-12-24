@@ -3,18 +3,14 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)\.(.*)",
-      "dest": "/$1.$2"
+      "source": "/(.*)\.(.*)",
+      "destination": "/$1.$2"
     },
     {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
