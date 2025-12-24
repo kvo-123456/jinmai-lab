@@ -5,44 +5,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/proxy/trae-api/(.*)",
-      "destination": "https://trae-api-sg.mchost.guru/$1"
-    },
-    {
-      "source": "/api/proxy/unsplash/(.*)",
-      "destination": "https://images.unsplash.com/$1"
-    },
-    {
-      "source": "/test/(.*)",
-      "destination": "/"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0"
-        }
-      ]
-    },
-    {
-      "source": "/(.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webmanifest|json)$)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }
-      ]
     }
   ]
 }
