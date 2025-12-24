@@ -14,9 +14,26 @@ export default function WorkDetail() {
   const navigate = useNavigate()
   const { id } = useParams()
   const workId = Number(id)
-  const work = useMemo(() => mockWorks.find(w => w.id === workId), [workId])
+  const work = useMemo(() => { const found = mockWorks.find(w => w.id === workId); console.log('Found work:', found, 'workId:', workId); return found; }, [workId])
+
+  // 确保在访问work属性之前work已经存在
+  if (!work) {
+    return (
+      <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center py-20">
+            <div className="text-5xl text-gray-400 mb-4"><i className="far fa-image" /></div>
+            <h2 className="text-xl font-semibold mb-2">未找到作品</h2>
+            <p className={`${isDark ? 'text-gray-400' : 'text-gray-600'}`}>请返回探索页选择其他作品</p>
+            <button className="mt-6 px-4 py-2 rounded-lg bg-red-600 text-white" onClick={() => navigate('/explore')}>返回探索</button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const [liked, setLiked] = useState(false)
-  const [likes, setLikes] = useState(work ? work.likes : 0)
+  const [likes, setLikes] = useState(work?.likes || 0)
   const [bookmarked, setBookmarked] = useState(false)
   const [isARPreviewOpen, setIsARPreviewOpen] = useState(false)
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false)

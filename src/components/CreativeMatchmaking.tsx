@@ -1,9 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, ErrorInfo } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '@/hooks/useTheme';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TianjinImage } from './TianjinStyleComponents';
+
+// 错误边界组件
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('CreativeMatchmaking组件错误:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 rounded-2xl bg-white shadow-md">
+          <div className="flex flex-col items-center justify-center text-center py-12">
+            <i className="fas fa-exclamation-circle text-4xl text-red-500 mb-4"></i>
+            <h3 className="text-xl font-bold mb-2">页面加载出错</h3>
+            <p className="text-gray-600 mb-4">很抱歉，创作搭档匹配功能暂时无法使用，请稍后重试。</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
+            >
+              重新加载页面
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // 创作者类型定义
 interface Creator {
@@ -42,6 +80,14 @@ interface StyleCompatibilityData {
 }
 
 export default function CreativeMatchmaking() {
+  return (
+    <ErrorBoundary>
+      <CreativeMatchmakingContent />
+    </ErrorBoundary>
+  );
+}
+
+function CreativeMatchmakingContent() {
   const { isDark } = useTheme();
   const [potentialPartners, setPotentialPartners] = useState<Creator[]>([]);
   const [styleCompatibility, setStyleCompatibility] = useState<StyleCompatibilityData[]>([]);
@@ -158,6 +204,8 @@ export default function CreativeMatchmaking() {
   // 重新匹配功能
   const handleRematch = () => {
     loadMatchData();
+    setInvitationStatus({}); // 重置邀请状态
+    setSelectedCreator(null); // 关闭打开的创作者详情
     toast.info('正在寻找新的创作搭档...');
   };
 
@@ -170,11 +218,28 @@ export default function CreativeMatchmaking() {
   };
 
   const handleSendInvitation = (creatorId: number) => {
+    // 找到对应的创作者信息
+    const creator = potentialPartners.find(p => p.id === creatorId);
+    if (!creator) return;
+    
+    // 生成邀请ID
+    const invitationId = Math.floor(Math.random() * 10000) + 1;
+    
     // 发送邀请
     setInvitationStatus(prev => ({
       ...prev,
       [creatorId]: 'sent'
     }));
+    
+    // 添加到邀请历史记录
+    const newInvitation: InvitationHistory = {
+      id: invitationId,
+      creatorId,
+      creatorName: creator.name,
+      status: 'sent',
+      sentAt: new Date()
+    };
+    setInvitationHistory(prev => [...prev, newInvitation]);
     
     toast.success('合作邀请已发送！');
     
@@ -185,6 +250,13 @@ export default function CreativeMatchmaking() {
         ...prev,
         [creatorId]: randomStatus
       }));
+      
+      // 更新邀请历史记录
+      setInvitationHistory(prev => prev.map(invitation => 
+        invitation.creatorId === creatorId 
+          ? { ...invitation, status: randomStatus }
+          : invitation
+      ));
       
       if (randomStatus === 'accepted') {
         toast.success('合作邀请已被接受！');
@@ -239,25 +311,26 @@ export default function CreativeMatchmaking() {
       {/* 风格兼容性图表 */}
       <div className={`p-4 rounded-xl mb-6 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
         <h4 className="font-medium mb-4">风格兼容性分析</h4>
-        <div className="h-64">
+        <div className="h-64 sm:h-80 md:h-96">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={styleCompatibility}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
+              margin={{ top: 5, right: 20, left: 50, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
               <XAxis 
                 type="number" 
                 domain={[0, 100]} 
-                tick={{ fill: isDark ? '#9ca3af' : '#4b5563' }}
+                tick={{ fill: isDark ? '#9ca3af' : '#4b5563', fontSize: '12px' }}
                 axisLine={{ stroke: isDark ? '#374151' : '#e5e7eb' }}
               />
               <YAxis 
                 dataKey="name" 
                 type="category" 
-                tick={{ fill: isDark ? '#9ca3af' : '#4b5563' }}
+                tick={{ fill: isDark ? '#9ca3af' : '#4b5563', fontSize: '12px' }}
                 axisLine={{ stroke: isDark ? '#374151' : '#e5e7eb' }}
+                width={50}
               />
               <Tooltip 
                 formatter={(value) => [`${value}%`, '兼容性']}
@@ -265,7 +338,8 @@ export default function CreativeMatchmaking() {
                   backgroundColor: isDark ? '#1f2937' : '#ffffff',
                   borderColor: isDark ? '#374151' : '#e5e7eb',
                   borderRadius: '0.5rem',
-                  color: isDark ? '#ffffff' : '#000000'
+                  color: isDark ? '#ffffff' : '#000000',
+                  fontSize: '12px'
                 }} 
               />
               <Bar 
@@ -273,7 +347,7 @@ export default function CreativeMatchmaking() {
                 name="兼容性" 
                 fill="#ef4444" 
                 radius={[0, 4, 4, 0]} 
-                barSize={20}
+                barSize={16}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -286,12 +360,10 @@ export default function CreativeMatchmaking() {
         {potentialPartners.map((creator) => (
           <motion.div
             key={creator.id}
-            className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'} border ${
-              isDark ? 'border-gray-600' : 'border-gray-200'
-            } transition-all hover:shadow-md`}
+            className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'} border ${isDark ? 'border-gray-600' : 'border-gray-200'} transition-all hover:shadow-md`}
             whileHover={{ y: -2 }}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center">
                 <div className="relative mr-4">
                   <div className="w-12 h-12 rounded-full overflow-hidden">
@@ -303,27 +375,16 @@ export default function CreativeMatchmaking() {
                       className="w-full h-full"
                     />
                   </div>
-                  <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${
-                    creator.isOnline ? 'bg-green-500' : 'bg-gray-400'
-                  }`}></span>
+                  <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${creator.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                 </div>
                 
-                <div className="flex-1">
-                  <div className="flex items-center mb-1">
-                    <h5 className="font-medium mr-2">{creator.name}</h5>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      creator.level === '大师级创作者' 
-                        ? 'bg-yellow-100 text-yellow-600' 
-                        : creator.level === '资深创作者'
-                          ? 'bg-purple-100 text-purple-600'
-                          : 'bg-blue-100 text-blue-600'
-                    }`}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center mb-1 gap-2">
+                    <h5 className="font-medium truncate">{creator.name}</h5>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${creator.level === '大师级创作者' ? 'bg-yellow-100 text-yellow-600' : creator.level === '资深创作者' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
                       {creator.level}
                     </span>
-                    <span className={`ml-2 text-sm ${
-                      creator.matchScore > 90 ? 'text-green-500' : 
-                      creator.matchScore > 80 ? 'text-blue-500' : 'text-yellow-500'
-                    }`}>
+                    <span className={`text-sm ${creator.matchScore > 90 ? 'text-green-500' : creator.matchScore > 80 ? 'text-blue-500' : 'text-yellow-500'}`}>
                       {creator.matchScore}% 匹配度
                     </span>
                   </div>
@@ -332,66 +393,138 @@ export default function CreativeMatchmaking() {
                     {creator.style.map((style, index) => (
                       <span 
                         key={index} 
-                        className={`text-xs px-2 py-0.5 rounded-full ${
-                          isDark ? 'bg-gray-600' : 'bg-gray-200'
-                        }`}
+                        className={`text-xs px-2 py-0.5 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-200'}`}
                       >
                         {style}
                       </span>
                     ))}
                   </div>
                   
-                  <div className="flex text-xs opacity-70">
-                    <span className="mr-3">{creator.worksCount} 作品</span>
+                  <div className="flex flex-wrap gap-3 text-xs opacity-70">
+                    <span>{creator.worksCount} 作品</span>
                     <span>{creator.followers} 粉丝</span>
                   </div>
                 </div>
-                
-                <div className="flex space-x-2">
+              </div>
+              
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <button 
+                  onClick={() => handleViewProfile(creator)}
+                  className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-sm ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'} transition-colors`}
+                >
+                  查看资料
+                </button>
+                {invitationStatus[creator.id] === 'sent' && (
                   <button 
-                    onClick={() => handleViewProfile(creator)}
-                    className={`px-3 py-1.5 rounded-lg text-sm ${isDark ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'} transition-colors`}
+                    className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white text-sm transition-colors cursor-not-allowed"
+                    disabled
                   >
-                    查看资料
+                    邀请已发送
                   </button>
-                  {invitationStatus[creator.id] === 'sent' && (
-                    <button 
-                      className="px-3 py-1.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white text-sm transition-colors cursor-not-allowed"
-                      disabled
-                    >
-                      邀请已发送
-                    </button>
-                  )}
-                  {invitationStatus[creator.id] === 'accepted' && (
-                    <button 
-                      className="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm transition-colors cursor-not-allowed"
-                      disabled
-                    >
-                      邀请已接受
-                    </button>
-                  )}
-                  {invitationStatus[creator.id] === 'rejected' && (
-                    <button 
-                      className="px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white text-sm transition-colors cursor-not-allowed"
-                      disabled
-                    >
-                      邀请已拒绝
-                    </button>
-                  )}
-                  {!invitationStatus[creator.id] && (
-                    <button 
-                      onClick={() => handleSendInvitation(creator.id)}
-                      className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
-                    >
-                      邀请合作
-                    </button>
-                  )}
-                </div>
+                )}
+                {invitationStatus[creator.id] === 'accepted' && (
+                  <button 
+                    className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm transition-colors cursor-not-allowed"
+                    disabled
+                  >
+                    邀请已接受
+                  </button>
+                )}
+                {invitationStatus[creator.id] === 'rejected' && (
+                  <button 
+                    className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white text-sm transition-colors cursor-not-allowed"
+                    disabled
+                  >
+                    邀请已拒绝
+                  </button>
+                )}
+                {!invitationStatus[creator.id] && (
+                  <button 
+                    onClick={() => handleSendInvitation(creator.id)}
+                    className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm transition-colors"
+                  >
+                    邀请合作
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
         ))}
       </div>
+
+      {/* 邀请历史记录 */}
+      {invitationHistory.length > 0 && (
+        <div className="mt-8">
+          <h4 className="font-medium mb-4">邀请历史记录</h4>
+          <div className={`rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'} overflow-hidden border ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] sm:min-w-full">
+                <thead>
+                  <tr className={`${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-4">创作者</th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-4">邀请时间</th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-4">状态</th>
+                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-4">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+                  {invitationHistory.map((invitation) => (
+                    <tr key={invitation.id} className={`${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'} transition-colors`}>
+                      <td className="px-3 py-4 whitespace-nowrap sm:px-4">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
+                            <TianjinImage 
+                              src={potentialPartners.find(p => p.id === invitation.creatorId)?.avatar || 'https://via.placeholder.com/32'}
+                              alt={invitation.creatorName}
+                              ratio="square"
+                              fit="cover"
+                              className="w-full h-full"
+                            />
+                          </div>
+                          <div className="text-sm font-medium truncate">{invitation.creatorName}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap sm:px-4">
+                        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                          {invitation.sentAt.toLocaleString('zh-CN')}
+                        </div>
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap sm:px-4">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invitation.status === 'accepted' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : invitation.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'}`}>
+                          {invitation.status === 'accepted' ? '已接受' : invitation.status === 'rejected' ? '已拒绝' : '已发送'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap text-xs sm:text-sm font-medium sm:px-4">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => {
+                              const creator = potentialPartners.find(p => p.id === invitation.creatorId);
+                              if (creator) {
+                                handleViewProfile(creator);
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                          >
+                            查看资料
+                          </button>
+                          {invitation.status === 'rejected' && (
+                            <button
+                              onClick={() => handleSendInvitation(invitation.creatorId)}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            >
+                              重新邀请
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 创作者详情弹窗 */}
       {selectedCreator && (
@@ -407,8 +540,8 @@ export default function CreativeMatchmaking() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className={`p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
-              <h3 className="text-xl font-bold">{selectedCreator.name} - 个人资料</h3>
+            <div className={`p-4 sm:p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'} flex justify-between items-center`}>
+              <h3 className="text-lg sm:text-xl font-bold truncate">{selectedCreator.name} - 个人资料</h3>
               <button 
                 onClick={handleCloseProfile}
                 className={`p-2 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
@@ -418,10 +551,10 @@ export default function CreativeMatchmaking() {
               </button>
             </div>
             
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row items-center md:items-start mb-6">
-                <div className="relative mb-4 md:mb-0 md:mr-6">
-                  <div className="w-24 h-24 rounded-full overflow-hidden">
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col md:flex-row items-center md:items-start mb-6 gap-4">
+                <div className="relative">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden">
                     <TianjinImage 
                       src={selectedCreator.avatar} 
                       alt={selectedCreator.name} 
@@ -434,14 +567,14 @@ export default function CreativeMatchmaking() {
                 </div>
                 
                 <div className="text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start mb-2">
-                    <h2 className="text-2xl font-bold mr-2">{selectedCreator.name}</h2>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
+                    <h2 className="text-xl sm:text-2xl font-bold">{selectedCreator.name}</h2>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${selectedCreator.level === '大师级创作者' ? 'bg-yellow-100 text-yellow-600' : selectedCreator.level === '资深创作者' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
                       {selectedCreator.level}
                     </span>
                   </div>
                   
-                  <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-3">
                     {selectedCreator.style.map((style, index) => (
                       <span 
                         key={index} 
@@ -452,18 +585,18 @@ export default function CreativeMatchmaking() {
                     ))}
                   </div>
                   
-                  <div className="flex justify-center md:justify-start space-x-6">
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 sm:gap-6">
                     <div className="text-center">
                       <p className="font-bold">{selectedCreator.worksCount}</p>
-                      <p className="text-sm opacity-70">作品</p>
+                      <p className="text-xs sm:text-sm opacity-70">作品</p>
                     </div>
                     <div className="text-center">
                       <p className="font-bold">{selectedCreator.followers}</p>
-                      <p className="text-sm opacity-70">粉丝</p>
+                      <p className="text-xs sm:text-sm opacity-70">粉丝</p>
                     </div>
                     <div className="text-center">
                       <p className="font-bold">{selectedCreator.matchScore}</p>
-                      <p className="text-sm opacity-70">匹配度</p>
+                      <p className="text-xs sm:text-sm opacity-70">匹配度</p>
                     </div>
                   </div>
                 </div>
@@ -471,7 +604,7 @@ export default function CreativeMatchmaking() {
 
               {/* 创作者简介 */}
               <div className="mb-6">
-                <h4 className="font-medium mb-4">个人简介</h4>
+                <h4 className="font-medium mb-3 sm:mb-4">个人简介</h4>
                 <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   {selectedCreator.bio}
                 </p>
@@ -480,7 +613,7 @@ export default function CreativeMatchmaking() {
               {/* 基本信息 */}
               <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-medium mb-4">基本信息</h4>
+                  <h4 className="font-medium mb-3 sm:mb-4">基本信息</h4>
                   <div className={`space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                     <div className="flex items-center">
                       <i className="fas fa-map-marker-alt mr-2 text-gray-500"></i>
@@ -499,12 +632,12 @@ export default function CreativeMatchmaking() {
 
                 {/* 特长标签 */}
                 <div>
-                  <h4 className="font-medium mb-4">擅长领域</h4>
+                  <h4 className="font-medium mb-3 sm:mb-4">擅长领域</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedCreator.specialties.map((skill, index) => (
                       <span 
                         key={index} 
-                        className={`px-3 py-1.5 rounded-full text-sm ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
+                        className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}
                       >
                         {skill}
                       </span>
@@ -515,8 +648,8 @@ export default function CreativeMatchmaking() {
               
               {/* 作品预览 */}
               <div className="mb-6">
-                <h4 className="font-medium mb-4">代表作品</h4>
-                <div className="grid grid-cols-3 gap-3">
+                <h4 className="font-medium mb-3 sm:mb-4">代表作品</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="aspect-square rounded-lg overflow-hidden bg-gray-200">
                       <TianjinImage 
@@ -533,16 +666,16 @@ export default function CreativeMatchmaking() {
               </div>
               
               {/* 操作按钮 */}
-              <div className="flex justify-end space-x-3">
+              <div className="flex flex-wrap justify-end gap-2 sm:gap-3">
                 <button 
                   onClick={handleCloseProfile}
-                  className={`px-5 py-2.5 rounded-lg transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+                  className={`flex-1 sm:flex-none px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg transition-colors ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}
                 >
                   关闭
                 </button>
                 {invitationStatus[selectedCreator.id] === 'sent' && (
                   <button 
-                    className="px-5 py-2.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white transition-colors cursor-not-allowed"
+                    className="flex-1 sm:flex-none px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white transition-colors cursor-not-allowed"
                     disabled
                   >
                     邀请已发送
@@ -550,7 +683,7 @@ export default function CreativeMatchmaking() {
                 )}
                 {invitationStatus[selectedCreator.id] === 'accepted' && (
                   <button 
-                    className="px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors cursor-not-allowed"
+                    className="flex-1 sm:flex-none px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors cursor-not-allowed"
                     disabled
                   >
                     已接受邀请
@@ -558,7 +691,7 @@ export default function CreativeMatchmaking() {
                 )}
                 {invitationStatus[selectedCreator.id] === 'rejected' && (
                   <button 
-                    className="px-5 py-2.5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors cursor-not-allowed"
+                    className="flex-1 sm:flex-none px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors cursor-not-allowed"
                     disabled
                   >
                     已拒绝邀请
@@ -567,7 +700,7 @@ export default function CreativeMatchmaking() {
                 {!invitationStatus[selectedCreator.id] && (
                   <button 
                     onClick={() => handleSendInvitation(selectedCreator.id)}
-                    className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                    className="flex-1 sm:flex-none px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
                   >
                     邀请合作
                   </button>

@@ -1378,7 +1378,7 @@ export default function Community() {
                   renderItem={(item, index: number) => {
                     const c = item as Community;
                     return (
-                    <div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'} rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg`}>
+                    <div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-gray-200'} rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg cursor-pointer`} onClick={() => openCommunity(c)}>
                       <div className="relative">
                         <TianjinImage src={c.cover} alt={c.name} className="w-full object-cover transition-transform duration-500 hover:scale-105" ratio="landscape" />
                         <div className="absolute top-3 right-3">
@@ -1390,15 +1390,15 @@ export default function Community() {
                         <div className={`text-sm mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'} line-clamp-2`}>{c.description}</div>
                         <div className="flex flex-wrap gap-2 mb-3">
                           {c.tags.map((t: string, i: number) => (
-                            <button key={i} onClick={() => setSelectedStyle(t)} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} transition-colors hover:opacity-80`}>#{t}</button>
+                            <button key={i} onClick={(e) => { e.stopPropagation(); setSelectedStyle(t); }} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-700'} transition-colors hover:opacity-80`}>#{t}</button>
                           ))}
                         </div>
                         <div className="flex items-center justify-between">
                           <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.members + (joinedCommunities.includes(c.id) ? 1 : 0)} 人加入</div>
-                          <button onClick={() => toggleJoinCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full transition-all ${joinedCommunities.includes(c.id) ? 'bg-blue-600 text-white hover:bg-blue-700' : (isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}`}>{joinedCommunities.includes(c.id) ? '已加入' : '加入'}</button>
+                          <button onClick={(e) => { e.stopPropagation(); toggleJoinCommunity(c.id); }} className={`text-xs px-3 py-1 rounded-full transition-all ${joinedCommunities.includes(c.id) ? 'bg-blue-600 text-white hover:bg-blue-700' : (isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}`}>{joinedCommunities.includes(c.id) ? '已加入' : '加入'}</button>
                         </div>
                         <div className="mt-3 flex justify-end">
-                          <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} text-xs px-3 py-1 rounded-lg transition-colors`}>查看详情</button>
+                          <button onClick={(e) => { e.stopPropagation(); openCommunity(c); }} className={`${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} text-xs px-3 py-1 rounded-lg transition-colors`}>查看详情</button>
                         </div>
                       </div>
                     </div>
@@ -1443,7 +1443,7 @@ export default function Community() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {displayJoined.map(c => (
-                    <div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white/80'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-indigo-200'} rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-4 hover:shadow-lg`}>
+                    <div key={c.id} className={`${isDark ? 'bg-gray-800' : 'bg-white/80'} ring-1 ${isDark ? 'ring-gray-700' : 'ring-indigo-200'} rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-4 hover:shadow-lg cursor-pointer`} onClick={() => openCommunity(c)}>
                       <TianjinImage src={c.cover} alt={c.name} className="w-full object-cover" ratio="landscape" />
                       <div className="p-4">
                         <div className="font-medium mb-1 flex items-center gap-2">
@@ -1461,7 +1461,7 @@ export default function Community() {
                         {/* 中文注释：卡片信息条（成员数量与公告摘要；推荐社群兼容显示） */}
                         <div className={`text-xs opacity-70 mb-2 flex items-center gap-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                           {/* 中文注释：点击成员数展开只读成员列表 */}
-                          <button onClick={() => setExpandedMembersId(expandedMembersId === c.id ? null : c.id)} className={`${isDark ? 'hover:text-white' : 'hover:text-gray-900'} flex items-center gap-1`}>
+                          <button onClick={(e) => { e.stopPropagation(); setExpandedMembersId(expandedMembersId === c.id ? null : c.id); }} className={`${isDark ? 'hover:text-white' : 'hover:text-gray-900'} flex items-center gap-1`}>
                             <span>成员 {c.id.startsWith('uc-') ? (memberStore[c.id]?.length || 0) + 1 : c.members + (joinedCommunities.includes(c.id) ? 1 : 0)}</span>
                             <span className={`inline-block w-4 h-4 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}></span>
                           </button>
@@ -1495,21 +1495,21 @@ export default function Community() {
                               )
                             })()}
                             <div className="mt-2 flex justify-end">
-                              <button onClick={() => setExpandedMembersId(null)} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} text-xs px-2 py-1 rounded`}>收起</button>
+                              <button onClick={(e) => { e.stopPropagation(); setExpandedMembersId(null); }} className={`${isDark ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900'} text-xs px-2 py-1 rounded`}>收起</button>
                             </div>
                           </div>
                         )}
                         <div className="flex items-center justify-between">
                           <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{c.members + (joinedCommunities.includes(c.id) ? 1 : 0)} 人加入</div>
                           <div className="flex items-center gap-2">
-                            <button onClick={() => togglePinJoined(c.id)} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-indigo-100 text-indigo-700'}`}>{pinnedJoined.includes(c.id) ? '取消置顶' : '置顶'}</button>
-                            <button onClick={() => toggleMuteCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>{mutedCommunities.includes(c.id) ? '取消静音' : '静音'}</button>
-                            <button onClick={() => toggleJoinCommunity(c.id)} className={`text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(c.id) ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700')}`}>{joinedCommunities.includes(c.id) ? '退出' : '加入'}</button>
+                            <button onClick={(e) => { e.stopPropagation(); togglePinJoined(c.id); }} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-indigo-100 text-indigo-700'}`}>{pinnedJoined.includes(c.id) ? '取消置顶' : '置顶'}</button>
+                            <button onClick={(e) => { e.stopPropagation(); toggleMuteCommunity(c.id); }} className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'}`}>{mutedCommunities.includes(c.id) ? '取消静音' : '静音'}</button>
+                            <button onClick={(e) => { e.stopPropagation(); toggleJoinCommunity(c.id); }} className={`text-xs px-3 py-1 rounded-full ${joinedCommunities.includes(c.id) ? 'bg-red-600 text-white' : (isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700')}`}>{joinedCommunities.includes(c.id) ? '退出' : '加入'}</button>
                           </div>
                         </div>
                         <div className="mt-3 flex justify-end">
-                          <button onClick={() => openCommunity(c)} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-lg`}>查看详情</button>
-                          <button onClick={() => openManage(c.id)} className={`ml-2 text-xs px-3 py-1 rounded-lg ${isDark ? 'bg-gray-700 text-white' : 'bg-indigo-100 text-indigo-700'}`}>成员/公告</button>
+                          <button onClick={(e) => { e.stopPropagation(); openCommunity(c); }} className={`${isDark ? 'bg-gray-700 text-gray-200' : 'bg-gray-100 text-gray-800'} text-xs px-3 py-1 rounded-lg`}>查看详情</button>
+                          <button onClick={(e) => { e.stopPropagation(); openManage(c.id); }} className={`ml-2 text-xs px-3 py-1 rounded-lg ${isDark ? 'bg-gray-700 text-white' : 'bg-indigo-100 text-indigo-700'}`}>成员/公告</button>
                         </div>
                       </div>
                     </div>

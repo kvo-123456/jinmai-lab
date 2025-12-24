@@ -276,11 +276,27 @@ const Leaderboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState<boolean>(false);
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchLeaderboard();
   }, [leaderboardType, timeRange, sortBy]);
+
+  // 键盘事件监听，支持Esc键关闭弹窗
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isDetailOpen) {
+        handleCloseDetail();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDetailOpen]);
 
   // 添加本地缓存机制
   const [cache, setCache] = useState<Record<string, { posts: Post[]; users: User[] }>>({});
@@ -356,6 +372,37 @@ const Leaderboard: React.FC = () => {
 
   const handlePostClick = (postId: number) => {
     navigate(`/explore/${postId}`);
+  };
+
+  const handleUserClick = async (user: User) => {
+    setSelectedUser(user);
+    setIsDetailOpen(true);
+    setIsLoadingDetail(true);
+    
+    // 获取用户热门作品
+    try {
+      // 使用mock数据筛选用户的热门作品
+      const sortedPosts = mockPosts.filter(post => post.user_id === user.id)
+        .sort((a, b) => b.likes_count - a.likes_count)
+        .slice(0, 3);
+      setUserPosts(sortedPosts);
+    } catch (error) {
+      console.error('Failed to fetch user posts:', error);
+      setUserPosts([]);
+    } finally {
+      // 使用requestAnimationFrame确保UI流畅更新
+      requestAnimationFrame(() => {
+        setIsLoadingDetail(false);
+      });
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setIsDetailOpen(false);
+    setTimeout(() => {
+      setSelectedUser(null);
+      setUserPosts([]);
+    }, 300);
   };
 
   const getRankColor = (index: number) => {
@@ -625,7 +672,8 @@ const Leaderboard: React.FC = () => {
                   y: -2, 
                   transition: { duration: 0.2 }
                 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-300"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer"
+                onClick={() => handleUserClick(user)}
               >
                 <div className="p-6">
                   <div className="flex items-center gap-4">
@@ -705,6 +753,163 @@ const Leaderboard: React.FC = () => {
             ))
           )}
         </div>
+      )}
+
+      {/* 创作者详情弹窗 */}
+      {isDetailOpen && selectedUser && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={handleCloseDetail}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 弹窗头部 */}
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">创作者详情</h2>
+              <button
+                onClick={handleCloseDetail}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 弹窗内容 */}
+            <div className="p-6">
+              {/* 用户基本信息 */}
+              <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
+                <div className="relative">
+                  <img
+                    src={selectedUser.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(selectedUser.username)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`}
+                    alt={selectedUser.username}
+                    className="w-24 h-24 rounded-full border-4 border-gray-200 dark:border-gray-600 object-cover"
+                    width={96}
+                    height={96}
+                  />
+                </div>
+                
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{selectedUser.username}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-3 flex items-center justify-center md:justify-start gap-1">
+                    <i className="fas fa-envelope text-sm opacity-70"></i>
+                    {selectedUser.email}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 flex items-center justify-center md:justify-start gap-1">
+                    <i className="fas fa-calendar-alt text-sm opacity-70"></i>
+                    加入时间：{new Date(selectedUser.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* 作品统计 */}
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">作品数量</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{selectedUser.posts_count || 0}</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">总点赞数</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{selectedUser.total_likes || 0}</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">总浏览量</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{selectedUser.total_views || 0}</p>
+                </div>
+              </div>
+
+              {/* 热门作品 */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">热门作品</h3>
+                
+                {isLoadingDetail ? (
+                  /* 加载状态 */
+                  <div className="space-y-4 animate-pulse">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2 max-w-md"></div>
+                            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded max-w-xs"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : userPosts.length > 0 ? (
+                  /* 作品列表 */
+                  <div className="space-y-4">
+                    {userPosts.map((post) => (
+                      <div 
+                        key={post.id} 
+                        className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 hover:shadow-sm transition-shadow cursor-pointer"
+                        onClick={() => {
+                          handleCloseDetail();
+                          setTimeout(() => handlePostClick(post.id), 300);
+                        }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded flex items-center justify-center flex-shrink-0">
+                            <i className="fas fa-image text-blue-600 dark:text-blue-400"></i>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 dark:text-white truncate mb-1">{post.title}</h4>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{post.content}</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <i className="fas fa-eye"></i>
+                                {post.views}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <i className="fas fa-heart"></i>
+                                {post.likes_count}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <i className="fas fa-comment"></i>
+                                {post.comments_count}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <i className="fas fa-arrow-right text-sm"></i>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* 无作品状态 */
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center">
+                    <i className="fas fa-images text-4xl text-gray-400 dark:text-gray-600 mb-3"></i>
+                    <p className="text-gray-600 dark:text-gray-400">该用户暂无作品</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 弹窗底部 */}
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <button
+                onClick={handleCloseDetail}
+                className="px-6 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
 
       {loading && (

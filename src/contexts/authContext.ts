@@ -61,7 +61,7 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 从本地存储获取用户认证状态
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('token') || localStorage.getItem('isAuthenticated') === 'true';
   });
   
   // 从本地存储获取用户信息

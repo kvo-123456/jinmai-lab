@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { XR, ARButton } from '@react-three/xr';
 import * as THREE from 'three';
 
 // 简化的AR预览配置类型 - 兼容原ARPreviewConfig类型
@@ -22,7 +21,8 @@ export interface SimplifiedARPreviewConfig {
 const SimplifiedARPreview: React.FC<{
   config: SimplifiedARPreviewConfig;
   onClose: () => void;
-}> = ({ config, onClose }) => {
+  work?: any;
+}> = ({ config, onClose, work }) => {
   const [isARMode, setIsARMode] = useState(false);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [loading, setLoading] = useState(true);
@@ -109,31 +109,19 @@ const SimplifiedARPreview: React.FC<{
           camera={{ position: [5, 5, 5] }}
           gl={{ antialias: true }}
           style={{ width: '100%', height: '100%' }}
-          {...(isARMode && {
-            sessionInit: {
-              requiredFeatures: ['hit-test'],
-              optionalFeatures: ['dom-overlay', 'dom-overlay-for-handheld-ar'],
-              domOverlay: overlayRef.current ? { root: overlayRef.current } : undefined
-            } as any
-          })}
         >
           {/* 光照 */}
           <ambientLight intensity={1} />
           <directionalLight position={[10, 10, 10]} intensity={1} />
 
-          {/* XR组件 */}
-          {isARMode && <XR />}
-
           {/* 控制器 */}
-          {!isARMode && <OrbitControls />}
+          <OrbitControls />
 
           {/* 地面网格 */}
-          {!isARMode && (
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
-              <planeGeometry args={[20, 20]} />
-              <meshStandardMaterial color="#e2e8f0" />
-            </mesh>
-          )}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
+            <planeGeometry args={[20, 20]} />
+            <meshStandardMaterial color="#e2e8f0" />
+          </mesh>
 
           {/* 2D图像 */}
           {config.type === '2d' && texture && (
@@ -153,30 +141,28 @@ const SimplifiedARPreview: React.FC<{
         </Canvas>
 
         {/* AR按钮 */}
-        {!isARMode && (
-          <div className="absolute bottom-4 left-4 z-10">
-            {isSupported === null ? (
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-lg opacity-50 cursor-not-allowed">
-                检查AR支持...
-              </button>
-            ) : isSupported ? (
-              <ARButton
-                sessionInit={{
-                  requiredFeatures: ['hit-test'],
-                  optionalFeatures: ['dom-overlay', 'dom-overlay-for-handheld-ar'],
-                  domOverlay: overlayRef.current ? { root: overlayRef.current } : undefined
-                } as any}
-                onClick={() => setIsARMode(true)}
-              >
-                进入AR模式
-              </ARButton>
-            ) : (
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-lg opacity-50 cursor-not-allowed">
-                设备不支持AR
-              </button>
-            )}
-          </div>
-        )}
+        <div className="absolute bottom-4 left-4 z-10">
+          {isSupported === null ? (
+            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg opacity-50 cursor-not-allowed">
+              检查AR支持...
+            </button>
+          ) : isSupported ? (
+            <button
+              onClick={() => {
+                setIsARMode(true);
+                // 简化版本，不实际进入AR模式，只显示提示
+                alert('AR模式需要在支持WebXR的设备上运行');
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              进入AR模式
+            </button>
+          ) : (
+            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg opacity-50 cursor-not-allowed">
+              设备不支持AR
+            </button>
+          )}
+        </div>
 
         {/* 加载状态 */}
         {loading && (
@@ -259,7 +245,7 @@ const SimplifiedARPreview: React.FC<{
       </div>
 
       {/* 样式隔离 - 确保AR模式不影响页面其他部分 */}
-      <style jsx>{`
+      <style>{`
         /* 隔离AR预览的样式，确保不影响main元素 */
         .xr-overlay {
           all: unset;

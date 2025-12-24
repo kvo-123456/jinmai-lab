@@ -1770,17 +1770,62 @@ export default function CulturalKnowledge() {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [selectedFigure, setSelectedFigure] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showDetail, setShowDetail] = useState(false);
   const [favoriteTutorials, setFavoriteTutorials] = useState<number[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [viewIncrements, setViewIncrements] = useState<Record<number, number>>({});
+  const [imageLoadStates, setImageLoadStates] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoOverrides, setVideoOverrides] = useState<Record<number, string>>({});
   const isSafeForProxy = (url: string) => {
     const u = String(url || '')
     return u.startsWith('https://') && (u.includes('volces.com') || u.includes('tos-cn-beijing'))
   }
+  
+  // 图片加载处理
+  const handleImageLoad = (imageUrl: string) => {
+    setImageLoadStates(prev => ({ ...prev, [imageUrl]: 'loaded' }));
+  };
+  
+  // 图片加载错误处理
+  const handleImageError = (imageUrl: string) => {
+    setImageLoadStates(prev => ({ ...prev, [imageUrl]: 'error' }));
+  };
+  
+  // 获取相关推荐内容
+  const getRelatedContent = (currentId: number, contentType: string) => {
+    let allContent: any[] = [];
+    let relatedContent: any[] = [];
+    
+    switch (contentType) {
+      case 'stories':
+        allContent = historicalStories;
+        break;
+      case 'tutorials':
+        allContent = tutorialVideos;
+        break;
+      case 'elements':
+        allContent = culturalElements;
+        break;
+      case 'encyclopedia':
+        allContent = [...encyclopediaEntries, ...encyclopediaEntriesExtra, ...encyclopediaEntriesMore];
+        break;
+      case 'figures':
+        allContent = [...heritageFigures, ...heritageFiguresExtra];
+        break;
+      default:
+        allContent = historicalStories;
+    }
+    
+    // 随机选择3个不重复的相关内容
+    const shuffled = [...allContent].filter(item => item.id !== currentId).sort(() => 0.5 - Math.random());
+    relatedContent = shuffled.slice(0, 3);
+    
+    return relatedContent;
+  };
   
   // 模拟加载数据
   useEffect(() => {
@@ -1904,45 +1949,104 @@ export default function CulturalKnowledge() {
   }, [])
 
   const handleStoryClick = (story: any) => {
-    setSelectedStory(story);
-    setSelectedVideo(null);
-    setSelectedElement(null);
-    setShowDetail(true);
+    setError(null);
+    setIsDetailLoading(true);
+    setTimeout(() => {
+      try {
+        setSelectedStory(story);
+        setSelectedVideo(null);
+        setSelectedElement(null);
+        setSelectedEntry(null);
+        setSelectedFigure(null);
+        setShowDetail(true);
+      } catch (err) {
+        setError('加载故事详情失败，请稍后重试');
+        toast.error('加载故事详情失败');
+      } finally {
+        setIsDetailLoading(false);
+      }
+    }, 300);
   };
   
   const handleVideoClick = (video: any) => {
-    setSelectedVideo(video);
-    setSelectedStory(null);
-    setSelectedElement(null);
-    setShowDetail(true);
-    setIsPlaying(false);
+    setError(null);
+    setIsDetailLoading(true);
+    setTimeout(() => {
+      try {
+        setSelectedVideo(video);
+        setSelectedStory(null);
+        setSelectedElement(null);
+        setSelectedEntry(null);
+        setSelectedFigure(null);
+        setShowDetail(true);
+        setIsPlaying(false);
+      } catch (err) {
+        setError('加载视频详情失败，请稍后重试');
+        toast.error('加载视频详情失败');
+      } finally {
+        setIsDetailLoading(false);
+      }
+    }, 300);
   };
   
   const handleElementClick = (element: any) => {
-    setSelectedElement(element);
-    setSelectedStory(null);
-    setSelectedVideo(null);
-    setSelectedEntry(null);
-    setSelectedFigure(null);
-    setShowDetail(true);
+    setError(null);
+    setIsDetailLoading(true);
+    setTimeout(() => {
+      try {
+        setSelectedElement(element);
+        setSelectedStory(null);
+        setSelectedVideo(null);
+        setSelectedEntry(null);
+        setSelectedFigure(null);
+        setShowDetail(true);
+      } catch (err) {
+        setError('加载文化元素详情失败，请稍后重试');
+        toast.error('加载文化元素详情失败');
+      } finally {
+        setIsDetailLoading(false);
+      }
+    }, 300);
   };
   
   const handleEntryClick = (entry: any) => {
-    setSelectedEntry(entry);
-    setSelectedStory(null);
-    setSelectedVideo(null);
-    setSelectedElement(null);
-    setSelectedFigure(null);
-    setShowDetail(true);
+    setError(null);
+    setIsDetailLoading(true);
+    setTimeout(() => {
+      try {
+        setSelectedEntry(entry);
+        setSelectedStory(null);
+        setSelectedVideo(null);
+        setSelectedElement(null);
+        setSelectedFigure(null);
+        setShowDetail(true);
+      } catch (err) {
+        setError('加载工艺百科详情失败，请稍后重试');
+        toast.error('加载工艺百科详情失败');
+      } finally {
+        setIsDetailLoading(false);
+      }
+    }, 300);
   };
   
   const handleFigureClick = (fig: any) => {
-    setSelectedFigure(fig);
-    setSelectedStory(null);
-    setSelectedVideo(null);
-    setSelectedElement(null);
-    setSelectedEntry(null);
-    setShowDetail(true);
+    setError(null);
+    setIsDetailLoading(true);
+    setTimeout(() => {
+      try {
+        setSelectedFigure(fig);
+        setSelectedStory(null);
+        setSelectedVideo(null);
+        setSelectedElement(null);
+        setSelectedEntry(null);
+        setShowDetail(true);
+      } catch (err) {
+        setError('加载传承人物详情失败，请稍后重试');
+        toast.error('加载传承人物详情失败');
+      } finally {
+        setIsDetailLoading(false);
+      }
+    }, 300);
   };
   
   const handleBackToList = () => {
@@ -2087,6 +2191,44 @@ export default function CulturalKnowledge() {
                   <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} h-48 rounded-xl animate-pulse`}></div>
                   <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} h-4 w-3/4 rounded animate-pulse`}></div>
                   <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} h-3 w-1/2 rounded animate-pulse`}></div>
+                </div>
+                
+                {/* 相关推荐 */}
+                <div className="pt-8 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}">
+                  <h3 className="text-xl font-bold mb-6 flex items-center">
+                    <i className="fas fa-thumbs-up mr-2 text-indigo-600"></i>
+                    相关推荐
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getRelatedContent(selectedVideo.id, 'tutorials').map((item) => (
+                      <motion.div
+                        key={item.id}
+                        className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300`}
+                        whileHover={{ y: -5 }}
+                        onClick={() => handleVideoClick(item)}
+                      >
+                        <div className="relative mb-3">
+                          <img
+                            src={item.thumbnail.includes('/api/proxy/trae-api') ? 'https://picsum.photos/400/250?random=' + item.id : item.thumbnail}
+                            alt={item.title}
+                            className="w-full h-40 object-cover rounded-lg"
+                          />
+                          <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
+                            {item.duration}
+                          </div>
+                        </div>
+                        <h4 className="font-semibold mb-2 line-clamp-2">{item.title}</h4>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className={`text-xs px-2 py-1 rounded-full ${item.level === '入门' ? 'bg-green-100 text-green-600' : item.level === '进阶' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                            {item.level}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {item.views} 次观看
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -2502,66 +2644,180 @@ export default function CulturalKnowledge() {
           </>
         ) : (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 shadow-md`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 shadow-xl`}
           >
             {/* 返回按钮 */}
             <button 
               onClick={handleBackToList}
-              className={`mb-6 flex items-center text-sm ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'} transition-colors`}
+              className={`mb-6 flex items-center text-sm ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'} transition-all duration-300 hover:translate-x-[-2px]`}
             >
               <i className="fas fa-arrow-left mr-2"></i>
               返回列表
             </button>
             
+            {/* 加载状态 */}
+            {isDetailLoading && (
+              <div className="space-y-8">
+                <div className="h-64 sm:h-72 rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                <div className="space-y-4">
+                  <div className="h-8 sm:h-10 w-full sm:w-3/4 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                  <div className="h-6 sm:h-8 w-full sm:w-1/2 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                  <div className="space-y-2 sm:space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-3 sm:h-4 w-full rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* 相关推荐 */}
+                <div className="pt-8 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}">
+                  <h3 className="text-xl font-bold mb-6 flex items-center">
+                    <i className="fas fa-thumbs-up mr-2 text-indigo-600"></i>
+                    相关推荐
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getRelatedContent(selectedVideo.id, 'tutorials').map((item) => (
+                      <motion.div
+                        key={item.id}
+                        className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300`}
+                        whileHover={{ y: -5 }}
+                        onClick={() => handleVideoClick(item)}
+                      >
+                        <div className="relative mb-3">
+                          <img
+                            src={item.thumbnail.includes('/api/proxy/trae-api') ? 'https://picsum.photos/400/250?random=' + item.id : item.thumbnail}
+                            alt={item.title}
+                            className="w-full h-40 object-cover rounded-lg"
+                          />
+                          <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
+                            {item.duration}
+                          </div>
+                        </div>
+                        <h4 className="font-semibold mb-2 line-clamp-2">{item.title}</h4>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className={`text-xs px-2 py-1 rounded-full ${item.level === '入门' ? 'bg-green-100 text-green-600' : item.level === '进阶' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                            {item.level}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {item.views} 次观看
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 错误状态 */}
+            {error && (
+              <div className="space-y-6 text-center py-8 sm:py-12">
+                <div className="text-red-500 text-3xl sm:text-4xl mb-3 sm:mb-4">
+                  <i className="fas fa-exclamation-circle"></i>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold mb-2">加载失败</h3>
+                <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6 px-4">{error}</p>
+                <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 px-4">
+                  <button 
+                    onClick={() => {
+                      if (selectedStory) handleStoryClick(selectedStory);
+                      else if (selectedVideo) handleVideoClick(selectedVideo);
+                      else if (selectedElement) handleElementClick(selectedElement);
+                      else if (selectedEntry) handleEntryClick(selectedEntry);
+                      else if (selectedFigure) handleFigureClick(selectedFigure);
+                    }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full transition-colors text-sm sm:text-base flex-1 sm:flex-none min-w-[120px]"
+                  >
+                    重试
+                  </button>
+                  <button 
+                    onClick={handleBackToList}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full transition-colors text-sm sm:text-base flex-1 sm:flex-none min-w-[120px]"
+                  >
+                    返回列表
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {/* 老字号故事详情 */}
-            {selectedStory && (
-              <div>
-                <img 
-                  src={selectedStory.thumbnail.includes('/api/proxy/trae-api') ? 'https://picsum.photos/800/600?random=' + selectedStory.id : selectedStory.thumbnail} 
-                  alt={selectedStory.title} 
-                  className="w-full h-64 object-cover rounded-xl mb-6"
-                />
+            {!isDetailLoading && !error && selectedStory && (
+              <div className="space-y-8">
+                {/* 图片区域 - 添加悬停缩放效果 */}
+                <motion.div 
+                  className="relative overflow-hidden rounded-xl shadow-lg"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {imageLoadStates[selectedStory.thumbnail] !== 'loaded' && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse z-0 flex items-center justify-center">
+                      <i className="fas fa-image text-3xl sm:text-4xl text-gray-400"></i>
+                    </div>
+                  )}
+                  <img 
+                    src={selectedStory.thumbnail.includes('/api/proxy/trae-api') ? 'https://picsum.photos/800/600?random=' + selectedStory.id : selectedStory.thumbnail} 
+                    alt={selectedStory.title} 
+                    className="w-full h-64 sm:h-72 object-cover transition-transform duration-500 ease-in-out"
+                    onLoad={() => handleImageLoad(selectedStory.thumbnail)}
+                    onError={() => handleImageError(selectedStory.thumbnail)}
+                  />
+                </motion.div>
                 
-                <h2 className="text-2xl font-bold mb-6">{selectedStory.title}</h2>
+                {/* 标题和标签 */}
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-600">{selectedStory.title}</h2>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {selectedStory.tags.map((tag: string, index: number) => (
+                      <motion.span 
+                        key={index} 
+                        className={`text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} transition-all duration-300 hover:scale-105`}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        {tag}
+                      </motion.span>
+                    ))}
+                  </div>
+                </div>
                 
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {selectedStory.tags.map((tag: string, index: number) => (
-                    <span 
-                      key={index} 
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        isDark ? 'bg-gray-700' : 'bg-gray-100'
-                      }`}
+                {/* 内容区域 */}
+                <div className={`prose max-w-none ${isDark ? 'prose-invert' : ''} prose-lg`}>
+                  <p className="leading-relaxed whitespace-pre-line">{selectedStory.content}</p>
+                </div>
+                
+                {/* 操作按钮 */}
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-between items-center pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}">
+                  <div className="flex flex-wrap space-x-2 sm:space-x-3 w-full sm:w-auto">
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
+                      className={`p-2.5 sm:p-3 rounded-full ${
+                        isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                      } transition-colors flex items-center shadow-sm`}
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className={`prose max-w-none mb-8 ${isDark ? 'prose-invert' : ''}`}>
-                  <p className="text-lg leading-relaxed whitespace-pre-line">{selectedStory.content}</p>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div className="flex space-x-4">
-                    <button className={`p-2 rounded-full ${
-                      isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors flex items-center`}>
-                      <i className="far fa-bookmark mr-2"></i>
-                      <span className="text-sm">收藏</span>
-                    </button>
+                      <i className="far fa-bookmark mr-1.5 sm:mr-2"></i>
+                      <span className="text-xs sm:text-sm">收藏</span>
+                    </motion.button>
                     
-                    <button className={`p-2 rounded-full ${
-                      isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors flex items-center`}>
-                      <i className="far fa-share-square mr-2"></i>
-                      <span className="text-sm">分享</span>
-                    </button>
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
+                      className={`p-2.5 sm:p-3 rounded-full ${
+                        isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                      } transition-colors flex items-center shadow-sm`}
+                    >
+                      <i className="far fa-share-square mr-1.5 sm:mr-2"></i>
+                      <span className="text-xs sm:text-sm">分享</span>
+                    </motion.button>
                   </div>
                   
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }} 
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       if (!selectedStory) return;
                       const base = `${selectedStory.title} ${Array.isArray(selectedStory.tags) ? selectedStory.tags.join(' ') : ''}`.trim();
@@ -2569,19 +2825,51 @@ export default function CulturalKnowledge() {
                       const url = `/create?from=knowledge&prompt=${encodeURIComponent(text)}`;
                       navigate(url);
                     }}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition-colors flex items-center"
+                    className="ml-auto bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-700 hover:to-fuchsia-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all duration-300 flex items-center shadow-lg whitespace-nowrap"
                   >
-                    <i className="fas fa-magic mr-2"></i>
-                    应用到创作
-                  </button>
+                    <i className="fas fa-magic mr-1.5 sm:mr-2"></i>
+                    <span className="text-sm">应用到创作</span>
+                  </motion.button>
+                </div>
+                
+                {/* 相关推荐 */}
+                <div className="pt-8 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}">
+                  <h3 className="text-xl font-bold mb-6 flex items-center">
+                    <i className="fas fa-thumbs-up mr-2 text-indigo-600"></i>
+                    相关推荐
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getRelatedContent(selectedStory.id, 'stories').map((item) => (
+                      <motion.div
+                        key={item.id}
+                        className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300`}
+                        whileHover={{ y: -5 }}
+                        onClick={() => handleStoryClick(item)}
+                      >
+                        <img
+                          src={item.thumbnail.includes('/api/proxy/trae-api') ? 'https://picsum.photos/400/250?random=' + item.id : item.thumbnail}
+                          alt={item.title}
+                          className="w-full h-40 object-cover rounded-lg mb-3"
+                        />
+                        <h4 className="font-semibold mb-2 line-clamp-2">{item.title}</h4>
+                        <p className={`text-sm mb-3 line-clamp-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{item.excerpt}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {item.tags.slice(0, 2).map((tag: string, idx: number) => (
+                            <span key={idx} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-600' : 'bg-gray-200'}`}>{tag}</span>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
             
             {/* 非遗教程详情 */}
-            {selectedVideo && (
-              <div>
-                <div className="relative w-full h-64 rounded-xl overflow-hidden mb-6 bg-black">
+            {!isDetailLoading && !error && selectedVideo && (
+              <div className="space-y-8">
+                {/* 视频播放区域 */}
+                <div className="relative w-full rounded-xl overflow-hidden shadow-lg bg-black aspect-video">
                   {isPlaying && (videoOverrides[Number(selectedVideo.id)] || selectedVideo.videoUrl) ? (
                     <video
                       ref={videoRef}
@@ -2612,79 +2900,118 @@ export default function CulturalKnowledge() {
                     />
                   ) : (
                     <>
+                      {imageLoadStates[selectedVideo.thumbnail] !== 'loaded' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse z-0 flex items-center justify-center">
+                          <i className="fas fa-image text-4xl text-gray-400"></i>
+                        </div>
+                      )}
                       <img 
                         src={selectedVideo.thumbnail.includes('/api/proxy/trae-api') ? 'https://picsum.photos/800/600?random=' + selectedVideo.id : selectedVideo.thumbnail} 
                         alt={selectedVideo.title} 
                         className="w-full h-full object-cover opacity-70"
+                        onLoad={() => handleImageLoad(selectedVideo.thumbnail)}
+                        onError={() => handleImageError(selectedVideo.thumbnail)}
                       />
-                      <button
+                      <motion.button
                         onClick={startLearning}
                         className="absolute inset-0 flex items-center justify-center"
                         aria-label="播放教程"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
-                        <div className="w-20 h-20 rounded-full bg-red-600 bg-opacity-80 flex items-center justify-center">
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-r from-red-600 to-pink-600 bg-opacity-90 flex items-center justify-center shadow-lg">
                           <i className="fas fa-play text-white text-2xl"></i>
                         </div>
-                      </button>
+                      </motion.button>
                     </>
                   )}
                 </div>
                 
-                <div className="flex justify-between items-start mb-6">
-                  <h2 className="text-2xl font-bold">{selectedVideo.title}</h2>
-                  <span className={`text-xs px-3 py-1 rounded-full ${
-                    selectedVideo.level === '入门' 
-                      ? 'bg-green-100 text-green-600' 
-                      : selectedVideo.level === '进阶'
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-purple-100 text-purple-600'
-                  }`}>
-                    {selectedVideo.level}
-                  </span>
-                </div>
-                
-                <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                  {selectedVideo.description}
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <h3 className="text-sm font-medium mb-2">视频时长</h3>
-                    <p className="text-xl font-bold">{selectedVideo.duration}</p>
+                {/* 标题和描述 */}
+                <div>
+                  <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                    <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-600">{selectedVideo.title}</h2>
+                    <span className={`text-xs px-3 py-1 rounded-full ${
+                      selectedVideo.level === '入门' 
+                        ? 'bg-green-100 text-green-600' 
+                        : selectedVideo.level === '进阶'
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'bg-purple-100 text-purple-600'
+                    }`}>
+                      {selectedVideo.level}
+                    </span>
                   </div>
                   
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <h3 className="text-sm font-medium mb-2">难度级别</h3>
-                    <p className="text-xl font-bold">{selectedVideo.level}</p>
-                  </div>
-                  
-                  <div className={`p-4 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <h3 className="text-sm font-medium mb-2">观看次数</h3>
-                    <p className="text-xl font-bold">{(() => { try { const base = parseInt(String(selectedVideo.views).replace(/,/g,'')) || 0; const inc = viewIncrements[Number(selectedVideo.id)] || 0; return (base + inc).toLocaleString('zh-CN') } catch { return selectedVideo.views } })()}</p>
-                  </div>
+                  <p className={`text-lg ${isDark ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
+                    {selectedVideo.description}
+                  </p>
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <div className="flex space-x-4">
-                    <button onClick={toggleFavoriteSelectedVideo} className={`p-2 rounded-full ${
-                      isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors flex items-center`}>
-                      <i className="far fa-bookmark mr-2"></i>
+                {/* 视频信息卡片 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <motion.div 
+                    className={`p-5 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-50 to-indigo-50'} shadow-md`}
+                    whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                  >
+                    <h3 className="text-sm font-medium mb-2 text-gray-600">视频时长</h3>
+                    <p className="text-2xl font-bold">{selectedVideo.duration}</p>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className={`p-5 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-green-50 to-emerald-50'} shadow-md`}
+                    whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                  >
+                    <h3 className="text-sm font-medium mb-2 text-gray-600">难度级别</h3>
+                    <p className="text-2xl font-bold">{selectedVideo.level}</p>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className={`p-5 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-purple-50 to-violet-50'} shadow-md`}
+                    whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                  >
+                    <h3 className="text-sm font-medium mb-2 text-gray-600">观看次数</h3>
+                    <p className="text-2xl font-bold">{(() => { try { const base = parseInt(String(selectedVideo.views).replace(/,/g,'')) || 0; const inc = viewIncrements[Number(selectedVideo.id)] || 0; return (base + inc).toLocaleString('zh-CN') } catch { return selectedVideo.views } })()}</p>
+                  </motion.div>
+                </div>
+                
+                {/* 操作按钮 */}
+                <div className="flex flex-wrap gap-4 justify-between items-center pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}">
+                  <div className="flex flex-wrap gap-3">
+                    <motion.button 
+                      onClick={toggleFavoriteSelectedVideo} 
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
+                      className={`p-3 rounded-full ${
+                        isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                      } transition-colors flex items-center shadow-sm`}
+                    >
+                      <i className={`far ${favoriteTutorials.includes(selectedVideo.id) ? 'fa-bookmark' : 'fa-bookmark'} mr-2`}></i>
                       <span className="text-sm">{favoriteTutorials.includes(selectedVideo.id) ? '已收藏' : '收藏'}</span>
-                    </button>
+                    </motion.button>
                     
-                    <button onClick={shareSelectedVideo} className={`p-2 rounded-full ${
-                      isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors flex items-center`}>
+                    <motion.button 
+                      onClick={shareSelectedVideo} 
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
+                      className={`p-3 rounded-full ${
+                        isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                      } transition-colors flex items-center shadow-sm`}
+                    >
                       <i className="far fa-share-square mr-2"></i>
                       <span className="text-sm">分享</span>
-                    </button>
-                    <button onClick={changeVideoSource} className={`p-2 rounded-full ${
-                      isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors flex items-center`}>
+                    </motion.button>
+                    
+                    <motion.button 
+                      onClick={changeVideoSource} 
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
+                      className={`p-3 rounded-full ${
+                        isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
+                      } transition-colors flex items-center shadow-sm`}
+                    >
                       <i className="fas fa-film mr-2"></i>
                       <span className="text-sm">更换视频源</span>
-                    </button>
+                    </motion.button>
                   </div>
                   
                     <div className="flex items-center gap-3">
@@ -2710,30 +3037,46 @@ export default function CulturalKnowledge() {
             )}
             
             {/* 文化元素详情 */}
-            {selectedElement && (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <img 
-                  src={selectedElement.image.includes('/api/proxy/trae-api') ? 'https://picsum.photos/800/600?random=' + selectedElement.id : selectedElement.image} 
-                  alt={selectedElement.name} 
-                    className="w-full h-64 object-cover rounded-xl"
-                  />
+            {!isDetailLoading && !error && selectedElement && (
+              <div className="space-y-8">
+                {/* 图片和基本信息 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <motion.div 
+                    className="relative overflow-hidden rounded-xl shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {imageLoadStates[selectedElement.image] !== 'loaded' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse z-0 flex items-center justify-center">
+                        <i className="fas fa-image text-4xl text-gray-400"></i>
+                      </div>
+                    )}
+                    <img 
+                      src={selectedElement.image.includes('/api/proxy/trae-api') ? 'https://picsum.photos/800/600?random=' + selectedElement.id : selectedElement.image} 
+                      alt={selectedElement.name} 
+                      className="w-full h-72 object-cover transition-transform duration-500 ease-in-out"
+                      onLoad={() => handleImageLoad(selectedElement.image)}
+                      onError={() => handleImageError(selectedElement.image)}
+                    />
+                  </motion.div>
                   
                   <div>
-                    <div className="flex justify-between items-start mb-3">
-                      <h2 className="text-2xl font-bold">{selectedElement.name}</h2>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
+                    <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                      <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-600">{selectedElement.name}</h2>
+                      <span className={`text-xs px-3 py-1 rounded-full ${
                         isDark ? 'bg-gray-700' : 'bg-gray-100'
                       }`}>
                         {selectedElement.category}
                       </span>
                     </div>
                     
-                    <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                    <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
                       {selectedElement.description}
                     </p>
                     
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         if (!selectedElement) return;
                         const base = `${selectedElement.name} ${selectedElement.category}`.trim();
@@ -2742,100 +3085,162 @@ export default function CulturalKnowledge() {
                         const url = `/create?from=knowledge&prompt=${encodeURIComponent(text)}`;
                         navigate(url);
                       }}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition-colors flex items-center mb-6"
+                      className="bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-700 hover:to-fuchsia-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center shadow-lg"
                     >
                       <i className="fas fa-magic mr-2"></i>
                       应用到创作
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                  <div className={`p-6 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <h3 className="text-xl font-bold mb-4">历史渊源</h3>
-                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                {/* 详细信息 - 使用卡片式布局 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <motion.div 
+                    className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-700 hover:bg-gray-650' : 'bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100'} transition-all duration-300`}
+                    whileHover={{ y: -5 }}
+                  >
+                    <h3 className="text-xl font-bold mb-4 flex items-center">
+                      <i className="fas fa-history mr-2 text-indigo-600"></i>
+                      历史渊源
+                    </h3>
+                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
                       {selectedElement.history}
                     </p>
-                  </div>
+                  </motion.div>
                   
-                  <div className={`p-6 rounded-xl ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                    <h3 className="text-xl font-bold mb-4">应用场景</h3>
-                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                  <motion.div 
+                    className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-700 hover:bg-gray-650' : 'bg-gradient-to-br from-purple-50 to-fuchsia-50 hover:from-purple-100 hover:to-fuchsia-100'} transition-all duration-300`}
+                    whileHover={{ y: -5 }}
+                  >
+                    <h3 className="text-xl font-bold mb-4 flex items-center">
+                      <i className="fas fa-lightbulb mr-2 text-fuchsia-600"></i>
+                      应用场景
+                    </h3>
+                    <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
                       {selectedElement.usage}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             )}
 
             {/* 工艺百科详情 */}
-            {selectedEntry && (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <img 
-                    src={selectedEntry.image} 
-                    alt={selectedEntry.title} 
-                    className="w-full h-64 object-cover rounded-xl"
-                  />
+            {!isDetailLoading && !error && selectedEntry && (
+              <div className="space-y-8">
+                {/* 图片和基本信息 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <motion.div 
+                    className="relative overflow-hidden rounded-xl shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {imageLoadStates[selectedEntry.image] !== 'loaded' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse z-0 flex items-center justify-center">
+                        <i className="fas fa-image text-4xl text-gray-400"></i>
+                      </div>
+                    )}
+                    <img 
+                      src={selectedEntry.image} 
+                      alt={selectedEntry.title} 
+                      className="w-full h-72 object-cover transition-transform duration-500 ease-in-out"
+                      onLoad={() => handleImageLoad(selectedEntry.image)}
+                      onError={() => handleImageError(selectedEntry.image)}
+                    />
+                  </motion.div>
+                  
                   <div>
-                    <div className="flex justify-between items-start mb-3">
-                      <h2 className="text-2xl font-bold">{selectedEntry.title}</h2>
-                      <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>{selectedEntry.category}</span>
+                    <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                      <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-600">{selectedEntry.title}</h2>
+                      <span className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>{selectedEntry.category}</span>
                     </div>
-                    <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>{selectedEntry.description}</p>
-                    <button
+                    <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>{selectedEntry.description}</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         const base = `${selectedEntry.title} ${selectedEntry.category}`.trim();
                         const text = `${base} ${selectedEntry.description}`.trim();
                         const url = `/create?from=knowledge&prompt=${encodeURIComponent(text)}`;
                         navigate(url);
                       }}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition-colors flex items-center mb-6"
+                      className="bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-700 hover:to-fuchsia-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center shadow-lg"
                     >
                       <i className="fas fa-magic mr-2"></i>
                       应用到创作
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
-                <div className={`p-6 rounded-xl mt-8 ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                  <h3 className="text-xl font-bold mb-4">工艺详解</h3>
-                  <p className={`${isDark ? 'text-gray-300' : 'text-gray-800'}`}>{selectedEntry.content}</p>
-                </div>
+                
+                {/* 工艺详解 - 使用卡片式布局 */}
+                <motion.div 
+                  className={`p-8 rounded-xl shadow-lg ${isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-green-50 to-emerald-50'} transition-all duration-300`}
+                  whileHover={{ y: -5 }}
+                >
+                  <h3 className="text-2xl font-bold mb-6 flex items-center">
+                    <i className="fas fa-tools mr-3 text-emerald-600"></i>
+                    工艺详解
+                  </h3>
+                  <p className={`${isDark ? 'text-gray-300' : 'text-gray-700'} text-lg leading-relaxed`}>{selectedEntry.content}</p>
+                </motion.div>
               </div>
             )}
 
             {/* 传承人物详情 */}
-            {selectedFigure && (
-              <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <img 
-                    src={selectedFigure.image} 
-                    alt={selectedFigure.name} 
-                    className="w-full h-64 object-cover rounded-xl"
-                  />
+            {!isDetailLoading && !error && selectedFigure && (
+              <div className="space-y-8">
+                {/* 图片和基本信息 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <motion.div 
+                    className="relative overflow-hidden rounded-xl shadow-lg"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {imageLoadStates[selectedFigure.image] !== 'loaded' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse z-0 flex items-center justify-center">
+                        <i className="fas fa-image text-4xl text-gray-400"></i>
+                      </div>
+                    )}
+                    <img 
+                      src={selectedFigure.image} 
+                      alt={selectedFigure.name} 
+                      className="w-full h-72 object-cover transition-transform duration-500 ease-in-out"
+                      onLoad={() => handleImageLoad(selectedFigure.image)}
+                      onError={() => handleImageError(selectedFigure.image)}
+                    />
+                  </motion.div>
+                  
                   <div>
-                    <div className="flex justify-between items-start mb-3">
-                      <h2 className="text-2xl font-bold">{selectedFigure.name}</h2>
-                      <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>{selectedFigure.field}</span>
+                    <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
+                      <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-600">{selectedFigure.name}</h2>
+                      <span className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>{selectedFigure.field}</span>
                     </div>
-                    <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>{selectedFigure.bio}</p>
+                    <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>{selectedFigure.bio}</p>
+                    
+                    {/* 成就标签 */}
                     <div className="flex flex-wrap gap-2 mb-6">
                       {(selectedFigure.achievements || []).map((a: string, i: number) => (
-                        <span key={i} className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>{a}</span>
+                        <motion.span 
+                          key={i} 
+                          className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'} transition-all duration-300`}
+                          whileHover={{ scale: 1.05 }}
+                        >{a}</motion.span>
                       ))}
                     </div>
-                    <button
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.05 }} 
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         const base = `${selectedFigure.name} ${selectedFigure.field}`.trim();
                         const text = `${base} ${selectedFigure.bio}`.trim();
                         const url = `/create?from=knowledge&prompt=${encodeURIComponent(text)}`;
                         navigate(url);
                       }}
-                      className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition-colors flex items-center mb-6"
+                      className="bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-700 hover:to-fuchsia-700 text-white px-6 py-3 rounded-full transition-all duration-300 flex items-center shadow-lg"
                     >
                       <i className="fas fa-magic mr-2"></i>
                       应用到创作
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               </div>
