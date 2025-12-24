@@ -184,15 +184,6 @@ export default defineConfig({
     },
     // 启用更严格的 tree-shaking
     ssr: false,
-    // 确保资源文件命名稳定
-    rollupOptions: {
-      output: {
-        // 资源文件命名规则，便于缓存
-        assetFileNames: 'assets/[name]-[hash:8][extname]',
-        chunkFileNames: 'chunks/[name]-[hash:8].js',
-        entryFileNames: 'entries/[name]-[hash:8].js'
-      }
-    },
     // 优化构建目标，使用更现代的ES版本
     target: 'es2022',
     // 优化 terser 配置，减少压缩时间
@@ -259,7 +250,7 @@ export default defineConfig({
         preserve_annotations: false
       },
     },
-    // 分割代码
+    // 分割代码和资源文件配置
     rollupOptions: {
       // 启用更严格的tree-shaking
       treeshake: {

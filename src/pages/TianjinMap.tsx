@@ -356,7 +356,7 @@ export default function TianjinMap() {
         theme="heritage"
         stats={[
           { label: '文化资源', value: mapData.length.toString() },
-          { label: '文化分类', value: Object.keys(categoryNames).length.toString() },
+          { label: '文化分类', value: Object.keys(categories).length.toString() },
           { label: '历史跨度', value: '近200年' },
           { label: '文化遗产', value: '国家级' }
         ]}

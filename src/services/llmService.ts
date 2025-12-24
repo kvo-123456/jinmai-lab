@@ -1635,6 +1635,27 @@ class LLMService {
   }
   
   /**
+   * 生成创意方向
+   */
+  generateCreativeDirections(prompt: string): string[] {
+    return [];
+  }
+  
+  /**
+   * 推荐文化元素
+   */
+  recommendCulturalElements(prompt: string): string[] {
+    return [];
+  }
+  
+  /**
+   * 诊断创作问题
+   */
+  diagnoseCreationIssues(prompt: string): string[] {
+    return [];
+  }
+  
+  /**
    * 获取模型调用失败时的回退响应
    */
   private getFallbackResponse(modelId: string, errorMessage: string): string {
