@@ -3,28 +3,26 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/proxy/trae-api/(.*)",
-      "dest": "https://trae-api-sg.mchost.guru/$1",
-      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      "source": "/api/proxy/trae-api/(.*)",
+      "destination": "https://trae-api-sg.mchost.guru/$1"
     },
     {
-      "src": "/api/proxy/unsplash/(.*)",
-      "dest": "https://images.unsplash.com/$1",
-      "methods": ["GET", "OPTIONS"]
+      "source": "/api/proxy/unsplash/(.*)",
+      "destination": "https://images.unsplash.com/$1"
     },
     {
-      "src": "/test/(.*)",
-      "dest": "/"
+      "source": "/test/(.*)",
+      "destination": "/"
     },
     {
-      "src": "/(.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webmanifest|json)$)",
-      "dest": "/$1"
+      "source": "/(.*)",
+      "destination": "/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -38,7 +36,7 @@
       ]
     },
     {
-      "source": "/(.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webmanifest|json)$)",
+      "source": "/(assets|chunks|entries|icons|images)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
