@@ -330,6 +330,20 @@ export default function App() {
   return (
     <div className="relative">
       <Routes>
+        {/* 核心页面直接渲染，无需懒加载，添加缓存和动画 */}
+        {/* 确保根路径是第一个路由，提高匹配优先级 */}
+        <Route path="/" element={
+          isMobile ? (
+            <MobileLayout>
+              <RouteCache><AnimatedPage><Home /></AnimatedPage></RouteCache>
+            </MobileLayout>
+          ) : (
+            <SidebarLayout>
+              <RouteCache><AnimatedPage><Home /></AnimatedPage></RouteCache>
+            </SidebarLayout>
+          )
+        } />
+        
         {/* 不需要布局的页面 */}
         <Route path="/login" element={<AnimatedPage><Login /></AnimatedPage>} />
         <Route path="/register" element={<AnimatedPage><Register /></AnimatedPage>} />
@@ -349,8 +363,6 @@ export default function App() {
             </SidebarLayout>
           )
         }>
-          {/* 核心页面直接渲染，无需懒加载，添加缓存和动画 */}
-          <Route path="/" element={<RouteCache><AnimatedPage><Home /></AnimatedPage></RouteCache>} />
           <Route path="/explore" element={<RouteCache><AnimatedPage><Explore /></AnimatedPage></RouteCache>} />
           <Route path="/explore/:id" element={<AnimatedPage><WorkDetail /></AnimatedPage>} />
           <Route path="/tools" element={<RouteCache><AnimatedPage><Tools /></AnimatedPage></RouteCache>} />
