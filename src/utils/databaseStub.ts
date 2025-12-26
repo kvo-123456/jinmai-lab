@@ -61,3 +61,30 @@ export function neon() {
     sql: async () => ({ rows: [] })
   };
 }
+
+// Stub for ws
+export class WebSocket {
+  constructor(url: string, protocols?: string | string[]) {
+    console.warn('ws is a Node.js module and should not be used in the browser');
+  }
+  // Implement minimal WebSocket interface to prevent runtime errors
+  onopen: ((this: WebSocket, ev: Event) => any) | null = null;
+  onmessage: ((this: WebSocket, ev: MessageEvent) => any) | null = null;
+  onclose: ((this: WebSocket, ev: CloseEvent) => any) | null = null;
+  onerror: ((this: WebSocket, ev: Event) => any) | null = null;
+  send(data: any) {}
+  close() {}
+  readyState = 3; // CLOSED
+  CONNECTING = 0;
+  OPEN = 1;
+  CLOSING = 2;
+  CLOSED = 3;
+  // Add static properties
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+}
+
+// Default export for ws
+export default WebSocket;

@@ -156,6 +156,7 @@ export default defineConfig({
       'mongodb': '@/utils/databaseStub',
       'pg': '@/utils/databaseStub',
       '@neondatabase/serverless': '@/utils/databaseStub',
+      'ws': '@/utils/databaseStub',
     }
   },
   build: {
@@ -263,8 +264,8 @@ export default defineConfig({
           return id.includes('@fortawesome') || id.includes('sonner');
         }
       },
-      // 外部化 Node.js 原生模块，避免打包到浏览器代码中
-      external: ['better-sqlite3', 'mongodb', 'pg', '@neondatabase/serverless', 'ws'],
+      // 移除了 external 配置，因为已使用 alias 将这些模块映射到 stub 文件
+      // external: ['better-sqlite3', 'mongodb', 'pg', '@neondatabase/serverless', 'ws'],
       // 优化输入选项
       input: {
         main: 'index.html',
