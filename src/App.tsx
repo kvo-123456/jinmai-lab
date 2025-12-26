@@ -185,7 +185,7 @@ export default function App() {
   const location = useLocation();
   // 认证上下文
   const { user } = useContext(AuthContext);
-  // 添加响应式布局状态
+  // 添加响应式布局状态 - 初始值设为false，避免服务器端渲染不匹配
   const [isMobile, setIsMobile] = useState(false);
   // 添加用户反馈状态
   const [showFeedback, setShowFeedback] = useState(false);
@@ -293,8 +293,13 @@ export default function App() {
     return () => document.removeEventListener('mousedown', handler);
   }, [showCommunityMessages]);
   
-  // 监听窗口大小变化
+  // 添加挂载状态，确保只在客户端执行
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // 在客户端挂载后执行，避免服务器端渲染时的hydration不匹配
   useEffect(() => {
+    setIsMounted(true);
+    
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -593,8 +598,9 @@ export default function App() {
       <Routes>
         {/* 核心页面直接渲染，无需懒加载，添加缓存和动画 */}
         {/* 确保根路径是第一个路由，提高匹配优先级 */}
+        {/* 使用isMounted状态，确保服务器端渲染时使用默认布局，避免hydration不匹配 */}
         <Route path="/" element={
-          isMobile ? (
+          (isMounted && isMobile) ? (
             <MobileLayout>
               <RouteCache><AnimatedPage><Home /></AnimatedPage></RouteCache>
             </MobileLayout>
@@ -614,7 +620,7 @@ export default function App() {
         
         {/* 使用布局的页面，为所有子路由添加动画 */}
         <Route element={
-          isMobile ? (
+          (isMounted && isMobile) ? (
             <MobileLayout>
               <AnimatedPage>
                 <Outlet />
