@@ -3,40 +3,7 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/(.*.(js|css|png|jpg|jpeg|svg|gif|woff2|woff|ttf|json|ico|webmanifest|txt))$",
-      "destination": "/$1"
-    },
-    {
-      "source": "/icons/(.*)",
-      "destination": "/icons/$1"
-    },
-    {
-      "source": "/assets/(.*)",
-      "destination": "/assets/$1"
-    },
-    {
-      "source": "/chunks/(.*)",
-      "destination": "/chunks/$1"
-    },
-    {
-      "source": "/entries/(.*)",
-      "destination": "/entries/$1"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
