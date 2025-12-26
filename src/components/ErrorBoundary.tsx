@@ -105,9 +105,21 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           
           {/* 错误信息 */}
           <main className="flex-1 container mx-auto px-4 py-16 flex flex-col items-center justify-center text-center">
-            {/* 解决方案 */}
+            {/* 错误详情（仅在开发环境显示或添加调试按钮） */}
             <div className={`mb-8 p-6 rounded-2xl ${isDark ? 'bg-gray-800' : 'bg-white'} max-w-md w-full shadow-lg transition-all hover:shadow-xl`}>
               <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <i className="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                错误详情
+              </h3>
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 dark:bg-gray-700 rounded-lg text-left overflow-auto max-h-60">
+                  <p className="text-sm font-medium text-red-800 dark:text-red-300">{error.name}: {error.message}</p>
+                  <pre className="text-xs mt-2 text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{error.stack}</pre>
+                </div>
+              )}
+              
+              {/* 解决方案 */}
+              <h3 className="text-lg font-semibold mb-4 mt-6 flex items-center">
                 <i className="fas fa-lightbulb text-yellow-500 mr-2"></i>
                 推荐解决方案
               </h3>
@@ -131,11 +143,13 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                 刷新页面
               </button>
               <button 
-                onClick={() => window.history.back()}
-                className={`px-8 py-3 rounded-full transition-all transform hover:scale-105 ${isDark ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 shadow-md hover:shadow-lg'}`}
+                onClick={() => {
+                  window.location.href = '/test-basic';
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
-                <i className="fas fa-arrow-left mr-2"></i>
-                返回上一页
+                <i className="fas fa-home mr-2"></i>
+                基础测试页面
               </button>
               <button 
                 onClick={() => this.setState({ showFeedback: true })}

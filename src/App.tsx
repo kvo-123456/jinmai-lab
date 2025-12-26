@@ -69,6 +69,7 @@ const CollaborationDemo = lazy(() => import("@/pages/CollaborationDemo"));
 const ImageTest = lazy(() => import("@/pages/ImageTest"));
 const CulturalNewsPage = lazy(() => import("@/pages/CulturalNewsPage"));
 const GitHubImageTestPage = lazy(() => import("@/pages/GitHubImageTestPage"));
+import TestBasic from "@/pages/TestBasic";
 // 会员相关页面
 const Membership = lazy(() => import("@/pages/Membership"));
 const MembershipPayment = lazy(() => import("@/pages/MembershipPayment"));
@@ -346,6 +347,7 @@ export default function App() {
         <Route path="/register" element={<AnimatedPage><Register /></AnimatedPage>} />
         {/* 测试页面 */}
         <Route path="/test" element={<AnimatedPage><TestPage /></AnimatedPage>} />
+        <Route path="/test-basic" element={<AnimatedPage><TestBasic /></AnimatedPage>} />
         
         {/* 使用布局的页面 */}
         <Route element={

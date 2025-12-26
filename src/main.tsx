@@ -31,9 +31,7 @@ import { initPerformanceMonitor } from './utils/performanceMonitor';
 // 初始化性能监控
 initPerformanceMonitor();
 
-// 暂时禁用Service Worker，排查问题
-// import { registerServiceWorker } from './utils/serviceWorker';
-// registerServiceWorker();
+// 移除Service Worker相关代码，排查线上问题
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
