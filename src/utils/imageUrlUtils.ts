@@ -6,7 +6,10 @@
  * @returns 处理后的图片URL
  */
 export function processImageUrl(url: string): string {
-  if (!url) return '';
+  if (!url) {
+    console.warn('Empty URL provided to processImageUrl');
+    return url;
+  }
   
   try {
     // 检查是否为base64编码的图片数据

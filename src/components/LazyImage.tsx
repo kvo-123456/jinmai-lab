@@ -234,13 +234,38 @@ const LazyImage: React.FC<LazyImageProps> = React.memo(({
           </div>
         )}
         
-        {/* 加载失败状态 - 显示fallback图片 */}
+        {/* 加载失败状态 - 显示自定义错误界面，允许重试 */}
         {isError && (
-          <img
-            src={fallbackSrc || defaultFallbackSrc}
-            alt={`${alt} 的占位图`}
-            className="absolute inset-0 z-20 w-full h-full object-cover"
-          />
+          <div className="absolute inset-0 z-20 w-full h-full flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800">
+            <div className="text-center p-4">
+              <i className="fas fa-exclamation-circle text-4xl text-red-500 mb-2"></i>
+              <p className="text-gray-800 dark:text-gray-200 mb-1">图片加载失败</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">请检查网络连接或稍后重试</p>
+              <button 
+                onClick={() => {
+                  setIsLoaded(false);
+                  setIsError(false);
+                  const img = imgRef.current;
+                  if (img) {
+                    // 重置图片src，触发重新加载
+                    img.src = '';
+                    setTimeout(() => {
+                      img.src = currentSrc;
+                    }, 0);
+                  }
+                }} 
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                重试
+              </button>
+              {/* 添加调试信息，便于开发人员排查问题 */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                  <p>URL: {currentSrc}</p>
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

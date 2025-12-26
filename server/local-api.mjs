@@ -994,17 +994,25 @@ const server = http.createServer(async (req, res) => {
       const remoteUrl = `https://trae-api-sg.mchost.guru${remotePath}${queryString}`
       
       try {
+        // 允许重定向，最多跟随10次重定向
         const resp = await fetch(remoteUrl, {
           method: req.method,
           headers: {
             'Accept': 'application/json, image/*, text/html, */*',
-          }
+          },
+          redirect: 'follow', // 跟随重定向
+          follow: 10, // 最多跟随10次重定向
         })
         
         // 设置响应头
         res.statusCode = resp.status
         const contentType = resp.headers.get('content-type') || 'application/octet-stream'
         res.setHeader('Content-Type', contentType)
+        
+        // 设置CORS头
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         
         // 根据响应类型返回相应的数据
         if (contentType.startsWith('image/')) {
@@ -1021,6 +1029,7 @@ const server = http.createServer(async (req, res) => {
           res.end(text)
         }
       } catch (e) {
+        console.error(`[Proxy Error] ${remoteUrl}: ${e.message}`)
         sendJson(res, 500, { error: 'PROXY_ERROR', message: e?.message || 'UNKNOWN' })
       }
       return
@@ -1033,12 +1042,15 @@ const server = http.createServer(async (req, res) => {
       const remoteUrl = `https://images.unsplash.com${remotePath}${queryString}`
       
       try {
+        // 允许重定向，最多跟随10次重定向
         const resp = await fetch(remoteUrl, {
           method: req.method,
           headers: {
             'Accept': 'image/*, */*',
             'User-Agent': req.headers['user-agent'] || '',
-          }
+          },
+          redirect: 'follow', // 跟随重定向
+          follow: 10, // 最多跟随10次重定向
         })
         
         // 设置响应头
@@ -1046,11 +1058,16 @@ const server = http.createServer(async (req, res) => {
         const contentType = resp.headers.get('content-type') || 'image/jpeg'
         res.setHeader('Content-Type', contentType)
         
+        // 设置CORS头
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        
         // 返回图片二进制数据
         const buffer = Buffer.from(await resp.arrayBuffer())
         res.end(buffer)
       } catch (e) {
-        console.error('Unsplash proxy error:', e.message)
+        console.error(`[Unsplash Proxy Error] ${remoteUrl}: ${e.message}`)
         sendJson(res, 500, { error: 'UNSPLASH_PROXY_ERROR', message: e?.message || 'Failed to proxy Unsplash image' })
       }
       return
