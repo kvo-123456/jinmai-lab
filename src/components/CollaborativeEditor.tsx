@@ -490,50 +490,6 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = React.memo(({
     });
   };
 
-  // 获取光标位置
-  const getCursorPosition = (position: number): number => {
-    if (!editorRef.current) return position * 8;
-    
-    const editor = editorRef.current;
-    const textContent = editor.textContent || '';
-    
-    if (position === 0) return 0;
-    if (position >= textContent.length) {
-      // 如果位置超出文本长度，使用最后一个字符的位置
-      const range = document.createRange();
-      range.selectNodeContents(editor);
-      range.collapse(false);
-      const rect = range.getBoundingClientRect();
-      const editorRect = editor.getBoundingClientRect();
-      return rect.left - editorRect.left;
-    }
-    
-    // 创建临时范围来测量位置
-    const range = document.createRange();
-    range.selectNodeContents(editor);
-    range.setStart(editor.firstChild || editor, 0);
-    
-    let currentPos = 0;
-    let node: Node | null = editor.firstChild;
-    
-    while (node && currentPos < position) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const textLength = node.textContent?.length || 0;
-        if (currentPos + textLength >= position) {
-          const offset = position - currentPos;
-          range.setStart(node, offset);
-          break;
-        }
-        currentPos += textLength;
-      }
-      node = node.nextSibling;
-    }
-    
-    const rect = range.getBoundingClientRect();
-    const editorRect = editor.getBoundingClientRect();
-    return rect.left - editorRect.left;
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
