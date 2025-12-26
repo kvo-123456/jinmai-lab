@@ -10,6 +10,7 @@ function getPlugins() {
     tsconfigPaths(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: null, // 禁用自动注入registerSW.js
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.svg', 'fonts/*.ttf', 'fonts/*.woff2', 'images/*.png', 'images/*.jpg'],
       manifest: {
         name: '津脉智坊 - 津门老字号共创平台',

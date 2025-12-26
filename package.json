@@ -17,6 +17,7 @@
     "test:ci": "jest --ci --coverage"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.10.2",
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@mediapipe/camera_utils": "^0.3.1675466862",
     "@mediapipe/hands": "^0.4.1675469240",

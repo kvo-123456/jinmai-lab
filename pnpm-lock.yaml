@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: ^2.10.2
+        version: 2.10.2
       '@fortawesome/fontawesome-free':
         specifier: ^7.1.0
         version: 7.1.0
