@@ -7,84 +7,64 @@
     <script>
       // 在所有脚本加载前执行，确保任何尝试在undefined对象上设置属性的操作都不会导致应用崩溃
       (function() {
-        // 1. 核心保护：确保knowledge和lazilyLoaded对象总是存在
-        // 直接在全局作用域创建这些对象，确保任何脚本都能访问到
-        console.log('Initializing global objects...');
+        console.log('=== INITIALIZING GLOBAL PROTECTION ===');
         
         // 确保window对象存在
-        if (typeof window === 'undefined') {
-          console.error('Window object is undefined!');
-        } else {
-          // 初始化knowledge对象
-          if (typeof window.knowledge === 'undefined') {
-            console.log('Initializing window.knowledge...');
-            window.knowledge = {};
-          } else {
-            console.log('window.knowledge already exists:', typeof window.knowledge);
-          }
+        if (typeof window !== 'undefined') {
+          // 1. 最直接的保护：确保knowledge和lazilyLoaded对象总是存在
+          // 直接赋值，确保它们在任何脚本访问前就已经存在
+          console.log('Initializing window.knowledge and window.lazilyLoaded...');
           
-          // 初始化lazilyLoaded对象
-          if (typeof window.lazilyLoaded === 'undefined') {
-            console.log('Initializing window.lazilyLoaded...');
-            window.lazilyLoaded = {};
-          } else {
-            console.log('window.lazilyLoaded already exists:', typeof window.lazilyLoaded);
-          }
+          // 初始化内部存储变量
+          window._knowledge = {};
+          window._lazilyLoaded = {};
           
-          // 2. 监控这些对象的访问，记录谁在修改它们
+          // 使用Object.defineProperty创建访问器属性
+          // 这样无论何时访问window.knowledge或window.lazilyLoaded，都能得到正确的对象
           Object.defineProperty(window, 'knowledge', {
             configurable: true,
-            enumerable: false,
+            enumerable: true,
             get: function() {
               return this._knowledge;
             },
             set: function(newValue) {
-              console.warn('Setting window.knowledge to:', newValue);
-              console.trace('Stack trace for knowledge assignment:');
               this._knowledge = newValue || {};
             }
           });
           
           Object.defineProperty(window, 'lazilyLoaded', {
             configurable: true,
-            enumerable: false,
+            enumerable: true,
             get: function() {
               return this._lazilyLoaded;
             },
             set: function(newValue) {
-              console.warn('Setting window.lazilyLoaded to:', newValue);
-              console.trace('Stack trace for lazilyLoaded assignment:');
               this._lazilyLoaded = newValue || {};
             }
           });
           
-          // 3. 初始化内部存储
-          window._knowledge = window.knowledge;
-          window._lazilyLoaded = window.lazilyLoaded;
+          console.log('Global objects initialized successfully:');
+          console.log('- window.knowledge:', typeof window.knowledge, window.knowledge);
+          console.log('- window.lazilyLoaded:', typeof window.lazilyLoaded, window.lazilyLoaded);
         }
         
-        // 4. 捕获并详细记录所有错误
+        // 2. 捕获并阻止"Cannot set properties of undefined"错误
         window.addEventListener('error', function(event) {
-          console.error('=== GLOBAL ERROR CAUGHT ===');
-          console.error('Error message:', event.message);
-          console.error('Error source:', event.filename, 'line', event.lineno, 'col', event.colno);
-          console.error('Error object:', event.error);
-          console.error('Error details:', event);
-          
-          // 特别处理"Cannot set properties of undefined"错误
           if (event.message && event.message.includes('Cannot set properties of undefined')) {
-            console.error('>>> Cannot set properties of undefined detected! <<<');
-            // 尝试提取更多信息
-            const match = event.message.match(/Cannot set properties of undefined \(setting '(.*)'\)/);
-            if (match) {
-              console.error('Property name:', match[1]);
-            }
+            console.error('=== CRITICAL ERROR BLOCKED ===');
+            console.error('Error message:', event.message);
+            console.error('Error source:', event.filename, 'line', event.lineno, 'col', event.colno);
+            console.error('Error details:', event);
+            
+            // 阻止错误继续传播，防止应用崩溃
+            event.preventDefault();
+            event.stopPropagation();
+            
+            return false;
           }
-          
-          // 不阻止错误传播，让浏览器正常显示，便于调试
         });
         
-        console.log('Global error protection initialized successfully');
+        console.log('=== GLOBAL PROTECTION INITIALIZED ===');
       })();
     </script>
 
