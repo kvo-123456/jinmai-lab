@@ -194,9 +194,9 @@ export default defineConfig({
     // 优化 terser 配置，减少压缩时间
     terserOptions: {
       compress: {
-        drop_console: true, // 始终移除控制台日志
+        drop_console: false, // 保留控制台日志，用于调试和错误捕获
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.warn', 'console.error', 'console.debug', 'console.info', 'console.trace', 'console.dir', 'console.table'],
+        pure_funcs: ['console.log'], // 只移除 console.log，保留其他日志函数用于调试
         pure_getters: true,
         passes: 3, // 减少压缩次数，加快构建速度
         // 更安全的压缩选项，减少构建时间
