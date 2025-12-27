@@ -388,7 +388,7 @@ CORS_ALLOW_ORIGIN="*" # 允许的来源
    - 构建命令：`pnpm build`
    - 输出目录：`dist`
    - 自动部署：已开启，代码提交至GitHub后自动触发构建与部署
-3. 生产部署URL：`https://jinmai-3lqhy32my-kvos-projects.vercel.app`
+3. 生产部署URL：`https://jinmai-3jhepvnda-kvos-projects.vercel.app`
 4. 预览部署URL：每次PR或分支提交都会生成预览URL
 
 ### CI/CD配置
