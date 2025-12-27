@@ -17,11 +17,17 @@ export default function Home() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   
-  // 添加响应式布局状态
+  // 添加响应式布局状态 - 初始值为false，确保服务器端和客户端渲染一致
   const [isMobile, setIsMobile] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   
   // 监听窗口大小变化
   useEffect(() => {
+    // 只在客户端环境中执行
+    if (typeof window === 'undefined') return;
+    
+    setIsMounted(true);
+    
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
@@ -144,11 +150,17 @@ export default function Home() {
   const toggleInspire = () => {
     const next = !inspireOn;
     setInspireOn(next);
-    try { localStorage.setItem('inspireOn', String(next)); } catch {}
+    // 只在客户端环境中访问localStorage
+    if (typeof localStorage !== 'undefined') {
+      try { localStorage.setItem('inspireOn', String(next)); } catch {}
+    }
     toast.info(next ? '灵感加持已开启' : '灵感加持已关闭');
   };
   
   useEffect(() => {
+    // 只在客户端环境中访问localStorage
+    if (typeof localStorage === 'undefined') return;
+    
     try {
       const saved = localStorage.getItem('inspireOn');
       if (saved) setInspireOn(saved === 'true');
@@ -180,16 +192,37 @@ export default function Home() {
       return next;
     });
   };
+  // 英雄区变体 - 初始值为'A'，确保服务器端和客户端渲染一致
+  const [heroVariant, setHeroVariant] = useState<'A' | 'B'>('A');
   
-  // 英雄区变体
-  const [heroVariant] = useState<'A' | 'B'>(() => {
+  // 在客户端挂载后，从localStorage读取heroVariant或生成随机值
+  useEffect(() => {
+    // 只在客户端环境中执行
+    if (typeof localStorage === 'undefined') return;
+    
     try {
-      const v = localStorage.getItem('heroVariant')
-      if (v === 'A' || v === 'B') return v as any
-    } catch {}
-    return Math.random() > 0.5 ? 'A' : 'B'
-  })
-  useEffect(() => { try { localStorage.setItem('heroVariant', heroVariant) } catch {} }, [heroVariant])
+      const v = localStorage.getItem('heroVariant');
+      if (v === 'A' || v === 'B') {
+        setHeroVariant(v as 'A' | 'B');
+      } else {
+        // 生成随机值
+        const randomVariant = Math.random() > 0.5 ? 'A' : 'B';
+        setHeroVariant(randomVariant);
+        localStorage.setItem('heroVariant', randomVariant);
+      }
+    } catch {
+      // 如果发生错误，使用默认值
+      setHeroVariant('A');
+    }
+  }, []);
+  
+  // 保存heroVariant到localStorage
+  useEffect(() => {
+    // 只在客户端环境中访问localStorage
+    if (typeof localStorage === 'undefined') return;
+    
+    try { localStorage.setItem('heroVariant', heroVariant); } catch {}
+  }, [heroVariant])
   
   // 推荐问题
   const recommended = [

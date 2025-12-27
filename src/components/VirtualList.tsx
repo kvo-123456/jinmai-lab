@@ -24,6 +24,7 @@ export default function VirtualList<T>({
   // 初始化默认值，避免SSR期间访问window
   const [windowWidth, setWindowWidth] = React.useState(1200);
   const [scrollTop, setScrollTop] = React.useState(0);
+  const [isMounted, setIsMounted] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   // 在客户端挂载后初始化windowWidth并添加resize事件监听
@@ -33,6 +34,7 @@ export default function VirtualList<T>({
     
     // 初始化windowWidth
     setWindowWidth(window.innerWidth);
+    setIsMounted(true);
     
     // 添加resize事件监听
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -40,11 +42,16 @@ export default function VirtualList<T>({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 确保服务器端和客户端渲染一致，避免hydration错误
+  // 服务器端始终使用columns，客户端挂载后才使用responsiveColumns
   const responsiveColumns = React.useMemo(() => {
+    // 服务器端渲染或未挂载时，始终使用原始columns值
+    if (!isMounted) return columns;
+    
     if (windowWidth < 640) return 1;
     if (windowWidth < 1024) return Math.min(columns, 2);
     return columns;
-  }, [windowWidth, columns]);
+  }, [isMounted, windowWidth, columns]);
 
   // 计算可见区域的项目索引
   const getVisibleItemRange = React.useMemo(() => {
