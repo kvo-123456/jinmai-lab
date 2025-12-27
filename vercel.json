@@ -1,8 +1,7 @@
 {
   "version": 2,
+  "framework": "vite",
   "installCommand": "pnpm install",
   "buildCommand": "vite build",
-  "outputDirectory": "dist",
-  "cleanUrls": true,
-  "trailingSlash": false
+  "outputDirectory": "dist"
 }
