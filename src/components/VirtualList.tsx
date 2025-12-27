@@ -21,12 +21,20 @@ export default function VirtualList<T>({
   itemHeight = 200,
   overscan = 2,
 }: VirtualListProps<T>) {
-  const [windowWidth, setWindowWidth] = React.useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  // 初始化默认值，避免SSR期间访问window
+  const [windowWidth, setWindowWidth] = React.useState(1200);
   const [scrollTop, setScrollTop] = React.useState(0);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // 响应式调整列数
+  // 在客户端挂载后初始化windowWidth并添加resize事件监听
   React.useEffect(() => {
+    // 只在浏览器环境中执行
+    if (typeof window === 'undefined') return;
+    
+    // 初始化windowWidth
+    setWindowWidth(window.innerWidth);
+    
+    // 添加resize事件监听
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
