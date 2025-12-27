@@ -3,35 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- 全局 knowledge 属性保护脚本 -->
+    <!-- 全局对象属性保护脚本 -->
     <script>
-      // 在所有脚本加载前执行，保护全局 knowledge 属性
+      // 在所有脚本加载前执行，保护全局对象
       (function() {
-        // 1. 捕获全局错误，特别处理 "Cannot set properties of undefined (setting 'knowledge')" 错误
+        // 1. 捕获全局错误，处理 "Cannot set properties of undefined" 类型的错误
         window.addEventListener('error', function(event) {
-          if (event.message && event.message.includes('Cannot set properties of undefined (setting \'knowledge\')')) {
-            console.error('CRITICAL ERROR: Attempting to set knowledge property on undefined object!');
+          if (event.message && event.message.includes('Cannot set properties of undefined')) {
+            console.error('CRITICAL ERROR: Attempting to set property on undefined object!');
+            console.error('Error message:', event.message);
             console.error('Error details:', event);
-            console.trace('Stack trace for error:');
             
             // 阻止错误继续传播，防止应用崩溃
             event.preventDefault();
           }
         });
         
-        // 2. 监控对象属性设置，防止意外修改全局对象
+        // 2. 重写 Object.defineProperty，捕获所有属性定义操作
         const originalDefineProperty = Object.defineProperty;
         Object.defineProperty = function(obj, prop, descriptor) {
-          if (prop === 'knowledge') {
-            if (obj === undefined || obj === null) {
-              console.error('CRITICAL: Attempting to define knowledge property on', obj);
-              console.trace('Stack trace:');
-            } else if (obj === window) {
-              console.warn('Warning: Attempting to set knowledge property on window object:', descriptor);
-              console.trace('Stack trace:');
-            } else {
-              console.log('Info: Setting knowledge property on', obj.constructor.name || typeof obj);
-            }
+          if (obj === undefined || obj === null) {
+            console.error('CRITICAL: Attempting to define property', prop, 'on', obj);
+            console.trace('Stack trace:');
+            // 返回一个空对象，避免应用崩溃
+            return {};
           }
           return originalDefineProperty.call(this, obj, prop, descriptor);
         };
@@ -40,15 +35,29 @@
         const originalSetProperty = Object.prototype.__defineSetter__;
         if (originalSetProperty) {
           Object.prototype.__defineSetter__ = function(prop, setter) {
-            if (prop === 'knowledge') {
-              console.warn('Attempting to define setter for knowledge property:', setter);
+            if (this === undefined || this === null) {
+              console.error('CRITICAL: Attempting to define setter for property', prop, 'on', this);
               console.trace('Stack trace:');
+              return;
             }
             return originalSetProperty.call(this, prop, setter);
           };
         }
         
-        // 4. 定义一个安全的全局 knowledge 属性
+        // 4. 重写普通赋值操作，捕获对 undefined 对象的属性赋值
+        const originalObjectPrototype = Object.prototype;
+        const originalSet = Reflect.set;
+        Reflect.set = function(target, propertyKey, value, receiver) {
+          if (target === undefined || target === null) {
+            console.error('CRITICAL: Attempting to set property', propertyKey, 'on', target, 'with value', value);
+            console.trace('Stack trace:');
+            // 返回 true，表示赋值成功，避免应用崩溃
+            return true;
+          }
+          return originalSet.call(this, target, propertyKey, value, receiver);
+        };
+        
+        // 5. 定义一个安全的全局 knowledge 属性
         window._protectedKnowledge = {
           value: undefined,
           get: function() {
@@ -72,7 +81,7 @@
           }
         });
         
-        console.log('Global knowledge property protection initialized');
+        console.log('Global object property protection initialized');
       })();
     </script>
 
