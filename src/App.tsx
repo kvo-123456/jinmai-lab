@@ -186,7 +186,7 @@ export default function App() {
   const location = useLocation();
   // 添加挂载状态，确保只在客户端执行
   const [isMounted, setIsMounted] = useState(false);
-  // 添加响应式布局状态 - 只有在客户端挂载后才初始化
+  // 添加响应式布局状态 - 服务器端和客户端初始状态必须一致
   const [isMobile, setIsMobile] = useState(false);
   // 添加用户反馈状态
   const [showFeedback, setShowFeedback] = useState(false);

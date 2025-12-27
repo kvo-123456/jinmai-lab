@@ -33,14 +33,15 @@ interface ThemeProviderProps {
 
 // 创建 ThemeProvider 组件
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  // 确保在服务器端渲染时使用默认主题，避免访问浏览器API
-  const [theme, setTheme] = useState<Theme>(() => {
-    // 只在浏览器环境中调用initializeTheme
-    if (typeof window !== 'undefined') {
-      return initializeTheme();
-    }
-    return defaultTheme;
-  });
+  // 服务器端和客户端初始状态必须完全一致，避免hydration错误
+  // 初始状态始终使用defaultTheme，在客户端挂载后再更新
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+
+  // 在客户端挂载后，从localStorage读取并更新主题
+  useEffect(() => {
+    const savedTheme = initializeTheme();
+    setTheme(savedTheme);
+  }, []);
 
   // 更新主题类到DOM
   const updateThemeClass = useCallback(() => {
