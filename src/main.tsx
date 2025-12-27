@@ -94,12 +94,39 @@ window.addEventListener('error', (event) => {
 }, true);
 
 // 确保关键全局对象总是存在，防止 "Cannot set properties of undefined" 错误
-if (!window.knowledge) {
-  window.knowledge = {};
-}
-if (!window.lazilyLoaded) {
-  window.lazilyLoaded = {};
-}
+// 在所有代码执行前立即初始化这些对象
+(function() {
+  // 直接赋值，确保它们总是存在
+  window.knowledge = window.knowledge || {};
+  window.lazilyLoaded = window.lazilyLoaded || {};
+  
+  // 使用 Object.defineProperty 确保这些属性永远不会是 undefined
+  Object.defineProperty(window, 'knowledge', {
+    configurable: true,
+    enumerable: false,
+    get: function() {
+      return this._knowledge || {};
+    },
+    set: function(newValue) {
+      this._knowledge = newValue || {};
+    }
+  });
+  
+  Object.defineProperty(window, 'lazilyLoaded', {
+    configurable: true,
+    enumerable: false,
+    get: function() {
+      return this._lazilyLoaded || {};
+    },
+    set: function(newValue) {
+      this._lazilyLoaded = newValue || {};
+    }
+  });
+  
+  // 初始化内部存储
+  window._knowledge = window._knowledge || {};
+  window._lazilyLoaded = window._lazilyLoaded || {};
+})();
 
 // 注销旧的Service Worker，确保没有遗留的Service Worker影响应用
 if ('serviceWorker' in navigator) {
@@ -114,24 +141,42 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <LanguageProvider>
-        <ThemeProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <WorkflowProvider>
-                <App />
-                <Toaster />
-                {/* Vercel Analytics and Speed Insights */}
-                <Analytics />
-                <SpeedInsights />
-              </WorkflowProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </ThemeProvider>
-      </LanguageProvider>
-    </ErrorBoundary>
-  </StrictMode>
-);
+// 使用try-catch包装整个应用渲染过程，防止任何错误导致应用崩溃
+try {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <LanguageProvider>
+          <ThemeProvider>
+            <BrowserRouter>
+              <AuthProvider>
+                <WorkflowProvider>
+                  <App />
+                  <Toaster />
+                  {/* Vercel Analytics and Speed Insights */}
+                  <Analytics />
+                  <SpeedInsights />
+                </WorkflowProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </ThemeProvider>
+        </LanguageProvider>
+      </ErrorBoundary>
+    </StrictMode>
+  );
+} catch (error) {
+  console.error('Critical error during app rendering:', error);
+  // 如果渲染失败，显示一个友好的错误页面
+  const root = document.getElementById("root");
+  if (root) {
+    root.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; padding: 20px;">
+        <h1 style="color: #ff4444; margin-bottom: 20px;">应用加载失败</h1>
+        <p style="color: #666; text-align: center; max-width: 600px;">很抱歉，应用在加载过程中遇到了一些问题。请刷新页面重试，或者稍后再试。</p>
+        <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background-color: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+          刷新页面
+        </button>
+      </div>
+    `;
+  }
+}
