@@ -28,6 +28,12 @@ export const themeOrder: Theme[] = ['light', 'dark', 'pink', 'blue', 'green', 'a
 
 // 检测系统主题偏好
 export const getSystemTheme = (): 'light' | 'dark' => {
+  // 检查是否在浏览器环境中
+  const isBrowser = typeof window !== 'undefined';
+  if (!isBrowser) {
+    return 'light'; // 默认返回浅色主题
+  }
+  
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
@@ -41,23 +47,43 @@ export const getAppliedTheme = (theme: Theme): 'light' | 'dark' | 'pink' | 'blue
 
 // 保存主题到localStorage
 export const saveThemeToLocalStorage = (theme: Theme): void => {
+  // 检查是否在浏览器环境中
+  const isBrowser = typeof window !== 'undefined';
+  if (!isBrowser) {
+    return;
+  }
+  
   localStorage.setItem('theme', theme);
 };
 
 // 从localStorage读取主题
 export const getThemeFromLocalStorage = (): Theme | null => {
+  // 检查是否在浏览器环境中
+  const isBrowser = typeof window !== 'undefined';
+  if (!isBrowser) {
+    return null;
+  }
+  
   const savedTheme = localStorage.getItem('theme') as Theme | null;
   return savedTheme;
 };
 
 // 初始化主题
 export const initializeTheme = (): Theme => {
-  const savedTheme = getThemeFromLocalStorage();
-  if (savedTheme) {
-    return savedTheme;
+  // 检查是否在浏览器环境中
+  const isBrowser = typeof window !== 'undefined';
+  
+  if (isBrowser) {
+    const savedTheme = getThemeFromLocalStorage();
+    if (savedTheme) {
+      return savedTheme;
+    }
+    // 检测是否为移动端设备
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // 移动端默认使用浅色主题，桌面端默认使用深色主题
+    return isMobile ? 'light' : 'dark';
   }
-  // 检测是否为移动端设备
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  // 移动端默认使用浅色主题，桌面端默认使用深色主题
-  return isMobile ? 'light' : 'dark';
+  
+  // 服务器端渲染时返回默认主题
+  return defaultTheme;
 };
