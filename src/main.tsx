@@ -22,9 +22,9 @@ import "./index.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './hooks/useTheme';
-// Vercel Analytics and Speed Insights - temporarily removed due to import error
-// import Analytics from '@vercel/analytics/react';
-// import SpeedInsights from '@vercel/speed-insights/react';
+// Vercel Analytics and Speed Insights
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 // 性能监控
 import { initPerformanceMonitor } from './utils/performanceMonitor';
 
@@ -34,8 +34,16 @@ initPerformanceMonitor();
 // 全局错误捕获
 import errorService from './services/errorService';
 
-// 1. 捕获全局JavaScript错误
+// 1. 增强的全局JavaScript错误捕获
 window.onerror = (message, source, lineno, colno, error) => {
+  console.error('Global error caught:', {
+    message,
+    source,
+    lineno,
+    colno,
+    error
+  });
+  
   if (error) {
     errorService.logError(error, {
       type: 'global',
@@ -57,6 +65,11 @@ window.onerror = (message, source, lineno, colno, error) => {
 
 // 2. 捕获未处理的Promise拒绝
 window.onunhandledrejection = (event) => {
+  console.error('Unhandled promise rejection caught:', {
+    reason: event.reason,
+    promise: event.promise
+  });
+  
   const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
   errorService.logError(error, {
     type: 'unhandledrejection',
@@ -79,6 +92,33 @@ window.addEventListener('error', (event) => {
     });
   }
 }, true);
+
+// 4. 保护全局对象不被意外修改
+Object.defineProperty(window, 'knowledge', {
+  configurable: false,
+  writable: false,
+  value: undefined,
+  enumerable: false
+});
+
+// 5. 监控对象属性设置
+const originalDefineProperty = Object.defineProperty;
+Object.defineProperty = function(obj, prop, descriptor) {
+  if (prop === 'knowledge' && obj === window) {
+    console.warn('Attempting to set knowledge property on window object:', descriptor);
+  }
+  return originalDefineProperty.call(this, obj, prop, descriptor);
+};
+
+const originalSet = Object.prototype.__defineSetter__;
+if (originalSet) {
+  Object.prototype.__defineSetter__ = function(prop, setter) {
+    if (prop === 'knowledge') {
+      console.warn('Attempting to define setter for knowledge property:', setter);
+    }
+    return originalSet.call(this, prop, setter);
+  };
+}
 
 // 注销旧的Service Worker，确保没有遗留的Service Worker影响应用
 if ('serviceWorker' in navigator) {
@@ -103,9 +143,9 @@ createRoot(document.getElementById("root")!).render(
               <WorkflowProvider>
                 <App />
                 <Toaster />
-                {/* Vercel Analytics and Speed Insights - temporarily removed due to import error */}
-                {/* <Analytics /> */}
-                {/* <SpeedInsights /> */}
+                {/* Vercel Analytics and Speed Insights */}
+                <Analytics />
+                <SpeedInsights />
               </WorkflowProvider>
             </AuthProvider>
           </BrowserRouter>

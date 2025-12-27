@@ -178,13 +178,11 @@ import SatisfactionSurvey from '@/components/SatisfactionSurvey';
 import surveyService from '@/services/surveyService';
 // 认证上下文
 import { useContext } from 'react';
-import { AuthContext } from '@/contexts/authContext';
+import { AuthContext } from './contexts/authContext';
 
 
 export default function App() {
   const location = useLocation();
-  // 认证上下文
-  const { user } = useContext(AuthContext);
   // 添加响应式布局状态 - 初始值设为false，避免服务器端渲染不匹配
   const [isMobile, setIsMobile] = useState(false);
   // 添加用户反馈状态
@@ -343,6 +341,8 @@ export default function App() {
 
   // 优化：将浮动按钮组件提取为独立的memo组件，避免每次App状态变化都重新渲染
   const FloatingButtons = React.memo(() => {
+    // 认证上下文
+    const { user } = useContext(AuthContext);
     // 在组件内部管理自己的状态，避免影响全局
     const [isMobile, setIsMobile] = useState(false);
     const [showCommunityMessages, setShowCommunityMessages] = useState(false);
@@ -834,6 +834,8 @@ export default function App() {
       
       {/* 优化：使用独立的FloatingButtons组件，避免不必要的全局重新渲染 */}
       <FloatingButtons />
+      
+
     </div>
 );
 }
