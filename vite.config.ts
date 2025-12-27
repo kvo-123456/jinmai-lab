@@ -144,7 +144,7 @@ function getPlugins() {
 }
 
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: getPlugins(),
   // 确保正确处理中文编码
   esbuild: {
