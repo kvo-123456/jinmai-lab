@@ -1,12 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* 导入模块化主题样式 */
 @import './styles/themes/dark.css';
 @import './styles/themes/blue.css';
 @import './styles/themes/green.css';
 @import './styles/themes/pink.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 全局过渡动画优化 */
 * {
