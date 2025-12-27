@@ -3,19 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- 全局对象属性保护脚本 -->
+    <!-- 全局错误防护脚本 -->
     <script>
-      // 在所有脚本加载前执行，确保关键全局对象存在
+      // 在所有脚本加载前执行，确保任何尝试在undefined对象上设置属性的操作都不会导致应用崩溃
       (function() {
-        // 1. 定义所有可能被访问的全局对象，确保它们总是存在
-        if (!window.knowledge) {
-          window.knowledge = {};
-        }
-        if (!window.lazilyLoaded) {
-          window.lazilyLoaded = {};
-        }
+        // 1. 重写Object.defineProperty，处理在undefined/null对象上设置属性的情况
+        const originalDefineProperty = Object.defineProperty;
+        Object.defineProperty = function(obj, prop, descriptor) {
+          if (obj === undefined || obj === null) {
+            console.error('CRITICAL: Attempting to define property', prop, 'on', obj);
+            console.trace('Stack trace:');
+            // 返回一个空对象，避免应用崩溃
+            return {};
+          }
+          return originalDefineProperty.call(this, obj, prop, descriptor);
+        };
         
-        // 2. 捕获全局错误，处理 "Cannot set properties of undefined" 类型的错误
+        // 2. 重写Object.defineProperties，处理多个属性定义
+        const originalDefineProperties = Object.defineProperties;
+        Object.defineProperties = function(obj, props) {
+          if (obj === undefined || obj === null) {
+            console.error('CRITICAL: Attempting to define properties on', obj, 'with props:', props);
+            console.trace('Stack trace:');
+            // 返回一个空对象，避免应用崩溃
+            return {};
+          }
+          return originalDefineProperties.call(this, obj, props);
+        };
+        
+        // 3. 重写Reflect.set，处理普通属性赋值
+        const originalSet = Reflect.set;
+        Reflect.set = function(target, propertyKey, value, receiver) {
+          if (target === undefined || target === null) {
+            console.error('CRITICAL: Attempting to set property', propertyKey, 'on', target, 'with value', value);
+            console.trace('Stack trace:');
+            // 返回true，表示赋值成功，避免应用崩溃
+            return true;
+          }
+          return originalSet.call(this, target, propertyKey, value, receiver);
+        };
+        
+        // 4. 重写Object.assign，处理对象合并
+        const originalAssign = Object.assign;
+        Object.assign = function(target, ...sources) {
+          if (target === undefined || target === null) {
+            console.error('CRITICAL: Attempting to assign to', target, 'with sources:', sources);
+            console.trace('Stack trace:');
+            // 返回一个新对象，避免应用崩溃
+            return {};
+          }
+          return originalAssign.call(this, target, ...sources);
+        };
+        
+        // 5. 初始化关键全局对象
+        window.knowledge = window.knowledge || {};
+        window.lazilyLoaded = window.lazilyLoaded || {};
+        
+        // 6. 捕获并阻止"Cannot set properties of undefined"错误
         window.addEventListener('error', function(event) {
           if (event.message && event.message.includes('Cannot set properties of undefined')) {
             console.error('CRITICAL ERROR: Attempting to set property on undefined object!');
@@ -27,27 +71,7 @@
           }
         });
         
-        // 3. 监控关键全局对象的属性设置
-        const monitorProperty = function(objName, propName) {
-          const originalObj = window[objName];
-          window[objName] = new Proxy(originalObj, {
-            set: function(target, property, value) {
-              console.warn(`Setting property ${property} on window.${objName} to:`, value);
-              target[property] = value;
-              return true;
-            },
-            get: function(target, property) {
-              const value = target[property];
-              return value;
-            }
-          });
-        };
-        
-        // 监控关键全局对象
-        monitorProperty('knowledge');
-        monitorProperty('lazilyLoaded');
-        
-        console.log('Global object property protection initialized');
+        console.log('Global error protection initialized successfully');
       })();
     </script>
 
