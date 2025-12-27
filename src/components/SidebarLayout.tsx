@@ -21,13 +21,19 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
   const { isAuthenticated, user, logout, updateUser } = useContext(AuthContext)
   const location = useLocation()
   const navigate = useNavigate()
-  // 初始化默认值，避免SSR期间访问localStorage
+  const [isMounted, setIsMounted] = useState(false)
+  // 初始化默认值，确保服务器端和客户端渲染一致
   const [collapsed, setCollapsed] = useState<boolean>(false)
   const [hovered, setHovered] = useState<boolean>(false)
   const [width, setWidth] = useState<number>(180)
   
   // 在客户端挂载后从localStorage加载保存的状态
   useEffect(() => {
+    // 只在客户端环境中执行
+    if (typeof localStorage === 'undefined') return
+    
+    setIsMounted(true)
+    
     // 从localStorage读取保存的折叠状态
     const savedCollapsed = localStorage.getItem('sidebarCollapsed')
     if (savedCollapsed) {
@@ -47,16 +53,22 @@ export default memo(function SidebarLayout({ children }: SidebarLayoutProps) {
   
   // 保存折叠状态到localStorage
   useEffect(() => {
+    // 只在客户端环境中访问localStorage
+    if (typeof localStorage === 'undefined') return
     localStorage.setItem('sidebarCollapsed', JSON.stringify(collapsed))
   }, [collapsed])
   // 中文注释：搜索建议与最近搜索（用于提高搜索功能的使用率与转化）
   const suggestions = useMemo(() => (
     ['品牌设计', '国潮设计', '老字号品牌', 'IP设计', '插画设计', '工艺创新', '非遗传承', '共创向导']
   ), [])
+  // 初始化最近搜索为[]，确保服务器端和客户端渲染一致
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   
   // 在客户端挂载后从localStorage加载最近搜索
   useEffect(() => {
+    // 只在客户端环境中访问localStorage
+    if (typeof localStorage === 'undefined') return
+    
     try {
       const s = localStorage.getItem('recentSearches')
       if (s) {

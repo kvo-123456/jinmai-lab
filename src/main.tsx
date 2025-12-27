@@ -25,9 +25,9 @@ import "./index.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './hooks/useTheme';
-// Vercel Analytics and Speed Insights
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
+// Vercel Analytics and Speed Insights - Temporarily removed due to module resolution issue
+// import Analytics from '@vercel/analytics';
+// import SpeedInsights from '@vercel/speed-insights';
 // 性能监控
 import { initPerformanceMonitor } from './utils/performanceMonitor';
 
@@ -164,9 +164,9 @@ if (typeof window !== 'undefined') {
                   <WorkflowProvider>
                     <App />
                     <Toaster />
-                    {/* Vercel Analytics and Speed Insights */}
-                    <Analytics />
-                    <SpeedInsights />
+                    {/* Vercel Analytics and Speed Insights - Temporarily removed due to module resolution issue */}
+                    {/* <Analytics /> */}
+                    {/* <SpeedInsights /> */}
                   </WorkflowProvider>
                 </AuthProvider>
               </BrowserRouter>
