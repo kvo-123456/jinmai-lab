@@ -79,8 +79,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   // 主题变化时更新类名和localStorage
   useEffect(() => {
-    updateThemeClass();
-    saveThemeToLocalStorage(theme);
+    // 使用requestAnimationFrame优化DOM更新，减少卡顿
+    const frameId = requestAnimationFrame(() => {
+      updateThemeClass();
+      saveThemeToLocalStorage(theme);
+    });
+    
+    return () => cancelAnimationFrame(frameId);
   }, [theme, updateThemeClass]);
 
   // 优化toggleTheme函数，使用主题顺序数组
@@ -112,7 +117,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     toggleTheme,
     setTheme,
     availableThemes: themeConfig
-  }), [theme, isDark, toggleTheme, setTheme]);
+  }), [theme, isDark, setTheme, toggleTheme]);
 
   return (
     <ThemeContext.Provider value={value}>

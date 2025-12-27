@@ -159,17 +159,17 @@ if (typeof window !== 'undefined') {
         <ErrorBoundary>
           <LanguageProvider>
             <ThemeProvider>
-              <BrowserRouter>
-                <AuthProvider>
-                  <WorkflowProvider>
-                    <App />
-                    <Toaster />
-                    {/* Vercel Analytics and Speed Insights - Temporarily removed due to module resolution issue */}
-                    {/* <Analytics /> */}
-                    {/* <SpeedInsights /> */}
-                  </WorkflowProvider>
-                </AuthProvider>
-              </BrowserRouter>
+              <BrowserRouter basename="/jinmai-lab">
+                  <AuthProvider>
+                    <WorkflowProvider>
+                      <App />
+                      <Toaster />
+                      {/* Vercel Analytics and Speed Insights - Temporarily removed due to module resolution issue */}
+                      {/* <Analytics /> */}
+                      {/* <SpeedInsights /> */}
+                    </WorkflowProvider>
+                  </AuthProvider>
+                </BrowserRouter>
             </ThemeProvider>
           </LanguageProvider>
         </ErrorBoundary>

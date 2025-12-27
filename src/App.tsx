@@ -568,107 +568,15 @@ export default function App() {
     </div>
   );
 
-  // 带有页面切换动画的组件 - 使用memo优化，避免不必要的动画重绘
+  // 简化的AnimatedPage组件，减少动画效果，提高性能
   const AnimatedPage = React.memo(({ children }: { children: React.ReactNode }) => {
-    // 使用useRef记录动画是否已经应用过，避免每次渲染都重新应用动画
-    const animationAppliedRef = useRef(false);
-    
-    return (
-      <div 
-        className="transition-all duration-300 ease-in-out"
-        style={{
-          opacity: animationAppliedRef.current ? 1 : 0,
-          transform: animationAppliedRef.current ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.98)',
-          animation: animationAppliedRef.current ? undefined : 'fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards'
-        }}
-        onAnimationEnd={() => {
-          animationAppliedRef.current = true;
-        }}
-      >
-        {children}
-      </div>
-    );
+    return <div>{children}</div>;
   });
   
   AnimatedPage.displayName = 'AnimatedPage';
   
-  // 全局CSS动画
-  useEffect(() => {
-    // 只在浏览器环境中执行
-    if (typeof document === 'undefined') return;
-    
-    // 添加全局动画样式
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
-      @keyframes fadeOutDown {
-        from {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        to {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-      }
-      
-      /* 自定义旋转动画 - 用于品牌Logo骨架 */
-      @keyframes spin-slow {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      
-      /* 自定义进度条动画 */
-      @keyframes progress-animation {
-        0% {
-          width: 0%;
-        }
-        50% {
-          width: 70%;
-        }
-        100% {
-          width: 100%;
-        }
-      }
-      
-      .animate-page-transition {
-        animation-duration: 0.3s;
-        animation-fill-mode: both;
-      }
-      
-      /* 自定义旋转动画类 */
-      .animate-spin-slow {
-        animation: spin-slow 3s linear infinite;
-      }
-      
-      /* 自定义进度条动画类 */
-      .animate-progress {
-        animation: progress-animation 2s ease-in-out infinite;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-  
   return (
-    <div className="relative">
+    <div className="relative min-h-screen bg-white dark:bg-[var(--bg-primary)]">
       <Routes>
         {/* 核心页面直接渲染，无需懒加载，添加缓存和动画 */}
         {/* 确保根路径是第一个路由，提高匹配优先级 */}
