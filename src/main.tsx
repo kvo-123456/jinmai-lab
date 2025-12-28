@@ -32,18 +32,7 @@ if (typeof window !== 'undefined') {
   window.knowledge = window.knowledge || {};
   window.lazilyLoaded = window.lazilyLoaded || {};
 
-  // 简化的Service Worker注销
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (const registration of registrations) {
-          registration.unregister().catch(error => {
-            console.error('Failed to unregister service worker:', error);
-          });
-        }
-      });
-    });
-  }
+
 
   // 应用渲染
   const root = document.getElementById("root");
