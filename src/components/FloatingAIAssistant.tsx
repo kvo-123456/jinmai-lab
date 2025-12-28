@@ -358,18 +358,9 @@ const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
 
   // 初始化位置
   useEffect(() => {
-    // 根据预设位置设置初始坐标
-    const buttonSize = 64; // w-16 = 64px
-    const margin = 24; // 24px margin
-    
-    const initialPosition = {
-      'bottom-right': { x: window.innerWidth - buttonSize - margin, y: window.innerHeight - buttonSize - margin },
-      'bottom-left': { x: margin, y: window.innerHeight - buttonSize - margin },
-      'top-right': { x: window.innerWidth - buttonSize - margin, y: margin },
-      'top-left': { x: margin, y: margin }
-    };
-    setPositionStyle(initialPosition[position]);
-  }, [position]);
+    // 设置固定位置，确保按钮始终可见
+    setPositionStyle({ x: 20, y: window.innerHeight - 100 });
+  }, []);
 
   // 切换AI助手显示/隐藏
   const toggleAssistant = () => {
@@ -816,24 +807,25 @@ const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
       {/* 悬浮按钮 */}
       <motion.button
         ref={buttonRef}
-        initial={{ scale: 0, opacity: 0 }}
+        initial={{ scale: 1, opacity: 1 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4, type: 'spring', stiffness: 200, damping: 15 }}
         onClick={toggleAssistant}
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
-        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-2xl z-50 transition-all duration-300 transform hover:scale-125 ${isDark ? 'bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' : 'bg-gradient-to-br from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'} text-white cursor-${isDragging ? 'grabbing' : 'grab'}`}
+        className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl z-[100] transition-all duration-300 transform hover:scale-125 ${isDark ? 'bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' : 'bg-gradient-to-br from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'} text-white cursor-${isDragging ? 'grabbing' : 'grab'}`}
         aria-label="AI助手"
         whileHover={{ scale: 1.25, boxShadow: '0 8px 20px rgba(59, 130, 246, 0.4)' }}
         whileTap={{ scale: 1.1 }}
         style={{
-          position: 'absolute',
-          left: 0,
-          top: 0
+          position: 'fixed',
+          left: '20px',
+          bottom: '20px',
+          zIndex: 100
         }}
       >
         <motion.i 
-          className="fas fa-robot text-lg" 
+          className="fas fa-robot text-xl" 
           animate={isOpen ? { rotate: 90 } : { rotate: 0 }}
           transition={{ duration: 0.3 }}
         ></motion.i>
