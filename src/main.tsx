@@ -22,6 +22,7 @@ import { AuthProvider } from './contexts/authContext.tsx';
 import { WorkflowProvider } from './contexts/workflowContext.tsx';
 import { LanguageProvider } from './contexts/LanguageContext';
 import "./index.css";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './hooks/useTheme';
 
