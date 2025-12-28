@@ -48,6 +48,9 @@ if (typeof window !== 'undefined') {
   // 应用渲染
   const root = document.getElementById("root");
   if (root) {
+    // 清空root内容，确保没有服务器渲染的HTML残留，完全跳过hydration
+    root.innerHTML = '';
+    // 使用createRoot直接渲染，不进行hydration
     createRoot(root).render(
       <ErrorBoundary>
         <LanguageProvider>
