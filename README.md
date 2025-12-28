@@ -12,6 +12,9 @@
   <a href="https://github.com/kvo-123456/jinmai-lab"><img src="https://img.shields.io/github/last-commit/kvo-123456/jinmai-lab" alt="GitHub last commit" /></a>
 </div>
 
+## 更新记录
+- 2025-12-28: 优化部署流程，确保GitHub Actions工作流正常运行
+
 ## 🌟 项目定位与愿景
 
 AI共创平台旨在实现用户从吸引、共创、展示到战略采纳的全流程管理，通过AI技术助力传统文化的创新表达和商业化落地。我们的愿景是成为连接传统文化与青年创意的桥梁，推动老字号品牌的数字化转型和文化传承。
