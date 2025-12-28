@@ -20,8 +20,9 @@ export function processImageUrl(url: string): string {
     
     // 检查是否为相对路径
     if (url.startsWith('/')) {
-      // 直接返回原始URL，不进行额外处理
-      return url;
+      // 对于相对路径，添加正确的base路径
+      // 由于部署在GitHub Pages上，需要添加/jinmai-lab/前缀
+      return `/jinmai-lab${url}`;
     }
     
     // 检查是否为有效的URL格式
