@@ -34,12 +34,21 @@ jobs:
           echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          echo "Installing dependencies..."
+          pnpm install --frozen-lockfile --verbose
         env:
           NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Build project
-        run: pnpm build
+        run: |
+          echo "Building project..."
+          pnpm build --verbose
+
+      - name: Verify build output
+        run: |
+          echo "Checking build output..."
+          ls -la ./dist
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -47,3 +56,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           force_orphan: true
+          enable_jekyll: false
+          allow_empty_commit: false
+          full_commit_message: "Deploy from GitHub Actions: ${{ github.sha }}"
