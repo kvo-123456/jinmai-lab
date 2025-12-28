@@ -397,7 +397,7 @@ const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
     let newX = clientX - dragOffset.x;
     let newY = clientY - dragOffset.y;
     
-    // 边界检查
+    // 边界检查，考虑到按钮尺寸
     newX = Math.max(0, Math.min(newX, window.innerWidth - buttonWidth));
     newY = Math.max(0, Math.min(newY, window.innerHeight - buttonHeight));
     
@@ -818,9 +818,7 @@ const FloatingAIAssistant: React.FC<FloatingAIAssistantProps> = ({
         whileHover={{ scale: 1.25, boxShadow: '0 8px 20px rgba(59, 130, 246, 0.4)' }}
         whileTap={{ scale: 1.1 }}
         style={{
-          position: 'fixed',
-          left: '20px',
-          bottom: '20px',
+          position: 'relative',
           zIndex: 100
         }}
       >
