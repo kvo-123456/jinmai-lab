@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192" fill="none">
+  <!-- 蓝色渐变背景 -->
+  <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#2563eb" />
+    <stop offset="100%" stop-color="#1e40af" />
+  </linearGradient>
+  <rect width="192" height="192" rx="32" fill="url(#bgGradient)"/>
+  
+  <!-- 简约现代的JZ图标 - 居中布局 -->
+  <g transform="translate(36 36)">
+    <!-- 顶部白色水平线 -->
+    <path d="M24 24L104 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- 左侧白色矩形 -->
+    <rect x="32" y="32" width="24" height="72" fill="white"/>
+    
+    <!-- 右侧蓝色圆环 -->
+    <circle cx="64" cy="64" r="36" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+    
+    <!-- 右侧白色几何图形 -->
+    <path d="M56 32L88 32L72 56L88 80L56 80V32Z" fill="white"/>
+    
+    <!-- 底部白色水平线 -->
+    <path d="M24 104L104 104" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

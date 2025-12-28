@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" fill="none">
+  <!-- 渐变背景 -->
+  <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#2563eb" />
+    <stop offset="100%" stop-color="#1e40af" />
+  </linearGradient>
+  <rect width="192" height="192" rx="32" fill="url(#bgGradient)"/>
+  
+  <!-- 简约现代的JZ图标 - 居中布局 -->
+  <g transform="translate(36 36)">
+    <!-- 左侧J字母 - 现代简约风格 -->
+    <path d="M32 32V88H56V32H32Z" fill="white"/>
+    <path d="M32 88V104H56V88H32Z" fill="white"/>
+    
+    <!-- 右侧Z字母 - 现代简约风格 -->
+    <path d="M64 32L88 32L64 56L88 80H64V56H48V80H32V32H48V56H64V32Z" fill="white"/>
+    
+    <!-- 环绕的圆环 - 现代设计 -->
+    <circle cx="64" cy="64" r="36" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+    
+    <!-- 顶部装饰线 -->
+    <path d="M24 24L104 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- 底部装饰线 -->
+    <path d="M24 104L104 104" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>
